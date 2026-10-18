@@ -40,7 +40,7 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
    `src/world/lighting.js`, `src/world/collision.js`, `src/world/floaters.js`,
    `src/world/ball-layout.js`, `src/world/monster-ai.js`, `src/world/paths.js`,
    `src/world/autopilot.js`, `src/world/windows.js`, `src/view3d/flicker.js`,
-   `src/view3d/events.js`) slik at den
+   `src/view3d/events.js`, `src/audio/acoustics.js`, `src/audio/director.js`) slik at den
    kan testes i Node.
 5. Brukergrensesnittet er på **engelsk** (all tekst brukeren ser: knapper, menyer,
    dialoger, feilmeldinger, temanavn og eksempler). Kode, identifikatorer og kommentarer
@@ -61,7 +61,8 @@ src/
   world/     bygger 3D-verden fra et rom: geometri, bakt lys, materialer, armaturer, kollisjon
   textures/  prosedyrelle canvas-teksturer per tema (ingen eksterne bildefiler)
   view3d/    renderer, kamera (oversikt/topp/gå), etterbehandling, input, HUD
-  audio/     prosedyrell lyd (lysrørsurr, romtone, fottrinn, romklang)
+  audio/     prosedyrell lyd (lysrørsurr, ventilasjon, fottrinn, romklang som følger rommet,
+             bakgrunnslyder over tid: director.js bestemmer når, ambient.js lager lydene)
   editor/    2D-skissen: viewport, tegning, input
   ui/        toppmeny, sidepanel, modaler, toasts
   landing.js forsiden

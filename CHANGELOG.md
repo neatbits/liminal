@@ -104,6 +104,12 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Lyd som følger rommet: romklangen måles der du står (avstand til veggene i 16 retninger og
+  takhøyden) og glir mellom en kort og en lang klang – store haller og atrier klinger lenge, smale
+  ganger og små rom er nesten tørre, og fottrinn og andre lyder endrer seg når du går fra rom til
+  rom. Bakgrunnslyder over tid: ventilasjonen slår seg av og på med et klunk, dempet musikk spiller
+  fra et rom et sted (mer dempet med vegger imellom, fra riktig side), regn mot taket (tydeligere og
+  lysere ved vinduene), og innimellom kommer lange perioder med nesten total stillhet.
 - Drømmegange («Drift» i gålinjen, G, eller 🌙 Drift over 3D-visningen): kameraet glir sakte og
   av seg selv gjennom rommet – lange etapper mot steder det ikke har vært, rundt vegger og utenom
   bassenger, med myke svinger og lite hodebevegelse – og går etter noen etapper gjennom en dør til
@@ -185,6 +191,8 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   grønt/rødt om døren får plass, og forklarer hvorfor når den ikke gjør det.
 - CRT-TV-et er dobbelt så stort, laptopen halvparten så stor (katalogen har nå `scale`).
 - Romformatet har feltet `sky` (tiden på døgnet), og vinduer er vegger med `meta` = 1.
+- Romklangen er ikke lenger fast per tema: temaets `reverb`/`reverbTime` gir nå hvor klangfullt
+  temaet er og lengden på klangen i store rom (`audio/space.js`, `audio/acoustics.js`).
 - Veifinning (avstandskart over rutenettet) ligger i `world/paths.js`, felles for monsteret og
   drømmegangen; ingen av dem skjærer lenger hjørner forbi vegger eller vann.
 - Romformatet har den valgfrie listen `objects` ({ id, x, z, rot }); ukjente modeller hoppes

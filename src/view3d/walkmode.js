@@ -12,6 +12,7 @@ import { WalkInput } from './input.js';
 import { WaterPlay } from './water-play.js';
 import { Drift } from './drift.js';
 import { glowSources } from '../core/objects.js';
+import { windows } from '../core/windows.js';
 
 export class WalkMode {
   constructor({ canvas, hud, audio }) {
@@ -51,6 +52,7 @@ export class WalkMode {
     this.doors = doors;
     this.play.setWorld(this.level, extras.objects, extras.balls);
     this.screens = glowSources(this.level);
+    this.windows = windows(this.level);
     this.drift.reset();
     this.theme = theme;
     this.field = field;
@@ -203,6 +205,8 @@ export class WalkMode {
           .map((l) => Math.hypot(l.x - this.walker.x, l.z - this.walker.z));
         if (near.length) this.audio.flickerBuzz(Math.min(...near));
       }
+      const w = this.walker;
+      this.audio.listen({ level: this.level, x: w.x, z: w.z, y: w.floorY, yaw: w.yaw, windows: this.windows });
       this.audio.update(dt, this._humLevel(flickerValues) * this.power);
       this.audio.static(this._staticLevel());
     }

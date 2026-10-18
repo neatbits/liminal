@@ -1,7 +1,9 @@
-// Lydmotor for gåmodus: lysrørsurr som følger nærmeste lys, romtone, vann, fottrinn, sus og
-// plask fra vannsklier, dører og skumle lyder i rykk og napp (eerie.js) – alt sendt gjennom en
-// romklang per tema.
-import { noiseBuffer, impulseResponse, footstepBuffers, buzzBuffer, dripBuffer, thumpBuffer } from './synth.js';
+// Lydmotor for gåmodus: lysrørsurr som følger nærmeste lys, ventilasjon, fottrinn, sus og plask
+// fra vannsklier, dører og skumle lyder i rykk og napp (eerie.js). Romklangen følger rommet man
+// står i (space.js), og bakgrunnslydene – musikk, regn, stillhet – styres av ambient.js.
+import { noiseBuffer, footstepBuffers, buzzBuffer, dripBuffer, thumpBuffer } from './synth.js';
+import { createSpace } from './space.js';
+import { Ambient } from './ambient.js';
 import { eerieBuffer, playAround } from './eerie.js';
 import { slideRush, splash, door, shutter, staticHiss, power, pickup } from './effects.js';
 
@@ -46,6 +48,7 @@ export class AudioEngine {
     if (this.themeId !== theme.id) {
       this._teardown();
       this.graph = this._build(theme.sound);
+      this.graph.ambient = new Ambient(this, this.graph);
       this.themeId = theme.id;
     }
     this.master.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.6);
@@ -81,11 +84,8 @@ export class AudioEngine {
     const keep = (n) => (nodes.push(n), n);
     const dry = keep(ctx.createGain());
     dry.connect(this.master);
-    const reverb = keep(ctx.createConvolver());
-    reverb.buffer = impulseResponse(ctx, sound.reverbTime, sound.reverb > 0.4 ? 0.7 : 0.4);
-    const wet = keep(ctx.createGain());
-    wet.gain.value = sound.reverb;
-    reverb.connect(wet).connect(this.master);
+    const space = createSpace(ctx, sound, this.master, keep);
+    const reverb = space.input;
     const send = (node, amount) => {
       const g = keep(ctx.createGain());
       g.gain.value = amount;
@@ -131,7 +131,7 @@ export class AudioEngine {
     stepBus.gain.value = 0.45;
     send(stepBus, 0.5 + sound.reverb);
     for (const s of ['carpet', 'tile', 'concrete', 'water', 'foam', 'balls']) this.steps[s] ??= footstepBuffers(ctx, s);
-    return { nodes, hum, stepBus, sound };
+    return { nodes, hum, room, stepBus, sound, space };
   }
 
   _teardown() {
@@ -170,6 +170,7 @@ export class AudioEngine {
     this._oneShot(this.buzz, Math.max(0, 0.6 - distance * 0.08), 0.95 + Math.random() * 0.1);
   }
 
+  // Lydeffekter (effects.js): sklie, plask, dør, kamera, kassett, strømbrudd (down = true) og TV-sus.
   slide(speed) {
     slideRush(this, speed);
   }
@@ -190,20 +191,25 @@ export class AudioEngine {
     pickup(this);
   }
 
-  /** Strømmen går (down = true) eller kommer tilbake. */
   power(down) {
     power(this, down);
   }
 
-  /** Sus fra TV-skjermer i nærheten (0..1). */
   static(level) {
     staticHiss(this, level);
+  }
+
+  /** Hvor lytteren står (gåmodus): { level, x, z, y, yaw, windows } – for romklang og bakgrunnslyder. */
+  listen(listener) {
+    this.listener = listener;
   }
 
   /** @param humLevel 0..1 – hvor nær og mange lys som surrer */
   update(dt, humLevel) {
     if (!this.graph) return;
-    const { sound, hum } = this.graph;
+    const { sound, hum, ambient } = this.graph;
+    ambient.update(dt, this.listener);
+    const quiet = ambient.level; // < 1 i de stille periodene
     // Surret er dempet, nesten borte langt fra lysene, og glir sakte opp og ned (bølger) så
     // det ikke ligger helt jevnt hele tiden.
     this.humIn -= dt;
@@ -212,10 +218,10 @@ export class AudioEngine {
       this.humTarget = 0.35 + Math.random() * 0.65;
     }
     this.humMood += (this.humTarget - this.humMood) * Math.min(1, dt * 0.4);
-    const level = sound.hum * HUM_SCALE * (0.05 + 0.95 * humLevel) * this.humMood;
+    const level = sound.hum * HUM_SCALE * (0.05 + 0.95 * humLevel) * this.humMood * quiet;
     hum.gain.setTargetAtTime(level, this.ctx.currentTime, 0.4);
     this.eventIn -= dt;
-    if (this.eventIn > 0) return;
+    if (this.eventIn > 0 || quiet < 1) return; // stille periode: ingen små lyder heller
     // Små lyder (drypp/dunk) ofte, skumle lyder av og til – av og til to-tre tett på hverandre.
     if (this.burst > 0 || Math.random() < 0.45) {
       const name = sound.eerie[Math.floor(Math.random() * sound.eerie.length)];
