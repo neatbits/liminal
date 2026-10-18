@@ -3,7 +3,7 @@
 // romklang per tema.
 import { noiseBuffer, impulseResponse, footstepBuffers, buzzBuffer, dripBuffer, thumpBuffer } from './synth.js';
 import { eerieBuffer, playAround } from './eerie.js';
-import { slideRush, splash, door } from './effects.js';
+import { slideRush, splash, door, shutter, staticHiss, power, pickup } from './effects.js';
 
 const HUM_SCALE = 0.35; // lysrørsurret samlet (temaenes hum ganges med dette)
 
@@ -182,6 +182,24 @@ export class AudioEngine {
     door(this, opening);
   }
 
+  shutter() {
+    shutter(this);
+  }
+
+  pickup() {
+    pickup(this);
+  }
+
+  /** Strømmen går (down = true) eller kommer tilbake. */
+  power(down) {
+    power(this, down);
+  }
+
+  /** Sus fra TV-skjermer i nærheten (0..1). */
+  static(level) {
+    staticHiss(this, level);
+  }
+
   /** @param humLevel 0..1 – hvor nær og mange lys som surrer */
   update(dt, humLevel) {
     if (!this.graph) return;
@@ -209,6 +227,7 @@ export class AudioEngine {
     } else {
       this._oneShot(this.thump, 0.25, 0.7 + Math.random() * 0.3);
     }
-    this.eventIn = this.burst > 0 ? 2.5 + Math.random() * 5 : 12 + Math.random() * 40;
+    // eerieScale < 1 i Scary mode: de skumle lydene kommer oftere.
+    this.eventIn = (this.burst > 0 ? 2.5 + Math.random() * 5 : 12 + Math.random() * 40) * (this.eerieScale ?? 1);
   }
 }

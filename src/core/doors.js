@@ -135,7 +135,7 @@ export function closedLeafBox(info) {
  * omtrent i synsretningen (yaw 0 = mot −z). Dører til ingensteds kan ikke åpnes.
  * @returns {{ i, info } | null}
  */
-export function doorInReach(level, x, z, yaw, reach = 1.8) {
+export function doorInReach(level, x, z, yaw, reach = 1.8, { exits = false } = {}) {
   const fx = -Math.sin(yaw);
   const fz = -Math.cos(yaw);
   let best = null;
@@ -143,7 +143,7 @@ export function doorInReach(level, x, z, yaw, reach = 1.8) {
   for (let cz = Math.floor(z - reach); cz <= Math.floor(z + reach); cz++) {
     for (let cx = Math.floor(x - reach); cx <= Math.floor(x + reach); cx++) {
       const info = doorInfo(level, cx, cz);
-      if (!info || info.oneSided || info.state === DOOR.NONE) continue;
+      if (!info || (info.oneSided && !exits) || info.state === DOOR.NONE) continue;
       const [px, pz] = info.pz ? [info.a0 + 0.5, info.face] : [info.face, info.a0 + 0.5];
       const d = Math.hypot(px - x, pz - z);
       if (d >= bestD || (d > 0.4 && ((px - x) * fx + (pz - z) * fz) / d < 0.5)) continue;

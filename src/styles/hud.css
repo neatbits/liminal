@@ -144,3 +144,13 @@
   letter-spacing: 0.02em;
   pointer-events: none;
 }
+
+/* Nivå og kassetter i gålinjen («LEVEL 2 · 📼 1/4»). */
+.hud-extra {
+  color: #f2d58a;
+  letter-spacing: 0.04em;
+}
+
+.hud-extra:empty {
+  display: none;
+}

@@ -39,6 +39,7 @@ export function bindButtons(app) {
     const view = e.target.closest('[data-view]')?.dataset.view;
     if (view === 'walk') app.walk(false);
     else if (view === 'fullscreen') app.walk(true);
+    else if (view === 'photo') app.viewer.photo();
     else if (view) app.viewer.view(view);
   });
 }

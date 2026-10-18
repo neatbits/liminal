@@ -104,6 +104,40 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Scary mode («Scary» i gålinjen eller X; huskes): tettere tåke og mørkere bilde, strømbrudd
+  oftere og lenger (12–18 s), og de skumle lydene kommer tettere. Et monster – en høy, kullsvart
+  skikkelse med lysende øyne og et bredt smil – står i lyset langt borte og forsvinner når du
+  nærmer deg. Når lyset går, kommer det etter deg: det finner veien rundt vegger, men ikke
+  gjennom lukkede dører, og går raskere enn du går, men saktere enn du løper. Hjertebank og
+  pust fra den siden det er. Tar det deg, rives bildet opp i videostøy og du våkner på et nytt
+  nivå («YOU NOCLIPPED»). About-siden advarer om flimring og mørke.
+- Scary mode uten jumpscares: Scary-knappen (og X) veksler av → Scary → Scary · mild → av. I
+  den milde varianten er monsteret der, men det tar deg aldri – det trekker seg unna i mørket når
+  det kommer nærmere enn 3 m – og hjertebanken er svakere.
+- Genererte rom (eksemplene og de uendelige nivåene) får gjenstander som passer til temaet:
+  skrivebord med laptop, TV eller boombox på kontoret, et TV i kjellerstua, badeender i
+  bassengene og ballbingene, en rad med TV-er i en butikk i kjøpesenteret – og bare en og
+  annen forlatt TV eller boombox i Level 0, hotellet og garasjen. Gjenstandene står mot
+  veggen, aldri foran dører eller trapper eller ved startpunktet (`gen/furnish.js`).
+- Uendelige nivåer: i gåmodus fører en dør til ingensteds (E – go through the door) videre
+  til et nytt, generert nivå med et annet tema – svart overgang og tittelen «LEVEL 1 – The
+  Mall» i VHS-skrift. Nivåene finnes bare i gåmodus; går man ut, er man tilbake i rommet fra
+  editoren. Genererte rom (også eksemplene) får 2–3 utganger i ytterveggen.
+- VHS-kassetter å lete etter i gåmodus: 1–5 per rom, spredt rundt (også oppe på dekker).
+  Man plukker dem opp ved å gå bort til dem; gålinjen viser «LEVEL 2 · 📼 3/5».
+- Strømbrudd: av og til flimrer alle lysene, går ut i noen sekunder med et dunk og en
+  synkende tone, og kommer tilbake. Bare TV-ene lyser i mørket.
+- TV-er viser sne-støy som lyser (sakte rullende bånd og linjer), kaster et svakt lys rundt
+  seg og suser når man kommer nær.
+- Fotomodus: trykk P i gåmodus (eller «📷 Photo» i gålinjen / 📷 over 3D-visningen) for å
+  ta et bilde med VHS-filteret, «▶ PLAY», dato, romnavn og et lite vannmerke. Bildet lagres
+  som PNG – på mobil kan det deles direkte. Hvitt blink og lukkerlyd.
+- Forhåndsvisning av lenker: forsiden, simulatoren og About-siden har tittel, beskrivelse og
+  et forhåndsbilde (`public/og-image.jpg`, tatt med fotomodus i kjøpesenteret) for
+  Messenger, Discord, Facebook og lignende. Delte rom får det samme generelle bildet.
+- About & credits-side (`about/`): hva siden er, hvordan rom lagres (bare i nettleseren),
+  kreditering av modeller (fra katalogen), three.js og fonten VT323. Lenket fra forsiden og
+  fra Help → About Liminal.
 - Publisering med `npm run deploy`: kjører testene, bygger og laster opp `dist/` over SFTP
   (ressurser først, sidene sist). Tilkoblingen ligger i `.env.deploy` utenfor git; `--clean`
   fjerner gamle byggfiler i `assets/` på serveren, `--dry-run` viser hva som lastes opp.

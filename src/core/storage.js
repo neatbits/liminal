@@ -87,6 +87,8 @@ export function loadDraft() {
 
 export const DEFAULT_SETTINGS = Object.freeze({
   vhs: false,
+  scary: false, // Scary mode i gåmodus (monster, flere strømbrudd)
+  scaryMild: false, // … uten jumpscares: monsteret tar deg aldri
   grain: true,
   sound: true,
   volume: 0.8,

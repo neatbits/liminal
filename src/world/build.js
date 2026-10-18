@@ -30,7 +30,8 @@ const DEFAULT_TILES = {
 
 /**
  * @param options anisotropy, waterQuality (true = speiling og lysbrytning i vannet)
- * @returns {{ group, theme, lights, field, water, doors, objects, balls, stats, update(time, flicker), setBoost(v), dispose() }}
+ * @returns {{ group, theme, lights, field, water, doors, objects, balls, stats, update(time, flicker),
+ *            setBoost(v), setPower(p), dispose() }}
  *          doors: dører som kan dreies (createSwingDoors), objects: gjenstandene (createObjects),
  *          balls: ballbingene (createBalls) eller null
  */
@@ -100,7 +101,7 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true } = {}) 
   const doors = createSwingDoors(meshes.swing, materials.leaf, materials.knob);
   group.add(doors.group);
 
-  const fixtures = buildFixtures(lights, theme);
+  const fixtures = buildFixtures(lights.filter((l) => !l.object), theme);
   group.add(fixtures.group);
 
   // Ballbinger (theme.pit === 'balls') fylles med baller; ellers vann med speiling og brytning.
@@ -114,6 +115,8 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true } = {}) 
   group.add(objects.group);
 
   let lastTime = null;
+  let boost = 1;
+  let power = 1; // strømmen (strømbrudd i gåmodus): demper flater og armaturer
   let vertices = 0;
   for (const g of geometries) vertices += g.attributes.position.count;
   if (water) vertices += water.mesh.geometry.attributes.position.count;
@@ -135,10 +138,15 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true } = {}) 
       lastTime = time;
       shared.uTime.value = time;
       shared.uFlick.value.set(flicker[0], flicker[1], flicker[2], flicker[3]);
-      fixtures.update(flicker);
+      fixtures.update(flicker, power);
     },
     setBoost(v) {
-      shared.uBoost.value = v;
+      boost = v;
+      shared.uBoost.value = boost * power;
+    },
+    setPower(p) {
+      power = p;
+      shared.uBoost.value = boost * power;
     },
     dispose() {
       for (const g of geometries) g.dispose();

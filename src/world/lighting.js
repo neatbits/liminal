@@ -4,6 +4,7 @@
 import { TILE, LIGHT, canHaveLight, inBounds } from '../core/level.js';
 import { ceilingAt, floorAt, deckAt, SLAB } from '../core/heights.js';
 import { closedDoorFaces } from '../core/doors.js';
+import { glowSources } from '../core/objects.js';
 import { hexToLinear } from './color.js';
 
 export const FLICKER_GROUPS = 4;
@@ -16,7 +17,10 @@ export function flickerGroup(x, z) {
   return (((x * 73856093) ^ (z * 19349663)) >>> 0) % FLICKER_GROUPS;
 }
 
-/** Alle armaturer i rommet: { cx, cz, x, z, y, ceil, state, group } */
+/**
+ * Alle armaturer i rommet: { cx, cz, x, z, y, ceil, state, group }, pluss svake lyskilder fra
+ * skjermer (object: true, power < 1) – de har ingen armatur og surrer ikke.
+ */
 export function collectLights(level) {
   const out = [];
   for (let z = 0; z < level.h; z++) {
@@ -30,6 +34,10 @@ export function collectLights(level) {
         out.push({ cx: x, cz: z, x: x + 0.5, z: z + 0.5, y: ceil - LIGHT_DROP, ceil, state, group });
       }
     }
+  }
+  for (const g of glowSources(level)) {
+    if (!inBounds(level, g.cx, g.cz)) continue;
+    out.push({ ...g, ceil: g.y, state: LIGHT.ON, group: 0, object: true });
   }
   return out;
 }
@@ -198,7 +206,7 @@ export function createLightField(level, theme, lights = collectLights(level)) {
       const wrap = ((nx * dx + ny * dy + nz * dz) / d) * 0.7 + 0.3;
       if (wrap <= 0) continue;
       const win = 1 - d2 / R2;
-      const c = (wrap * intensity * win * win) / (1 + d2 * k);
+      const c = (wrap * intensity * (l.power ?? 1) * win * win) / (1 + d2 * k);
       if (c < 0.002 || !lineOfSight(level, sx, sz, l.x, l.z, heights, y, l.y)) continue;
       if (l.state === LIGHT.FLICKER) {
         out[3 + l.group] += c;

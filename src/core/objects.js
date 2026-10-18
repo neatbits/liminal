@@ -10,10 +10,19 @@ import { floorAt } from './heights.js';
 /**
  * Katalogen. size = [bredde, høyde, dybde] i meter (modellens utstrekning; selve filen
  * sentreres av world/objects.js). file = models/<file>.glb. surface = høyden på en flate
- * andre gjenstander kan stå på. Alle modellene er fra Poly Haven (CC0).
+ * andre gjenstander kan stå på. screen = området i teksturen [u0, v0, u1, v1] der en skjerm
+ * viser sne-støy, glow = hvor sterkt skjermen lyser opp rundt seg (andel av et taklys).
+ * Alle modellene er fra Poly Haven (CC0).
  */
 export const OBJECTS = {
-  tv: { label: 'CRT TV', file: 'television_crt', size: [0.4, 0.41, 0.35], credit: 'Television 02 – Poly Haven (CC0)' },
+  tv: {
+    label: 'CRT TV',
+    file: 'television_crt',
+    size: [0.4, 0.41, 0.35],
+    screen: [0.691, 0.011, 0.994, 0.235],
+    glow: 0.16,
+    credit: 'Television 02 – Poly Haven (CC0)',
+  },
   boombox: { label: 'Boombox', file: 'classic_boombox', size: [0.724, 0.47, 0.186], credit: 'Boombox – Poly Haven (CC0)' },
   laptop: { label: 'Laptop', file: 'classic_laptop', size: [0.652, 0.543, 0.486], credit: 'Classic Laptop – Poly Haven (CC0)' },
   desk: { label: 'Office desk', file: 'office_desk', size: [2, 0.788, 0.947], surface: 0.788, credit: 'Metal Office Desk – Poly Haven (CC0)' },
@@ -190,6 +199,22 @@ export function objectColliders(level, cx, cz) {
     const p = objectPose(level, o);
     const box = objectBox(p);
     if (overlaps(box, cell, 0)) out.push({ box, bottom: p.y, top: p.y + p.h });
+  }
+  return out;
+}
+
+/** Lyskilder fra skjermer (glow): punktet rett foran skjermen, { x, y, z, power, cx, cz }. */
+export function glowSources(level) {
+  const out = [];
+  for (const o of list(level)) {
+    const def = OBJECTS[o.id];
+    if (!def?.glow) continue;
+    const p = objectPose(level, o);
+    const [fx, fz] = FACING[p.rot];
+    const reach = (fx ? p.w : p.d) / 2 + 0.15;
+    const x = p.x + fx * reach;
+    const z = p.z + fz * reach;
+    out.push({ x, y: p.y + p.h * 0.62, z, power: def.glow, cx: Math.floor(x), cz: Math.floor(z) });
   }
   return out;
 }

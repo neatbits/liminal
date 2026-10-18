@@ -14,6 +14,7 @@ function about() {
       h('p', {
         text: 'All textures, lights and sounds are generated procedurally in the browser. Rooms are stored locally on your device and can be shared as a link.',
       }),
+      h('p', {}, h('a', { href: '../about/', target: '_blank', rel: 'noopener', text: 'Privacy, credits and licences →' })),
     ),
     actions: [{ label: 'Close', primary: true }],
   });

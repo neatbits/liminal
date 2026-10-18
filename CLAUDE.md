@@ -5,8 +5,10 @@ ser dem synkronisert i en 3D-forhåndsvisning, og kan gå i rommet (også i full
 Rom kan lagres lokalt, eksporteres som JSON og deles som lenke (`#room=...`; gamle
 `#rom=`-lenker og formatnavnet `liminal-rom` leses fortsatt).
 
-To sider (Vite multi-page): forsiden `index.html` (`src/landing.js`, eksempelkort og
-reklameplass `#ad-slot`) og simulatoren `app/index.html` (`src/main.js`). Gamle lenker til
+Tre sider (Vite multi-page): forsiden `index.html` (`src/landing.js`, eksempelkort og
+reklameplass `#ad-slot`), simulatoren `app/index.html` (`src/main.js`) og
+`about/index.html` (`src/about.js`, personvern og kreditering). Forhåndsbildet for lenker er
+`public/og-image.jpg` (lag nytt med fotomodus, `view3d/photo.js`, i 1200 × 630). Gamle lenker til
 roten med `#room=`/`#rom=` sendes videre til `app/`; `app/#example=<id>` åpner et eksempel.
 
 ## Kommandoer
@@ -36,11 +38,18 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
    delen av `src/world` skal ha tester i `test/`. Kjør `npm test` før du sier deg ferdig.
 4. **Ren logikk holdes fri for DOM og three.js** (`src/core`, `src/gen`,
    `src/world/lighting.js`, `src/world/collision.js`, `src/world/floaters.js`,
-   `src/world/ball-layout.js`, `src/view3d/flicker.js`) slik at den
+   `src/world/ball-layout.js`, `src/world/monster-ai.js`, `src/view3d/flicker.js`,
+   `src/view3d/events.js`) slik at den
    kan testes i Node.
 5. Brukergrensesnittet er på **engelsk** (all tekst brukeren ser: knapper, menyer,
    dialoger, feilmeldinger, temanavn og eksempler). Kode, identifikatorer og kommentarer
    kan være på norsk eller engelsk, men vær konsekvent innen en fil.
+6. **Nye gjenstander møbleres inn i romtypene.** Når en ny modell legges i katalogen
+   (`OBJECTS` i `core/objects.js`), skal den også legges inn i `PLANS` i `gen/furnish.js`
+   for de temaene der den passer naturlig (f.eks. kontorstol på kontoret, vannkjøler på
+   kontor/kjøpesenter, benk i kjøpesenteret), med en tetthet som passer stemningen –
+   glissent i de tomme rommene. Passer den ingen steder, holdes den utenfor `PLANS`.
+   Oppdater testene i `test/furnish.test.js` om nødvendig.
 
 ## Arkitektur
 
@@ -86,6 +95,16 @@ src/
   stedet – lag en ny liste (angre sammenligner med `===`, og banene bufres per objekt).
   `slidePath` gir den glattede banen som både 3D (`world/slides.js`), kollisjon, 2D og
   skliingen (`view3d/rider.js`) bruker.
+- **Utforsking** (`view3d/explore.js`): VHS-kassetter (`gen/tapes.js`, `view3d/tapes.js`),
+  strømbrudd (`view3d/events.js`, demper via `world.setPower`) og uendelige nivåer: en dør
+  til ingensteds i gåmodus kaller `walk.onExit` → `gen/endless.js` lager neste nivå, som
+  vises med `viewer.setLevel(level, { explorer: true })`; rommet fra editoren (`home`) settes
+  tilbake når man går ut. `generateLevel` legger inn utganger (`gen/exits.js`), også i
+  ytterkanten – kanten er da vegg eller en lukket dør til ingensteds – og gjenstander etter
+  temaet (`gen/furnish.js`, `PLANS`). Begge har eget frø, så romoppsettet er uendret.
+- **Scary mode** (`settings.scary`): `view3d/scary.js` styrer monsteret (`world/monster-ai.js`,
+  ren logikk: avstandskart over rutenettet, lukkede dører stenger; `view3d/monster.js` tegner
+  det) og lydene (`audio/scary.js`). Det jakter bare når strømmen er borte (`Blackout`).
 - **Gåmodus** jobber på en kopi av rommet (`cloneLevel` i `WalkMode.setWorld`), så dører
   man åpner med E ikke endrer rommet i editoren. Dører med rom på begge sider bygges som
   egne objekter som dreies om hengslet (`world/swing-doors.js`); lyset er bakt i

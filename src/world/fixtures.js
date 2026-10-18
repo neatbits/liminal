@@ -48,9 +48,9 @@ export function buildFixtures(lights, theme) {
     return material;
   };
 
-  add(
+  const onMaterial = add(
     lights.filter((l) => l.state === LIGHT.ON),
-    glow,
+    glow.clone(),
   );
   add(
     lights.filter((l) => l.state === LIGHT.BROKEN),
@@ -70,9 +70,11 @@ export function buildFixtures(lights, theme) {
 
   return {
     group,
-    update(values) {
+    /** values: blinkegruppene (0..1), power: strømmen (0..1, under strømbrudd). */
+    update(values, power = 1) {
+      onMaterial.color.copy(glow).multiplyScalar(power);
       for (let g = 0; g < FLICKER_GROUPS; g++) {
-        flickerMaterials[g].color.copy(glow).multiplyScalar(0.04 + 0.96 * values[g]);
+        flickerMaterials[g].color.copy(glow).multiplyScalar((0.04 + 0.96 * values[g]) * power);
       }
     },
     dispose() {

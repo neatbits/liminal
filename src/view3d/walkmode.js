@@ -2,7 +2,7 @@
 // Gåmodus jobber på en kopi av rommet, så dører man åpner ikke endrer selve rommet.
 import { resolveSpawn } from '../core/spawn.js';
 import { LIGHT, cloneLevel } from '../core/level.js';
-import { DOOR, doorInReach, toggleDoor } from '../core/doors.js';
+import { DOOR, doorInfo, doorInReach, toggleDoor } from '../core/doors.js';
 import { isTyping } from '../ui/dom.js';
 import { groundAt } from '../core/heights.js';
 import { slideEntry } from '../core/slides.js';
@@ -10,6 +10,7 @@ import { Walker } from './walker.js';
 import { Rider } from './rider.js';
 import { WalkInput } from './input.js';
 import { WaterPlay } from './water-play.js';
+import { glowSources } from '../core/objects.js';
 
 export class WalkMode {
   constructor({ canvas, hud, audio }) {
@@ -26,6 +27,7 @@ export class WalkMode {
     this.sound = true;
     this._statsIn = 0;
     this.doors = null;
+    this.power = 1; // strømmen (0..1): settes under strømbrudd (view3d/explore.js)
     this.play = new WaterPlay();
     window.addEventListener('keydown', (e) => {
       if (this.active && e.code === 'KeyE' && !e.repeat && !isTyping(e)) this.useDoor();
@@ -46,6 +48,7 @@ export class WalkMode {
     this.level = cloneLevel(level);
     this.doors = doors;
     this.play.setWorld(this.level, extras.objects, extras.balls);
+    this.screens = glowSources(this.level);
     this.theme = theme;
     this.field = field;
     if (this.active) {
@@ -107,11 +110,18 @@ export class WalkMode {
     if (on && this.active) this.audio.start(this.theme);
   }
 
-  /** E: åpner eller lukker døren man står foran. */
+  /** En dør til ingensteds (med dørblad) – i gåmodus fører den videre (onExit). */
+  isExit(x, z) {
+    const d = doorInfo(this.level, x, z);
+    return !!d?.oneSided && d.state !== DOOR.NONE;
+  }
+
+  /** E: åpner eller lukker døren man står foran – eller går gjennom en dør til ingensteds. */
   useDoor() {
     const w = this.walker;
-    const door = doorInReach(this.level, w.x, w.z, w.yaw);
+    const door = doorInReach(this.level, w.x, w.z, w.yaw, 1.8, { exits: true });
     if (!door || this.rider.active) return;
+    if (door.info.oneSided) return this.onExit?.(door);
     const state = toggleDoor(this.level, door.i, w.x, w.z, 0.28);
     if (state === null) return;
     this.doors?.set(door.i, state);
@@ -120,8 +130,9 @@ export class WalkMode {
 
   _prompt() {
     const w = this.walker;
-    const door = this.rider.active ? null : doorInReach(this.level, w.x, w.z, w.yaw);
-    this.hud.setPrompt(door ? `E – ${door.info.state === DOOR.CLOSED ? 'open' : 'close'} the door` : null);
+    const door = this.rider.active ? null : doorInReach(this.level, w.x, w.z, w.yaw, 1.8, { exits: true });
+    const verb = door?.info.oneSided ? 'go through' : door?.info.state === DOOR.CLOSED ? 'open' : 'close';
+    this.hud.setPrompt(door ? `E – ${verb} the door` : null);
   }
 
   /** Går man framover inn i toppen av en sklie, tar sklien over. */
@@ -146,10 +157,21 @@ export class WalkMode {
     if (this.sound) this.audio.splash(landed.speed);
   }
 
+  /** Hvor mye TV-sus man hører her (0..1): nærmeste skjerm. */
+  _staticLevel() {
+    let best = 0;
+    for (const s of this.screens ?? []) {
+      const d2 = (s.x - this.walker.x) ** 2 + (s.z - this.walker.z) ** 2;
+      best = Math.max(best, 1 / (1 + d2 * 0.7));
+    }
+    return best;
+  }
+
   /** Hvor mye lysrørsurr man hører her (0..1), vektet med blinkegruppenes tilstand. */
   _humLevel(flicker) {
     let sum = 0;
     for (const l of this.field.near(this.walker.x, this.walker.z, 6)) {
+      if (l.object) continue; // skjermer surrer ikke som lysrør
       const d2 = (l.x - this.walker.x) ** 2 + (l.z - this.walker.z) ** 2;
       const w = l.state === LIGHT.FLICKER ? flicker[l.group] : 1;
       sum += w / (1 + d2 * 0.3);
@@ -177,7 +199,8 @@ export class WalkMode {
           .map((l) => Math.hypot(l.x - this.walker.x, l.z - this.walker.z));
         if (near.length) this.audio.flickerBuzz(Math.min(...near));
       }
-      this.audio.update(dt, this._humLevel(flickerValues));
+      this.audio.update(dt, this._humLevel(flickerValues) * this.power);
+      this.audio.static(this._staticLevel());
     }
 
     this._statsIn -= dt;

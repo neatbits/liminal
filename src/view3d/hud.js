@@ -10,7 +10,7 @@ function el(tag, cls, html = '') {
 }
 
 export class Hud {
-  /** @param actions { exit(), vhs(), sound() } */
+  /** @param actions { exit(), vhs(), sound(), photo(), scary() } */
   constructor(root, actions) {
     this.root = el('div', 'hud');
     this.walkbar = el(
@@ -18,7 +18,10 @@ export class Hud {
       'hud-walkbar',
       `<span class="hud-badge">Walking</span>
        <span class="hud-stats"></span>
+       <span class="hud-extra"></span>
+       <button type="button" data-act="photo" title="Take a photo (P)">📷 Photo</button>
        <button type="button" data-act="vhs" title="VHS filter (V)">VHS</button>
+       <button type="button" data-act="scary" title="Scary mode: darker rooms, more blackouts – and something in the dark (X)">Scary</button>
        <button type="button" data-act="sound" title="Sound on/off (M)">Sound</button>
        <button type="button" data-act="exit" title="Back to overview (Esc)">Overview</button>`,
     );
@@ -35,6 +38,13 @@ export class Hud {
     this.root.append(this.prompt);
     this.splash = el('div', 'hud-splash');
     this.root.prepend(this.splash);
+    this.shot = el('div', 'hud-shot');
+    this.root.prepend(this.shot);
+    // Overgang til et nytt nivå: svart, og så en tittel («LEVEL 3», temaets navn).
+    this.black = el('div', 'hud-black');
+    this.titleCard = el('div', 'hud-title', '<b></b><span></span>');
+    this.glitchEl = el('div', 'hud-glitch');
+    this.root.append(this.black, this.titleCard, this.glitchEl);
     this.walkbar.addEventListener('click', (e) => {
       const act = e.target.closest('button')?.dataset.act;
       if (act && actions[act]) actions[act]();
@@ -69,6 +79,39 @@ export class Hud {
     this.splash.classList.add('go');
   }
 
+  /** Nivå og kassetter i gålinjen, f.eks. «LEVEL 2 · 📼 1/4» (tom tekst skjuler den). */
+  setExtra(text) {
+    if (this._extra === text) return;
+    this._extra = text;
+    this.walkbar.querySelector('.hud-extra').textContent = text;
+  }
+
+  /** Bildet rives opp i videostøy (når monsteret tar deg). */
+  glitch() {
+    this.glitchEl.classList.remove('go');
+    void this.glitchEl.offsetWidth;
+    this.glitchEl.classList.add('go');
+  }
+
+  fade(on) {
+    this.black.classList.toggle('on', on);
+  }
+
+  title(main, sub) {
+    this.titleCard.querySelector('b').textContent = main;
+    this.titleCard.querySelector('span').textContent = sub;
+    this.titleCard.classList.remove('go');
+    void this.titleCard.offsetWidth;
+    this.titleCard.classList.add('go');
+  }
+
+  /** Hvitt blink når man tar et bilde. */
+  photoFlash() {
+    this.shot.classList.remove('go');
+    void this.shot.offsetWidth;
+    this.shot.classList.add('go');
+  }
+
   setLocked(locked, walking) {
     this.hint.hidden = !walking || locked;
     this.hint.textContent = this._touch
@@ -80,7 +123,10 @@ export class Hud {
     this.walkbar.querySelector('.hud-stats').textContent = `${Math.round(meters)} m walked · ${Math.round(explored * 100)} % explored`;
   }
 
-  setToggles({ vhs, sound }) {
+  setToggles({ vhs, sound, scary, scaryMild }) {
+    const s = this.walkbar.querySelector('[data-act="scary"]');
+    s.classList.toggle('on', !!scary);
+    s.textContent = scary && scaryMild ? 'Scary · mild' : 'Scary';
     this.walkbar.querySelector('[data-act="vhs"]').classList.toggle('on', vhs);
     this.walkbar.querySelector('[data-act="sound"]').classList.toggle('on', sound);
   }

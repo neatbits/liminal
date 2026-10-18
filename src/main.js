@@ -5,6 +5,7 @@ import './styles/layout.css';
 import './styles/sidebar.css';
 import './styles/panes.css';
 import './styles/hud.css';
+import './styles/hud-fx.css';
 import './styles/overlays.css';
 import { decodeLevel } from './core/serialize.js';
 import { loadDraft } from './core/storage.js';

@@ -4,14 +4,18 @@ import { THEME_IDS } from '../src/core/themes.js';
 import { isWalkableCell } from '../src/core/spawn.js';
 import { generateLevel, levelFromTemplate, PRESETS, TEMPLATES } from '../src/gen/index.js';
 import { labelRegions } from '../src/gen/util.js';
+import { DOOR, doorInfo } from '../src/core/doors.js';
 
+/** Kanten er vegg – eller en lukket utgang (dør til ingensteds). */
 function borderIsWall(level) {
-  for (let x = 0; x < level.w; x++) {
-    if (level.tiles[x] !== TILE.WALL || level.tiles[(level.h - 1) * level.w + x] !== TILE.WALL) return false;
-  }
-  for (let z = 0; z < level.h; z++) {
-    if (level.tiles[z * level.w] !== TILE.WALL || level.tiles[z * level.w + level.w - 1] !== TILE.WALL) return false;
-  }
+  const closed = (x, z) => {
+    const t = level.tiles[z * level.w + x];
+    if (t === TILE.WALL) return true;
+    const d = doorInfo(level, x, z);
+    return t === TILE.DOOR && d?.oneSided && d.state === DOOR.CLOSED;
+  };
+  for (let x = 0; x < level.w; x++) if (!closed(x, 0) || !closed(x, level.h - 1)) return false;
+  for (let z = 0; z < level.h; z++) if (!closed(0, z) || !closed(level.w - 1, z)) return false;
   return true;
 }
 
@@ -50,6 +54,19 @@ describe('generatorer', () => {
       const open = level.tiles.filter((v) => v !== TILE.WALL).length;
       if (t.id === 'empty') expect(open).toBe(0);
       else expect(open).toBeGreaterThan(50);
+    }
+  });
+
+  it('genererte rom får utganger (dører til ingensteds) et stykke fra startpunktet', () => {
+    for (const theme of THEME_IDS) {
+      const level = generateLevel({ theme, w: 40, h: 36, seed: 3 });
+      const exits = [];
+      for (let i = 0; i < level.tiles.length; i++) {
+        const d = doorInfo(level, i % level.w, (i / level.w) | 0);
+        if (d?.oneSided && d.state === DOOR.CLOSED) exits.push(d);
+      }
+      expect(exits.length, theme).toBeGreaterThan(0);
+      for (const d of exits) expect(Math.hypot(d.x + 0.5 - level.spawn.x, d.z + 0.5 - level.spawn.z)).toBeGreaterThan(2);
     }
   });
 });

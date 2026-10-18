@@ -7,8 +7,8 @@ export default defineConfig({
   // three.js alene er ~600 kB minifisert; det er forventet.
   build: {
     chunkSizeWarningLimit: 900,
-    // To sider: forsiden (index.html) og simulatoren (app/index.html).
-    rollupOptions: { input: { main: 'index.html', app: 'app/index.html' } },
+    // Tre sider: forsiden (index.html), simulatoren (app/) og About & credits (about/).
+    rollupOptions: { input: { main: 'index.html', app: 'app/index.html', about: 'about/index.html' } },
   },
   test: {
     environment: 'node',

@@ -5,6 +5,8 @@ import { mulberry32 } from '../core/rng.js';
 import { autoSpawn, yawFromDir } from '../core/spawn.js';
 import { getTheme } from '../core/themes.js';
 import { fillInterior } from './util.js';
+import { addExits } from './exits.js';
+import { furnish } from './furnish.js';
 import * as styles from './styles.js';
 import { basement } from './basement.js';
 import { playroom } from './playroom.js';
@@ -21,11 +23,18 @@ const BY_THEME = {
   mall,
 };
 
-/** Tilfeldig rom i stilen til temaet. Samme frø gir samme rom. */
+/**
+ * Tilfeldig rom i stilen til temaet. Samme frø gir samme rom. Rommet får noen utganger
+ * (dører til ingensteds i ytterveggen) – i gåmodus fører de videre til et nytt nivå – og
+ * gjenstander som passer til temaet (gen/furnish.js).
+ */
 export function generateLevel({ theme = 'backrooms', w = 48, h = 48, seed = 1, name } = {}) {
   const level = createLevel({ theme, w, h, name: name ?? getTheme(theme).label });
   (BY_THEME[level.theme] ?? styles.backrooms)(level, mulberry32(seed));
   level.spawn = autoSpawn(level);
+  // Eget frø, så rommene ellers blir som før.
+  addExits(level, mulberry32(seed ^ 0x5eed), 3, level.spawn);
+  furnish(level, mulberry32(seed ^ 0xf00d));
   return level;
 }
 
