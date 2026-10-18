@@ -10,6 +10,7 @@ import { Walker } from './walker.js';
 import { Rider } from './rider.js';
 import { WalkInput } from './input.js';
 import { WaterPlay } from './water-play.js';
+import { Drift } from './drift.js';
 import { glowSources } from '../core/objects.js';
 
 export class WalkMode {
@@ -29,6 +30,7 @@ export class WalkMode {
     this.doors = null;
     this.power = 1; // strømmen (0..1): settes under strømbrudd (view3d/explore.js)
     this.play = new WaterPlay();
+    this.drift = new Drift(this); // drømmegange (G)
     window.addEventListener('keydown', (e) => {
       if (this.active && e.code === 'KeyE' && !e.repeat && !isTyping(e)) this.useDoor();
     });
@@ -49,6 +51,7 @@ export class WalkMode {
     this.doors = doors;
     this.play.setWorld(this.level, extras.objects, extras.balls);
     this.screens = glowSources(this.level);
+    this.drift.reset();
     this.theme = theme;
     this.field = field;
     if (this.active) {
@@ -86,6 +89,7 @@ export class WalkMode {
     this.audio.stop();
     this.hud.setWalking(false);
     this.play.reset();
+    this.drift.set(false);
   }
 
   lock() {
@@ -184,7 +188,7 @@ export class WalkMode {
     if (this.rider.active) {
       this._ride(dt, camera);
     } else {
-      const surface = this.walker.update(dt, this.input, this.level, this.theme);
+      const surface = this.walker.update(dt, this.drift.input(dt) ?? this.input, this.level, this.theme);
       if (surface && this.sound) this.audio.step(surface);
       this.walker.applyToCamera(camera);
       this._maybeSlide();

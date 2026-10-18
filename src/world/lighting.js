@@ -5,6 +5,7 @@ import { TILE, LIGHT, canHaveLight, inBounds } from '../core/level.js';
 import { ceilingAt, floorAt, deckAt, SLAB } from '../core/heights.js';
 import { closedDoorFaces } from '../core/doors.js';
 import { glowSources } from '../core/objects.js';
+import { windows, skyOf } from '../core/windows.js';
 import { hexToLinear } from './color.js';
 
 export const FLICKER_GROUPS = 4;
@@ -18,8 +19,9 @@ export function flickerGroup(x, z) {
 }
 
 /**
- * Alle armaturer i rommet: { cx, cz, x, z, y, ceil, state, group }, pluss svake lyskilder fra
- * skjermer (object: true, power < 1) – de har ingen armatur og surrer ikke.
+ * Alle armaturer i rommet: { cx, cz, x, z, y, ceil, state, group }, pluss lyskilder uten
+ * armatur (object: true – de surrer ikke): svakt lys fra skjermer og dagslys fra vinduer, med
+ * egen farge (rgb, lineær) og styrke (power) i forhold til et taklys.
  */
 export function collectLights(level) {
   const out = [];
@@ -38,6 +40,15 @@ export function collectLights(level) {
   for (const g of glowSources(level)) {
     if (!inBounds(level, g.cx, g.cz)) continue;
     out.push({ ...g, ceil: g.y, state: LIGHT.ON, group: 0, object: true });
+  }
+  const sky = skyOf(level);
+  const rgb = hexToLinear(sky.light);
+  for (const win of windows(level)) {
+    const [nx, nz] = win.n;
+    const x = win.x + 0.5 + nx * 0.9;
+    const z = win.z + 0.5 + nz * 0.9;
+    const y = (win.sill + win.head) / 2;
+    out.push({ cx: Math.floor(x), cz: Math.floor(z), x, z, y, ceil: y, state: LIGHT.ON, group: 0, object: true, power: sky.power, rgb });
   }
   return out;
 }
@@ -211,9 +222,10 @@ export function createLightField(level, theme, lights = collectLights(level)) {
       if (l.state === LIGHT.FLICKER) {
         out[3 + l.group] += c;
       } else {
-        out[0] += c * color[0];
-        out[1] += c * color[1];
-        out[2] += c * color[2];
+        const col = l.rgb ?? color;
+        out[0] += c * col[0];
+        out[1] += c * col[1];
+        out[2] += c * col[2];
       }
     }
     cache.set(key, out);

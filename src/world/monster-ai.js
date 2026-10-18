@@ -4,8 +4,10 @@
 // («no jumpscares») tar det en aldri: det trekker seg unna når det kommer for nær. Ren logikk.
 import { TILE, getTile } from '../core/level.js';
 import { groundAt } from '../core/heights.js';
-import { DOOR, doorInfo } from '../core/doors.js';
 import { lineOfSight } from './lighting.js';
+import { NEIGHBOURS, distanceMap, canStep } from './paths.js';
+
+export { passable, distanceMap } from './paths.js';
 
 export const MONSTER = {
   SPEED: 2.0, // m/s i mørket – raskere enn å gå (1,55), saktere enn å løpe (3,1)
@@ -17,56 +19,6 @@ export const MONSTER = {
 };
 
 const between = (rand, [a, b]) => a + rand() * (b - a);
-const NEIGHBOURS = [
-  [1, 0],
-  [-1, 0],
-  [0, 1],
-  [0, -1],
-  [1, 1],
-  [1, -1],
-  [-1, 1],
-  [-1, -1],
-];
-
-/** Kan monsteret gå gjennom ruten? Ikke vegg, søyle eller lukket dør. */
-export function passable(level, x, z) {
-  const t = getTile(level, x, z);
-  if (t === TILE.WALL || t === TILE.PILLAR) return false;
-  if (t === TILE.DOOR) return doorInfo(level, x, z)?.state !== DOOR.CLOSED;
-  return true;
-}
-
-/** Veilengde (antall steg, diagonalt teller som 1,4) fra (x, z) til alle ruter: Float32Array. */
-export function distanceMap(level, x, z) {
-  const { w, h } = level;
-  const dist = new Float32Array(w * h).fill(Infinity);
-  if (!passable(level, x, z)) return dist;
-  // Enkel Dijkstra med en liten «bøttekø» (avstandene er 1 eller 1,4).
-  dist[z * w + x] = 0;
-  let frontier = [z * w + x];
-  while (frontier.length) {
-    const next = [];
-    for (const i of frontier) {
-      const cx = i % w;
-      const cz = (i / w) | 0;
-      for (const [dx, dz] of NEIGHBOURS) {
-        const nx = cx + dx;
-        const nz = cz + dz;
-        if (!passable(level, nx, nz)) continue;
-        if (dx && dz && (!passable(level, cx + dx, cz) || !passable(level, cx, cz + dz))) continue;
-        const d = dist[i] + (dx && dz ? 1.4 : 1);
-        const j = nz * w + nx;
-        if (d < dist[j] - 1e-6) {
-          dist[j] = d;
-          next.push(j);
-        }
-      }
-    }
-    frontier = next;
-  }
-  return dist;
-}
-
 export class MonsterAI {
   constructor(level, rand = Math.random) {
     this.level = level;
@@ -159,7 +111,7 @@ export class MonsterAI {
       let best = map[cz * w + cx];
       for (const [dx, dz] of NEIGHBOURS) {
         const j = (cz + dz) * w + cx + dx;
-        if (map[j] < best - 1e-6) {
+        if (map[j] < best - 1e-6 && canStep(this.level, cx, cz, dx, dz)) {
           best = map[j];
           tx = cx + dx + 0.5;
           tz = cz + dz + 0.5;

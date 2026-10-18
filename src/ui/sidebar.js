@@ -1,5 +1,6 @@
 // Venstre sidepanel: verktøy, rommets egenskaper, atmosfære, nøkkeltall og tegnehjelp.
 import { THEMES, THEME_IDS, getTheme } from '../core/themes.js';
+import { SKIES } from '../core/windows.js';
 import { MIN_SIZE, MAX_SIZE, HEIGHT_MIN, HEIGHT_MAX, DEPTH_MIN, DEPTH_MAX } from '../core/level.js';
 import { h } from './dom.js';
 import { section, range, unitInput } from './fields.js';
@@ -29,6 +30,8 @@ export class Sidebar {
     this.h = unitInput('m', { ...size, onchange: () => a.size(+this.w.firstChild.value, +this.h.firstChild.value) });
     this.height = unitInput('m', { min: HEIGHT_MIN, max: HEIGHT_MAX, step: 0.1, onchange: (e) => a.height(+e.target.value) });
     this.depth = unitInput('m', { min: DEPTH_MIN, max: DEPTH_MAX, step: 0.1, onchange: (e) => a.waterDepth(+e.target.value) });
+    // Tiden på døgnet for lyset i vinduene (verktøyet Window).
+    this.sky = h('select', { class: 'field', onchange: (e) => a.sky(e.target.value) }, Object.entries(SKIES).map(([id, s]) => h('option', { value: id, text: s.label })));
     const room = section(
       'Room',
       true,
@@ -43,6 +46,7 @@ export class Sidebar {
         h('div', {}, h('label', { text: 'Water depth' }), this.depth),
       ),
       h('p', { class: 'side-hint', text: 'Use the Ceiling and Depth tools to give parts of the room their own height or depth.' }),
+      h('div', { class: 'row' }, h('label', { text: 'Window light' }), this.sky),
     );
 
     this.bright = range('Brightness', 0.3, 2, 0.05, (v) => a.bright(v));
@@ -90,6 +94,7 @@ export class Sidebar {
     this.h.firstChild.value = level.h;
     this.height.firstChild.value = level.height;
     this.depth.firstChild.value = level.waterDepth;
+    this.sky.value = level.sky ?? 'day';
     this.bright.input.value = level.bright;
     this.bright.out.textContent = `${Math.round(level.bright * 100)} %`;
     this.fog.input.value = level.fog;

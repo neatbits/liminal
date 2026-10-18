@@ -19,6 +19,7 @@ export function sidebarActions(app) {
     size: (w, h) => app.setSize(w, h),
     height: (v) => app.setRoomProp('height', clampHeight(v)),
     waterDepth: (v) => app.setRoomProp('waterDepth', clampDepth(v)),
+    sky: (id) => app.setRoomProp('sky', id),
     bright: (v) => app.setProp('bright', v),
     fog: (v) => app.setFog(v),
     fillLights: () => app.fillLights(),
@@ -40,6 +41,10 @@ export function bindButtons(app) {
     if (view === 'walk') app.walk(false);
     else if (view === 'fullscreen') app.walk(true);
     else if (view === 'photo') app.viewer.photo();
+    else if (view === 'drift') {
+      app.walk(false);
+      app.viewer.walk.drift.set(true);
+    }
     else if (view) app.viewer.view(view);
   });
 }

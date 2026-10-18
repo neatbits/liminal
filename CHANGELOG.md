@@ -104,6 +104,15 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Drømmegange («Drift» i gålinjen, G, eller 🌙 Drift over 3D-visningen): kameraet glir sakte og
+  av seg selv gjennom rommet – lange etapper mot steder det ikke har vært, rundt vegger og utenom
+  bassenger, med myke svinger og lite hodebevegelse – og går etter noen etapper gjennom en dør til
+  ingensteds videre til neste nivå. Gålinjen tones ned; en gåtast tar over styringen.
+- Vinduer og dagslys: verktøyet «Window» (W) setter vinduer i vegger som vender mot et rom (hvit
+  karm, glass med sprosser og en himmel så lys at den «brenner ut»). Lyset kommer inn i rommet i
+  himmelens farge, og sola kaster lange solflekker med sprosseskygge på gulvet. Tiden på døgnet
+  velges under Room («Window light»: Day, Golden hour, Dusk, Night). Kontoret, bassengrommene og
+  lekerommet får vinduer i ytterveggen og en tilfeldig tid på døgnet; «The Office at 3 AM» er natt.
 - Scary mode («Scary» i gålinjen eller X; huskes): tettere tåke og mørkere bilde, strømbrudd
   oftere og lenger (12–18 s), og de skumle lydene kommer tettere. Et monster – en høy, kullsvart
   skikkelse med lysende øyne og et bredt smil – står i lyset langt borte og forsvinner når du
@@ -174,6 +183,10 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   ligger i `audio/effects.js`.
 - Dørverktøyet godtar også en åpning i en vegg (gulvrute med vegg i begge ender), viser
   grønt/rødt om døren får plass, og forklarer hvorfor når den ikke gjør det.
+- CRT-TV-et er dobbelt så stort, laptopen halvparten så stor (katalogen har nå `scale`).
+- Romformatet har feltet `sky` (tiden på døgnet), og vinduer er vegger med `meta` = 1.
+- Veifinning (avstandskart over rutenettet) ligger i `world/paths.js`, felles for monsteret og
+  drømmegangen; ingen av dem skjærer lenger hjørner forbi vegger eller vann.
 - Romformatet har den valgfrie listen `objects` ({ id, x, z, rot }); ukjente modeller hoppes
   over når et rom åpnes.
 - Romformatet har det valgfrie laget `decks` (dekkehøyde per rute); trapper kan lagres opp

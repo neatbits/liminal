@@ -11,6 +11,9 @@ import { createSwingDoors } from './swing-doors.js';
 import { buildSlides } from './slides.js';
 import { createBalls } from './balls.js';
 import { createObjects } from './objects.js';
+import { buildWindows } from './windows.js';
+import { skyOf } from '../core/windows.js';
+import { skyCanvas, sunCanvas } from '../textures/windows.js';
 import { SLIDE_COLORS } from '../core/slides.js';
 import { buildWaterData } from './water/geometry.js';
 import { createWater } from './water/water.js';
@@ -49,6 +52,17 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true } = {}) 
     ...buildRailings(level, field),
     ...buildSlides(level, field),
   };
+  const panes = buildWindows(level, field);
+  meshes.windowFrame = panes.frame;
+  meshes.windowGlass = panes.glass;
+  meshes.sunPatch = panes.sun;
+  const sky = skyOf(level);
+  const ownTextures = []; // teksturer laget for akkurat dette rommet (himmel, sol)
+  const own = (canvas) => {
+    const t = new THREE.CanvasTexture(canvas);
+    ownTextures.push(t);
+    return t;
+  };
   const shared = createSharedUniforms(field.color);
   const s = theme.surfaces;
 
@@ -74,6 +88,23 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true } = {}) 
         [`slideOut_${c}`, () => surfaceMaterial({ color: col.outer }, shared, anisotropy)],
       ]),
     ),
+    // Vinduer: hvit karm, himmel i glasset (så lys at den «brenner ut») og solflekker på gulvet.
+    windowFrame: () => surfaceMaterial({ color: '#ecebe6' }, shared, anisotropy),
+    windowGlass: () => {
+      const map = own(skyCanvas(sky.sky));
+      map.colorSpace = THREE.SRGBColorSpace;
+      return new THREE.MeshBasicMaterial({ map, color: new THREE.Color(1, 1, 1).multiplyScalar(sky.sun ? 1.6 : 0.7) });
+    },
+    sunPatch: () =>
+      new THREE.MeshBasicMaterial({
+        map: own(sunCanvas()),
+        color: new THREE.Color(sky.sun?.color ?? '#000').multiplyScalar(sky.sun?.strength ?? 0),
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+      }),
     tileFloor: () => surfaceMaterial(tiles.floor, shared, anisotropy),
     tileWall: () => {
       const wainscot = { ...tiles.wall, split: tiles.height, trim: { h: 0.03, color: tiles.trim } };
@@ -151,6 +182,7 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true } = {}) 
     dispose() {
       for (const g of geometries) g.dispose();
       for (const m of Object.values(materials)) m.dispose();
+      for (const t of ownTextures) t.dispose();
       fixtures.dispose();
       doors.dispose();
       water?.dispose();

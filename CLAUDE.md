@@ -38,7 +38,8 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
    delen av `src/world` skal ha tester i `test/`. Kjør `npm test` før du sier deg ferdig.
 4. **Ren logikk holdes fri for DOM og three.js** (`src/core`, `src/gen`,
    `src/world/lighting.js`, `src/world/collision.js`, `src/world/floaters.js`,
-   `src/world/ball-layout.js`, `src/world/monster-ai.js`, `src/view3d/flicker.js`,
+   `src/world/ball-layout.js`, `src/world/monster-ai.js`, `src/world/paths.js`,
+   `src/world/autopilot.js`, `src/world/windows.js`, `src/view3d/flicker.js`,
    `src/view3d/events.js`) slik at den
    kan testes i Node.
 5. Brukergrensesnittet er på **engelsk** (all tekst brukeren ser: knapper, menyer,
@@ -102,6 +103,11 @@ src/
   tilbake når man går ut. `generateLevel` legger inn utganger (`gen/exits.js`), også i
   ytterkanten – kanten er da vegg eller en lukket dør til ingensteds – og gjenstander etter
   temaet (`gen/furnish.js`, `PLANS`). Begge har eget frø, så romoppsettet er uendret.
+- **Vinduer** (`core/windows.js`): en veggrute med `meta & 1` er et vindu – fortsatt vegg for
+  kollisjon, lys og dører. `level.sky` (SKIES) gir himmel, dagslys (lyskilder med egen farge,
+  `rgb`) og solflekker (`sunPatch`). 3D i `world/windows.js`; surfaces.js lar åpningen stå åpen.
+- **Drømmegange** (`view3d/drift.js` + `world/autopilot.js`): autopiloten bruker
+  `world/paths.js` (som monsteret) og går gjennom dører til ingensteds via `walk.onExit`.
 - **Scary mode** (`settings.scary`): `view3d/scary.js` styrer monsteret (`world/monster-ai.js`,
   ren logikk: avstandskart over rutenettet, lukkede dører stenger; `view3d/monster.js` tegner
   det) og lydene (`audio/scary.js`). Det jakter bare når strømmen er borte (`Blackout`).

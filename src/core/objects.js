@@ -8,8 +8,8 @@ import { TILE, getTile, inBounds, WATER_SURFACE } from './level.js';
 import { floorAt } from './heights.js';
 
 /**
- * Katalogen. size = [bredde, høyde, dybde] i meter (modellens utstrekning; selve filen
- * sentreres av world/objects.js). file = models/<file>.glb. surface = høyden på en flate
+ * Katalogen. size = [bredde, høyde, dybde] i meter slik gjenstanden står i rommet (selve filen
+ * sentreres av world/objects.js), scale = skalering av modellfilen (size er allerede skalert). file = models/<file>.glb. surface = høyden på en flate
  * andre gjenstander kan stå på. screen = området i teksturen [u0, v0, u1, v1] der en skjerm
  * viser sne-støy, glow = hvor sterkt skjermen lyser opp rundt seg (andel av et taklys).
  * Alle modellene er fra Poly Haven (CC0).
@@ -18,13 +18,14 @@ export const OBJECTS = {
   tv: {
     label: 'CRT TV',
     file: 'television_crt',
-    size: [0.4, 0.41, 0.35],
+    size: [0.8, 0.822, 0.7], // modellen × 2: et stort, gammelt TV
+    scale: 2,
     screen: [0.691, 0.011, 0.994, 0.235],
     glow: 0.16,
     credit: 'Television 02 – Poly Haven (CC0)',
   },
   boombox: { label: 'Boombox', file: 'classic_boombox', size: [0.724, 0.47, 0.186], credit: 'Boombox – Poly Haven (CC0)' },
-  laptop: { label: 'Laptop', file: 'classic_laptop', size: [0.652, 0.543, 0.486], credit: 'Classic Laptop – Poly Haven (CC0)' },
+  laptop: { label: 'Laptop', file: 'classic_laptop', size: [0.326, 0.272, 0.243], scale: 0.5, credit: 'Classic Laptop – Poly Haven (CC0)' },
   desk: { label: 'Office desk', file: 'office_desk', size: [2, 0.788, 0.947], surface: 0.788, credit: 'Metal Office Desk – Poly Haven (CC0)' },
   duck: { label: 'Rubber duck', file: 'rubber_duck', size: [0.214, 0.286, 0.3], floats: true, credit: 'Rubber Duck Toy – Poly Haven (CC0)' },
 };

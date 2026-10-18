@@ -18,6 +18,7 @@ import { setDoor } from '../core/doors.js';
 import { placeStairs, removeStairs } from '../core/stairs.js';
 import { addSlide, removeSlidesAt } from '../core/slides.js';
 import { placeObject } from '../core/objects.js';
+import { paintWindows } from '../core/windows.js';
 
 // Soneverktøyene (kind 'zone') maler en høyde i meter, og dørverktøyet (kind 'door') setter
 // inn dører med en tilstand (DOOR); editoren gir dem `value` før bruk. Dørverktøyet virker
@@ -43,6 +44,7 @@ export const TOOLS = [
   { id: 'slide', label: 'Slide', key: 'L', kind: 'slide' },
   { id: 'deck', label: 'Deck', key: 'K', kind: 'zone', layer: 'deck' },
   { id: 'object', label: 'Object', key: 'J', kind: 'object' },
+  { id: 'window', label: 'Window', key: 'W', kind: 'window' },
 ];
 
 export const SHAPES = [
@@ -61,6 +63,7 @@ export function paintAt(level, tool, x, z, brush, erase) {
   if (tool.kind === 'zone') return paintZone(level, tool.layer, brushCells(x, z, brush), erase ? 0 : tool.value);
   if (tool.kind === 'door') return setDoor(level, x, z, tool.value, erase);
   if (tool.kind === 'object') return placeObject(level, x, z, tool.value, erase);
+  if (tool.kind === 'window') return paintWindows(level, brushCells(x, z, brush), !erase);
   if (tool.kind === 'light') {
     if (erase) return paintLights(level, brushCells(x, z, brush), LIGHT.NONE);
     return setLight(level, x, z, tool.value) ? 1 : 0;
@@ -80,6 +83,7 @@ export function applyRect(level, tool, rect, erase, spacing) {
   const cells = rectIndices(level, rect);
   if (tool.kind === 'tile') return fillTiles(level, cells, erase ? tool.erase : tool.value);
   if (tool.kind === 'zone') return fillZone(level, tool.layer, cells, erase ? 0 : tool.value);
+  if (tool.kind === 'window') return paintWindows(level, cells.map((i) => [i % level.w, (i / level.w) | 0]), !erase);
   if (tool.kind === 'light') {
     if (erase) return clearLights(level, cells);
     const region = cells.filter((i) => canHaveLight(level.tiles[i]));
@@ -92,6 +96,7 @@ export function applyRect(level, tool, rect, erase, spacing) {
 export function applyFill(level, tool, x, z, erase, spacing) {
   if (tool.kind === 'tile') return floodFillTile(level, x, z, erase ? tool.erase : tool.value);
   if (tool.kind === 'zone') return floodFillZone(level, tool.layer, x, z, erase ? 0 : tool.value);
+  if (tool.kind === 'window') return paintWindows(level, [[x, z]], !erase);
   if (tool.kind === 'light') {
     const region = openRegion(level, x, z);
     if (erase) return clearLights(level, region);

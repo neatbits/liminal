@@ -4,6 +4,7 @@ import { ceilingAt, depthAt, floorAt, stairSpan, deckAt } from '../core/heights.
 import { DOOR, doorInfo } from '../core/doors.js';
 import { slidesAt, slidePath } from '../core/slides.js';
 import { OBJECTS, objectsAt } from '../core/objects.js';
+import { windowInfo } from '../core/windows.js';
 import { SHAPES } from '../editor/tools.js';
 import { $ } from '../ui/dom.js';
 
@@ -23,7 +24,7 @@ export function hoverText(level, cell) {
   if (!cell || !level || !inBounds(level, cell[0], cell[1])) return '';
   const [x, z] = cell;
   const tile = level.tiles[z * level.w + x];
-  const parts = [`x ${x} m`, `y ${z} m`, NAMES[tile]];
+  const parts = [`x ${x} m`, `y ${z} m`, windowInfo(level, x, z) ? 'Window' : NAMES[tile]];
   const door = doorInfo(level, x, z);
   if (door?.state) parts.push(door.oneSided ? `${DOOR_NAMES[door.state]} door to nowhere` : `${DOOR_NAMES[door.state]} door`);
   if (tile === TILE.WATER) parts.push(`${m(depthAt(level, x, z))} deep`);

@@ -40,6 +40,7 @@ export class Walker {
     this.sensitivity = 1;
     this.visited = null;
     this.dip = 0; // hvor dypt hodet er dukket etter et plask (m), avtar raskt
+    this.bobScale = 1; // hodebevegelse (mindre under drømmegange)
   }
 
   reset(level, spawn) {
@@ -120,7 +121,7 @@ export class Walker {
 
   applyToCamera(camera) {
     const speed = Math.hypot(this.vx, this.vz);
-    const amp = 0.035 * Math.min(1.4, speed / WALK) * (isSwimming(this.floorY) ? 0.5 : 1);
+    const amp = 0.035 * Math.min(1.4, speed / WALK) * (isSwimming(this.floorY) ? 0.5 : 1) * this.bobScale;
     const phase = this.stepPhase * Math.PI;
     const bob = (Math.abs(Math.sin(phase)) - 0.5) * amp;
     const sway = Math.cos(phase) * amp * 0.4;

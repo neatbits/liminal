@@ -8,6 +8,7 @@ import { SIDES, addCaps } from './caps.js';
 import { buildSteps, surfaceHeight, stepBreaks } from './stairs.js';
 import { FINISH } from '../core/zones.js';
 import { openSpans, clipSpans, buildDeck } from './decks.js';
+import { windowInfo, FRAME } from '../core/windows.js';
 
 const UP = [0, 1, 0];
 const DOWN = [0, -1, 0];
@@ -155,6 +156,20 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
         if (isWall(nx, nz)) {
           const left = isWall(cx - s.ux, cz - s.uz) ? 0.8 : 1;
           const right = isWall(cx + s.ux, cz + s.uz) ? 0.8 : 1;
+          const win = windowInfo(level, nx, nz);
+          if (win && win.n[0] === -s.dx && win.n[1] === -s.dz) {
+            // Vindu: vegg under og over åpningen, og smale stykker på sidene av den (karmen).
+            const f = FRAME / 2;
+            const at = (t) => [L[0] + (R[0] - L[0]) * t, L[1] + (R[1] - L[1]) * t];
+            for (const sp of [...clipSpans(spans, -Infinity, win.sill), ...clipSpans(spans, win.head, Infinity)]) {
+              wallMesh.wall(L[0], L[1], R[0], R[1], s.n, uL, uR, sp.lo, sp.hi, [left, right], undefined, sp.base);
+            }
+            for (const [t0, t1] of [[0, f], [1 - f, 1]]) {
+              const [A, B] = [at(t0), at(t1)];
+              for (const sp of clipSpans(spans, win.sill, win.head)) wallMesh.wall(A[0], A[1], B[0], B[1], s.n, uL + t0, uL + t1, sp.lo, sp.hi, [1, 1], { bottom: false, top: false }, sp.base);
+            }
+            continue;
+          }
           for (const sp of spans) wallMesh.wall(L[0], L[1], R[0], R[1], s.n, uL, uR, sp.lo, sp.hi, [left, right], undefined, sp.base);
           continue;
         }

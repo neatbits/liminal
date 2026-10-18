@@ -7,6 +7,7 @@ import { getTheme } from '../core/themes.js';
 import { fillInterior } from './util.js';
 import { addExits } from './exits.js';
 import { furnish } from './furnish.js';
+import { addWindows } from './windows.js';
 import * as styles from './styles.js';
 import { basement } from './basement.js';
 import { playroom } from './playroom.js';
@@ -35,6 +36,7 @@ export function generateLevel({ theme = 'backrooms', w = 48, h = 48, seed = 1, n
   // Eget frø, så rommene ellers blir som før.
   addExits(level, mulberry32(seed ^ 0x5eed), 3, level.spawn);
   furnish(level, mulberry32(seed ^ 0xf00d));
+  addWindows(level, mulberry32(seed ^ 0x51de));
   return level;
 }
 
@@ -87,7 +89,8 @@ export const PRESETS = [
     id: 'office',
     name: 'The Office at 3 AM',
     hint: 'Meeting rooms, corridors and doors left ajar.',
-    make: () => generateLevel({ theme: 'office', w: 48, h: 40, seed: 5, name: 'The Office at 3 AM' }),
+    // Klokka er tre om natta: mørke vinduer.
+    make: () => Object.assign(generateLevel({ theme: 'office', w: 48, h: 40, seed: 5, name: 'The Office at 3 AM' }), { sky: 'night' }),
   },
   {
     id: 'hotel',

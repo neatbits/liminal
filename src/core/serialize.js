@@ -17,6 +17,7 @@ import {
 import { THEMES, DEFAULT_THEME } from './themes.js';
 import { SLIDE, SLIDE_COLORS, DEFAULT_SLIDE_COLOR } from './slides.js';
 import { objectsFromJSON } from './objects.js';
+import { SKIES } from './windows.js';
 
 export const FORMAT = 'liminal-room';
 const LEGACY_FORMATS = ['liminal-rom']; // første versjon brukte norsk formatnavn
@@ -105,6 +106,7 @@ export function levelToJSON(level) {
     waterDepth: level.waterDepth,
     fog: level.fog,
     bright: level.bright,
+    sky: level.sky ?? undefined,
     spawn: [round3(s.x), round3(s.z), round3(s.a)],
     rows,
     ...Object.fromEntries(LAYERS.map((layer) => [layer.key, layerToRows(level, layer)])),
@@ -137,6 +139,7 @@ export function levelFromJSON(data) {
   });
   level.fog = clamp(data.fog, 0, 3, 1);
   level.bright = clamp(data.bright, 0.2, 3, 1);
+  level.sky = SKIES[data.sky] ? data.sky : null;
   for (let z = 0; z < h; z++) {
     const row = String(data.rows[z]);
     if (row.length !== w) throw new Error(`Row ${z + 1} has the wrong length.`);

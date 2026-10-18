@@ -10,7 +10,7 @@ function el(tag, cls, html = '') {
 }
 
 export class Hud {
-  /** @param actions { exit(), vhs(), sound(), photo(), scary() } */
+  /** @param actions { exit(), vhs(), sound(), photo(), scary(), drift() } */
   constructor(root, actions) {
     this.root = el('div', 'hud');
     this.walkbar = el(
@@ -19,6 +19,7 @@ export class Hud {
       `<span class="hud-badge">Walking</span>
        <span class="hud-stats"></span>
        <span class="hud-extra"></span>
+       <button type="button" data-act="drift" title="Dream walk: drift slowly through the rooms on your own (G)">Drift</button>
        <button type="button" data-act="photo" title="Take a photo (P)">📷 Photo</button>
        <button type="button" data-act="vhs" title="VHS filter (V)">VHS</button>
        <button type="button" data-act="scary" title="Scary mode: darker rooms, more blackouts – and something in the dark (X)">Scary</button>
@@ -77,6 +78,14 @@ export class Hud {
     this.splash.classList.remove('go');
     void this.splash.offsetWidth; // start animasjonen på nytt
     this.splash.classList.add('go');
+  }
+
+  /** Drømmegange: gålinjen tones ned, og «Walking» blir «Drifting». */
+  setDrifting(on) {
+    this.root.classList.toggle('drifting', on);
+    this.walkbar.querySelector('[data-act="drift"]').classList.toggle('on', on);
+    this.walkbar.querySelector('.hud-badge').textContent = on ? 'Drifting' : 'Walking';
+    if (on) this.hint.hidden = true;
   }
 
   /** Nivå og kassetter i gålinjen, f.eks. «LEVEL 2 · 📼 1/4» (tom tekst skjuler den). */

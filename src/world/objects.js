@@ -203,10 +203,15 @@ export function createObjects(level, field, shared) {
     const parts = await loadModel(def.file);
     if (disposed) return;
     const pose = objectPose(level, o);
-    const matrix = new THREE.Matrix4().makeRotationY((-pose.rot * Math.PI) / 2).setPosition(pose.x, pose.y, pose.z);
+    const s = def.scale ?? 1;
+    const matrix = new THREE.Matrix4()
+      .makeRotationY((-pose.rot * Math.PI) / 2)
+      .scale(new THREE.Vector3(s, s, s))
+      .setPosition(pose.x, pose.y, pose.z);
     const item = new THREE.Group();
     item.position.set(pose.x, pose.y, pose.z);
     item.rotation.y = (-pose.rot * Math.PI) / 2;
+    item.scale.setScalar(s);
     for (const part of parts) {
       const geometry = bakeLight(part.geometry, matrix, field);
       owned.push(geometry);

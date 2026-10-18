@@ -9,6 +9,7 @@ import { canHoldDoor } from '../core/doors.js';
 import { drawStairs, drawStairsPreview } from './render-stairs.js';
 import { drawSlides } from './render-slides.js';
 import { drawObjects } from './render-objects.js';
+import { drawWindow } from './render-windows.js';
 
 export const RULER_TOP = 22;
 export const RULER_LEFT = 30;
@@ -104,6 +105,8 @@ function drawDetails(ctx, view, level, r) {
         drawDoor(ctx, view, level, x, z);
       } else if (t === TILE.STAIRS) {
         drawStairs(ctx, view, level, x, z);
+      } else if (t === TILE.WALL && level.meta[z * level.w + x]) {
+        drawWindow(ctx, view, level, x, z);
       }
       const l = level.lights[z * level.w + x];
       if (l !== LIGHT.NONE) drawLight(ctx, l, sx + s / 2, sy + s / 2, s);

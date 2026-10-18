@@ -75,6 +75,7 @@ export function createLevel({ name = 'Untitled', theme = DEFAULT_THEME, w = 48, 
     spawn: { x: w / 2, z: h / 2, a: 0 },
     slides: [], // vannsklier (core/slides.js) – byttes ut, endres aldri på stedet
     objects: [], // gjenstander (core/objects.js) – byttes ut, endres aldri på stedet
+    sky: null, // tiden på døgnet for lyset i vinduene (core/windows.js), null = dag
   };
   for (const key of LAYERS) level[key] = new Uint8Array(w * h);
   return level;
@@ -138,6 +139,7 @@ export function resizeLevel(level, w, h) {
   out.id = level.id;
   out.fog = level.fog;
   out.bright = level.bright;
+  out.sky = level.sky ?? null;
   const ox = Math.floor((w - level.w) / 2);
   const oz = Math.floor((h - level.h) / 2);
   for (let z = 0; z < level.h; z++) {

@@ -19,6 +19,7 @@ export const SWATCH = {
   stairs: 'repeating-linear-gradient(90deg, #efe4b8 0 3px, #7a5a30 3px 4px)',
   tiles: 'linear-gradient(90deg, transparent 47%, #8a8c8c 47% 53%, transparent 53%), linear-gradient(transparent 44%, #8a8c8c 44% 56%, transparent 56%), #e6e6e1',
   slide: 'radial-gradient(circle at 0 0, transparent 52%, #4a9dbb 53% 78%, transparent 79%), #cdeef7',
+  window: 'linear-gradient(90deg, #5a5d62 0 20%, #eef4f7 20% 48%, #5a5d62 48% 52%, #eef4f7 52% 80%, #5a5d62 80%)',
   object: 'linear-gradient(#efe4b8 0 30%, #3a3440 30% 80%, #f2c14e 80% 88%, #efe4b8 88%)',
   deck: 'repeating-linear-gradient(135deg, #2f6f8f 0 2px, transparent 2px 6px), linear-gradient(#efe4b8 0 55%, #8c8f94 55% 70%, #efe4b8 70%)',
 };
@@ -29,6 +30,8 @@ export const HINTS = {
   door: 'Click a wall cell between two rooms, or a 1-cell gap in a wall (green outline = a door fits). A wall with nothing behind gives a door to nowhere. Click a door again to flip it; right-click removes it but keeps the opening. While walking, press E to open and close doors.',
   stairs:
     'Drag from the bottom to the top. The stairs climb to a raised floor or a deck at the top end – or 0.6 m per cell up into a stairwell, as stairs to nowhere. Brush size sets the width; right-drag removes stairs.',
+  window:
+    "Paint along a wall that faces a room to put in windows – daylight comes in, and the sun throws bright patches on the floor. Choose the time of day under Room. Right-click removes windows.",
   object:
     'Click a floor cell to place the object – it turns its back to a wall next to it. Click it again to turn it a quarter turn; right-click removes it.',
   slide:

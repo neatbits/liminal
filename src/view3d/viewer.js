@@ -48,6 +48,7 @@ export class Viewer {
       sound: () => this.toggle('sound'),
       photo: () => this.photo(),
       scary: () => this.cycleScary(),
+      drift: () => this.walk.drift.toggle(),
     });
     this.walk = new WalkMode({ canvas: renderer.domElement, hud: this.hud, audio: this.audio });
     this.walk.sound = this.settings.sound;
@@ -211,6 +212,7 @@ export class Viewer {
     else if (e.code === 'KeyM') this.toggle('sound');
     else if (e.code === 'KeyP') this.photo();
     else if (e.code === 'KeyX') this.cycleScary();
+    else if (e.code === 'KeyG') this.walk.drift.toggle();
     else if (e.code === 'Escape' && !this.walk.locked && !document.fullscreenElement) this.exitWalk();
   }
 
