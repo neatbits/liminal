@@ -1,0 +1,25 @@
+{
+  "name": "liminal",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Liminal-simulator: tegn liminale rom i 2D, se dem i 3D og gå i dem.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "models": "node scripts/models.mjs",
+    "deploy": "node scripts/deploy.mjs"
+  },
+  "dependencies": {
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.5.1",
+    "ssh2-sftp-client": "^12.1.1",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}

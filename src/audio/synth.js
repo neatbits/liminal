@@ -1,0 +1,187 @@
+// Prosedyrell lyd: lager AudioBuffers for støy, romklang, fottrinn og små hendelser.
+
+function buffer(ctx, seconds, channels = 1) {
+  return ctx.createBuffer(channels, Math.max(1, Math.floor(ctx.sampleRate * seconds)), ctx.sampleRate);
+}
+
+function normalize(data, peak) {
+  let max = 0;
+  for (let i = 0; i < data.length; i++) max = Math.max(max, Math.abs(data[i]));
+  if (max > 0) for (let i = 0; i < data.length; i++) data[i] *= peak / max;
+}
+
+export function noiseBuffer(ctx, seconds, kind = 'white') {
+  const b = buffer(ctx, seconds);
+  const d = b.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < d.length; i++) {
+    const white = Math.random() * 2 - 1;
+    if (kind === 'brown') {
+      last = (last + 0.02 * white) / 1.02;
+      d[i] = last * 3.5;
+    } else {
+      d[i] = white;
+    }
+  }
+  return b;
+}
+
+/** Stereo impulsrespons: tidlige refleksjoner + eksponentielt hale. */
+export function impulseResponse(ctx, seconds, brightness = 0.5) {
+  const b = buffer(ctx, seconds, 2);
+  const sr = ctx.sampleRate;
+  for (let c = 0; c < 2; c++) {
+    const d = b.getChannelData(c);
+    let lp = 0;
+    const a = 0.08 + brightness * 0.6;
+    for (let i = 0; i < d.length; i++) {
+      const t = i / sr;
+      lp += a * (Math.random() * 2 - 1 - lp);
+      d[i] = lp * Math.exp((-t * 6.9) / seconds);
+    }
+    for (let k = 0; k < 6; k++) {
+      const at = Math.floor((0.008 + Math.random() * 0.06) * sr);
+      if (at < d.length) d[at] += (Math.random() < 0.5 ? -1 : 1) * (0.5 - k * 0.06);
+    }
+  }
+  return b;
+}
+
+function env(t, attack, tau) {
+  return t < attack ? t / attack : Math.exp(-(t - attack) / tau);
+}
+
+const STEP_SHAPES = {
+  carpet(t, n, s) {
+    s.lp += 0.04 * (n - s.lp);
+    return s.lp * env(t, 0.008, 0.03) * 2.2 + Math.sin(2 * Math.PI * 80 * t) * env(t, 0.006, 0.03) * 0.5;
+  },
+  // Myke sko eller bare føtter på (våte) fliser: et dumpt slag og et lavt «klask» – ingen
+  // skarpe klikk eller ringing, som fikk det til å høres ut som stiletthæler.
+  tile(t, n, s) {
+    s.lp += 0.08 * (n - s.lp);
+    s.lp2 += 0.02 * (n - s.lp2);
+    const slap = (s.lp - s.lp2) * env(t, 0.008, 0.02) * 3;
+    return slap + Math.sin(2 * Math.PI * 105 * t) * env(t, 0.006, 0.03) * 0.5;
+  },
+  concrete(t, n, s) {
+    s.lp += 0.09 * (n - s.lp);
+    s.lp2 += 0.03 * (n - s.lp2);
+    const grit = Math.random() < 0.006 ? (Math.random() - 0.5) * 0.4 * Math.exp(-t / 0.05) : 0;
+    return (s.lp - s.lp2) * env(t, 0.006, 0.022) * 2 + grit + Math.sin(2 * Math.PI * 90 * t) * env(t, 0.005, 0.025) * 0.45;
+  },
+  // Skumgummimatter: et mykt, dypt dunk uten skarpe kanter.
+  foam(t, n, s) {
+    s.lp += 0.035 * (n - s.lp);
+    return s.lp * env(t, 0.006, 0.03) * 3 + Math.sin(2 * Math.PI * 70 * t) * env(t, 0.004, 0.035) * 0.6;
+  },
+  // Plastballer som rasler: tette, korte klikk som dør ut.
+  balls(t, n, s) {
+    const click = Math.random() < 0.02 * Math.exp(-t / 0.12) ? n : 0;
+    s.lp += 0.5 * (click - s.lp);
+    s.lp2 += 0.08 * (s.lp - s.lp2);
+    return (s.lp - s.lp2) * 1.5;
+  },
+  water(t, n, s) {
+    const a = 0.05 + Math.min(1, t / 0.3) * 0.35;
+    s.lp += a * (n - s.lp);
+    let bubble = 0;
+    for (const b of s.bubbles) {
+      const bt = t - b.at;
+      if (bt > 0 && bt < 0.04) bubble += Math.sin(2 * Math.PI * (b.f + bt * 20000) * bt) * (1 - bt / 0.04) * 0.25;
+    }
+    return s.lp * env(t, 0.01, 0.12) * 2 + bubble;
+  },
+};
+
+/** Fire varianter av fottrinn for et underlag. */
+export function footstepBuffers(ctx, surface) {
+  const shape = STEP_SHAPES[surface] ?? STEP_SHAPES.carpet;
+  const seconds = surface === 'water' ? 0.45 : surface === 'balls' ? 0.35 : 0.2;
+  return Array.from({ length: 4 }, () => {
+    const b = buffer(ctx, seconds);
+    const d = b.getChannelData(0);
+    const state = {
+      lp: 0,
+      lp2: 0,
+      bubbles: Array.from({ length: 3 }, () => ({ at: 0.03 + Math.random() * 0.2, f: 400 + Math.random() * 500 })),
+    };
+    for (let i = 0; i < d.length; i++) d[i] = shape(i / ctx.sampleRate, Math.random() * 2 - 1, state);
+    normalize(d, 0.6);
+    return b;
+  });
+}
+
+/** Kort elektrisk knitring når et lysrør blinker. */
+export function buzzBuffer(ctx) {
+  const b = buffer(ctx, 0.12);
+  const d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / ctx.sampleRate;
+    const saw = ((t * 100) % 1) * 2 - 1;
+    d[i] = (saw * 0.6 + (Math.random() * 2 - 1) * 0.5) * env(t, 0.002, 0.03);
+  }
+  normalize(d, 0.5);
+  return b;
+}
+
+/** Vanndråpe: rask tonefall-sinus. */
+export function dripBuffer(ctx) {
+  const b = buffer(ctx, 0.15);
+  const d = b.getChannelData(0);
+  let phase = 0;
+  for (let i = 0; i < d.length; i++) {
+    const t = i / ctx.sampleRate;
+    phase += (2 * Math.PI * (1800 - t * 9000)) / ctx.sampleRate;
+    d[i] = Math.sin(phase) * env(t, 0.001, 0.025);
+  }
+  normalize(d, 0.4);
+  return b;
+}
+
+/** Fjernt dunk – noe tungt et sted i bygningen. */
+export function thumpBuffer(ctx) {
+  const b = buffer(ctx, 0.6);
+  const d = b.getChannelData(0);
+  let lp = 0;
+  for (let i = 0; i < d.length; i++) {
+    const t = i / ctx.sampleRate;
+    lp += 0.01 * (Math.random() * 2 - 1 - lp);
+    d[i] = (lp * 6 + Math.sin(2 * Math.PI * 45 * t) * 0.6) * env(t, 0.004, 0.12);
+  }
+  normalize(d, 0.6);
+  return b;
+}
+
+/** Plask: støyskvett som mørkner raskt, og et dypt «plopp» når man treffer vannet. */
+export function splashBuffer(ctx) {
+  const b = buffer(ctx, 1.2);
+  const d = b.getChannelData(0);
+  let lp = 0;
+  let phase = 0;
+  for (let i = 0; i < d.length; i++) {
+    const t = i / ctx.sampleRate;
+    const k = 0.5 * Math.exp(-t * 4) + 0.02; // filteret lukker seg: lyst sprut → mørkt skvulp
+    lp += k * (Math.random() * 2 - 1 - lp);
+    phase += (2 * Math.PI * (160 - t * 120)) / ctx.sampleRate;
+    d[i] = lp * 3 * env(t, 0.004, 0.35) + Math.sin(phase) * 0.5 * env(t, 0.002, 0.12);
+  }
+  normalize(d, 0.9);
+  return b;
+}
+
+/** Man lander i en ballbinge: et rasende skred av plastballer som roer seg. */
+export function ballsBuffer(ctx) {
+  const b = buffer(ctx, 1.4);
+  const d = b.getChannelData(0);
+  let hp = 0;
+  for (let i = 0; i < d.length; i++) {
+    const t = i / ctx.sampleRate;
+    const rate = 0.06 * Math.exp(-t / 0.35) + 0.002;
+    const click = Math.random() < rate ? Math.random() * 2 - 1 : 0;
+    hp += 0.3 * (click - hp);
+    d[i] = (click - hp) + Math.sin(2 * Math.PI * 90 * t) * 0.4 * env(t, 0.003, 0.08);
+  }
+  normalize(d, 0.8);
+  return b;
+}

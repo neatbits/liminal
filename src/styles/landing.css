@@ -1,0 +1,230 @@
+/* Forsiden (index.html). Egen, liten stil – deler bare fargene med simulatoren. */
+:root {
+  --l-bg: #f3efe2;
+  --l-ink: #2b2a27;
+  --l-muted: #6f6a5f;
+  --l-yellow: #d9c27a;
+  --l-carpet: #b9a35b;
+  --l-accent: #1f6f68;
+  --l-accent-hover: #185a54;
+  --l-card: #fbfaf5;
+  --l-border: #e1dccd;
+  --l-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body.landing {
+  margin: 0;
+  background: var(--l-bg);
+  color: var(--l-ink);
+  font: 16px/1.55 var(--l-font);
+  -webkit-font-smoothing: antialiased;
+}
+
+.landing a {
+  color: inherit;
+}
+
+.l-top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px clamp(16px, 4vw, 48px);
+  background: rgba(243, 239, 226, 0.92);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--l-border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #fff6d2 0 35%, #c9b56a 35%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.l-nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2.5vw, 24px);
+  font-size: 14px;
+}
+
+.l-nav a:not(.l-btn) {
+  text-decoration: none;
+  color: var(--l-muted);
+}
+
+.l-nav a:not(.l-btn):hover {
+  color: var(--l-ink);
+}
+
+.l-btn {
+  display: inline-block;
+  padding: 12px 22px;
+  border-radius: 8px;
+  background: var(--l-accent);
+  color: #fff !important;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.l-btn:hover {
+  background: var(--l-accent-hover);
+}
+
+.l-btn-small {
+  padding: 7px 14px;
+  font-size: 13px;
+}
+
+.l-btn-ghost {
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--l-ink) !important;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+}
+
+.l-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* Helten: gul tapet-vegg med lysrør i taket og et svakt VHS-skjær. */
+.l-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: clamp(24px, 5vw, 64px);
+  overflow: hidden;
+  padding: clamp(64px, 12vw, 140px) clamp(16px, 4vw, 48px) clamp(56px, 9vw, 110px);
+  background:
+    repeating-linear-gradient(90deg, rgba(120, 100, 40, 0.06) 0 2px, transparent 2px 26px),
+    radial-gradient(ellipse at 50% -10%, #fff7d0 0%, #e2cf86 45%, #b49f55 100%);
+}
+
+.l-hero::before {
+  /* Lysrørpaneler i «taket». */
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 18px;
+  background: repeating-linear-gradient(90deg, transparent 0 8%, #fffbe6 8% 22%, transparent 22% 34%);
+  box-shadow: 0 6px 40px rgba(255, 248, 210, 0.9);
+  opacity: 0.85;
+}
+
+.l-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.035) 0 1px, transparent 1px 3px);
+}
+
+.l-hero-text {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 520px;
+  max-width: 680px;
+}
+
+.l-kicker {
+  margin: 0 0 6px;
+  font: 22px/1 'VT323', ui-monospace, monospace;
+  letter-spacing: 0.08em;
+  color: #7c2f22;
+}
+
+.l-hero h1 {
+  margin: 0;
+  font: clamp(52px, 10vw, 104px) / 0.9 'VT323', ui-monospace, monospace;
+  letter-spacing: 0.02em;
+  color: #2f2a1c;
+  text-shadow: 2px 0 rgba(200, 40, 40, 0.18), -2px 0 rgba(40, 90, 200, 0.18);
+}
+
+.l-lead {
+  max-width: 600px;
+  margin: 18px 0 28px;
+  font-size: clamp(17px, 2.2vw, 20px);
+  color: #3b3524;
+}
+
+.l-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.l-cta-center {
+  justify-content: center;
+  margin-top: 36px;
+}
+
+.l-note {
+  margin: 18px 0 0;
+  font-size: 13px;
+  color: #5d5435;
+}
+
+.ad-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 728px;
+  min-height: 90px;
+  margin: 32px auto 0;
+  padding: 0 16px;
+  font-size: 12px;
+  color: var(--l-muted);
+}
+
+.ad-slot > span {
+  width: 100%;
+  min-height: 90px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--l-border);
+  border-radius: 6px;
+}
+
+.l-section {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(48px, 7vw, 80px) clamp(16px, 4vw, 48px) 0;
+}
+
+.l-section h2 {
+  margin: 0;
+  font-size: clamp(26px, 3.4vw, 34px);
+  letter-spacing: -0.01em;
+}
+
+.l-sub {
+  margin: 6px 0 28px;
+  color: var(--l-muted);
+}
+
+.l-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
+}

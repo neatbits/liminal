@@ -1,0 +1,146 @@
+/* HUD i 3D-vinduet */
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-size: 12px;
+}
+
+.hud > * {
+  pointer-events: auto;
+}
+
+.hud-walkbar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  max-width: calc(100% - 20px);
+  padding: 5px 6px 5px 10px;
+  border-radius: 9px;
+  background: rgba(20, 19, 16, 0.62);
+  color: #f2efe6;
+  backdrop-filter: blur(6px);
+}
+
+.hud-badge {
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--yellow);
+}
+
+.hud-stats {
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+  margin-right: 4px;
+}
+
+.hud-walkbar button {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+.hud-walkbar button.on {
+  background: rgba(232, 199, 90, 0.22);
+  border-color: rgba(232, 199, 90, 0.6);
+}
+
+.hud-hint,
+.hud-message,
+.hud-loading {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(20, 19, 16, 0.66);
+  color: #f2efe6;
+  white-space: nowrap;
+  max-width: calc(100% - 20px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.hud-hint {
+  bottom: 14px;
+}
+
+.hud-message {
+  top: 50%;
+}
+
+.hud-loading {
+  top: 12px;
+}
+
+.hud-vhs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font: 22px/1 'VT323', var(--mono);
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 2px 0 rgba(255, 0, 80, 0.5), -2px 0 rgba(0, 200, 255, 0.4);
+  letter-spacing: 0.05em;
+}
+
+.vhs-play {
+  position: absolute;
+  top: 54px;
+  left: 22px;
+}
+
+.vhs-time {
+  position: absolute;
+  bottom: 50px;
+  right: 22px;
+}
+
+
+/* Plask når man lander etter en sklietur: et blågrønt glimt som forsvinner. */
+.hud > .hud-splash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse at 50% 40%, rgba(150, 215, 230, 0.55), rgba(20, 85, 110, 0.8));
+}
+
+.hud-splash.go {
+  animation: hud-splash 1s ease-out;
+}
+
+@keyframes hud-splash {
+  from {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* «E – open the door» når man står foran en dør. */
+.hud > .hud-prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 22%;
+  transform: translateX(-50%);
+  padding: 5px 12px;
+  border-radius: 4px;
+  background: rgba(10, 12, 14, 0.6);
+  color: #f2efe6;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}

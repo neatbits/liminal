@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Liminal Simulator: draw empty, humming rooms on a grid, watch them appear in 3D and walk through them in your browser. Backrooms, poolrooms, playrooms and more." />
+    <title>Liminal Simulator</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23c9b56a'/%3E%3Crect x='7' y='9' width='18' height='4' rx='1' fill='%23fff8dc'/%3E%3Crect x='7' y='17' width='8' height='8' fill='%235a5d62'/%3E%3C/svg%3E" />
+    <script>
+      // Delte lenker fra før forsiden fantes (liminalsimulator.com/#room=…) går rett til simulatoren.
+      if (/^#(room|rom|example)=/.test(location.hash)) location.replace('app/' + location.hash);
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap" />
+  </head>
+  <body class="landing">
+    <header class="l-top">
+      <a class="brand" href="./"><span class="brand-mark"></span>Liminal</a>
+      <nav class="l-nav">
+        <a href="#examples">Examples</a>
+        <a href="#how">How it works</a>
+        <a class="l-btn l-btn-small" href="app/">Open the simulator</a>
+      </nav>
+    </header>
+
+    <section class="l-hero">
+      <div class="l-hero-text">
+        <p class="l-kicker">REC ● 03:14 AM</p>
+        <h1>Liminal Simulator</h1>
+        <p class="l-lead">
+          Draw empty rooms on a grid, watch them appear in 3D, and walk through them.
+          Damp carpet, still water, a ball pit nobody has used in years. The lights keep humming.
+        </p>
+        <div class="l-cta">
+          <a class="l-btn" href="app/">▶ Open the simulator</a>
+          <a class="l-btn l-btn-ghost" href="#examples">Try an example</a>
+        </div>
+        <p class="l-note">Free · runs in your browser · nothing to install</p>
+      </div>
+      <div class="l-hall" aria-hidden="true">
+        <div class="l-hall-ceiling"></div>
+        <div class="l-hall-left"></div>
+        <div class="l-hall-right"></div>
+        <div class="l-hall-floor"></div>
+        <div class="l-hall-end"></div>
+        <span class="l-hall-osd">PLAY ▶</span>
+        <span class="l-hall-osd l-hall-time">SP 0:03:14</span>
+      </div>
+    </section>
+
+    <!-- Reklamebanner: lim inn annonsekoden (f.eks. EthicalAds/Carbon/AdSense) i .ad-slot.
+         Tom plass skjules automatisk; i utviklingsmodus vises en stiplet plassholder. -->
+    <aside class="ad-slot" id="ad-slot" aria-label="Advertisement"></aside>
+
+    <section class="l-section" id="examples">
+      <h2>Step into an example</h2>
+      <p class="l-sub">Every example opens in the editor, ready to walk. Change anything you like.</p>
+      <div class="l-cards" id="example-cards"></div>
+    </section>
+
+    <section class="l-section" id="how">
+      <h2>How it works</h2>
+      <div class="l-steps">
+        <article>
+          <span class="l-step-no">1</span>
+          <h3>Sketch in 2D</h3>
+          <p>One square is one metre. Paint floor, walls, water, pillars, lights, doors, stairs and water slides.</p>
+        </article>
+        <article>
+          <span class="l-step-no">2</span>
+          <h3>Watch it in 3D</h3>
+          <p>The 3D view follows every stroke, with baked fluorescent light, reflections and a theme for the mood.</p>
+        </article>
+        <article>
+          <span class="l-step-no">3</span>
+          <h3>Walk through it</h3>
+          <p>Go fullscreen, put on headphones and explore. Open doors, ride the slides, listen to the hum.</p>
+        </article>
+        <article>
+          <span class="l-step-no">4</span>
+          <h3>Share a link</h3>
+          <p>Every room fits in a link. Send it to a friend and they walk exactly the room you made.</p>
+        </article>
+      </div>
+      <div class="l-cta l-cta-center">
+        <a class="l-btn" href="app/">▶ Start drawing</a>
+      </div>
+    </section>
+
+    <footer class="l-foot">
+      <span>Liminal Simulator</span>
+      <span>Made with three.js · Rooms are saved in your browser only</span>
+    </footer>
+
+    <script type="module" src="/src/landing.js"></script>
+  </body>
+</html>

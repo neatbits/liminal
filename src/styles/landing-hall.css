@@ -1,0 +1,123 @@
+/* Forsiden: korridoren i helten, tegnet med CSS (sentralperspektiv) og et VHS-skjær. */
+.l-hall {
+  position: relative;
+  z-index: 1;
+  flex: 0 1 460px;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #1c1a12;
+  box-shadow: 0 18px 50px rgba(60, 45, 10, 0.35), inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.l-hall > div {
+  position: absolute;
+  inset: 0;
+}
+
+.l-hall-ceiling {
+  clip-path: polygon(0 0, 100% 0, 60% 40%, 40% 40%);
+  background:
+    linear-gradient(180deg, transparent 0 8%, #fffbe8 8% 13%, transparent 13% 22%, #fff8dc 22% 25%, transparent 25% 31%, #fdf3cc 31% 33%, transparent 33%),
+    linear-gradient(180deg, #ece3c0, #b9ab78 40%);
+}
+
+.l-hall-left {
+  clip-path: polygon(0 0, 40% 40%, 40% 60%, 0 100%);
+  background:
+    repeating-linear-gradient(90deg, rgba(110, 90, 30, 0.12) 0 2px, transparent 2px 22px),
+    linear-gradient(90deg, #e3cf7e, #a8944c 40%);
+}
+
+.l-hall-right {
+  clip-path: polygon(100% 0, 60% 40%, 60% 60%, 100% 100%);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 20px, rgba(110, 90, 30, 0.12) 20px 22px),
+    linear-gradient(270deg, #d4bf6c, #9c8843 40%);
+}
+
+.l-hall-floor {
+  clip-path: polygon(0 100%, 100% 100%, 60% 60%, 40% 60%);
+  background: linear-gradient(0deg, #9f8a4a, #6f5f30 40%);
+}
+
+.l-hall-end {
+  clip-path: polygon(40% 40%, 60% 40%, 60% 60%, 40% 60%);
+  background: radial-gradient(circle at 50% 50%, #8b7a42 0 18%, #3a3218 60%);
+}
+
+/* En mørk døråpning i enden av gangen. */
+.l-hall-end::after {
+  content: '';
+  position: absolute;
+  left: 47%;
+  top: 46%;
+  width: 6%;
+  height: 14%;
+  background: #15120a;
+}
+
+.l-hall::after {
+  /* Skannelinjer, vignett og fargeskjær. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+  mix-blend-mode: multiply;
+  animation: l-flicker 6s infinite steps(1);
+}
+
+.l-hall-osd {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  z-index: 2;
+  font: 24px/1 'VT323', ui-monospace, monospace;
+  color: #f4f1e4;
+  text-shadow: 2px 0 rgba(220, 40, 40, 0.6), -2px 0 rgba(40, 120, 220, 0.6);
+}
+
+.l-hall-time {
+  top: auto;
+  bottom: 12px;
+  left: auto;
+  right: 16px;
+}
+
+@keyframes l-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  47% {
+    opacity: 0.75;
+  }
+  48% {
+    opacity: 1;
+  }
+  83% {
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-hall::after {
+    animation: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .l-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .l-hall {
+    flex-basis: auto;
+    width: 100%;
+    max-width: 520px;
+  }
+}

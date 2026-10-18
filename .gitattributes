@@ -1,0 +1,6 @@
+# Alle tekstfiler lagres med LF (slik prosjektet allerede er skrevet).
+* text=auto eol=lf
+*.glb binary
+*.bin binary
+*.jpg binary
+*.png binary

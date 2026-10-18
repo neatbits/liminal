@@ -1,0 +1,185 @@
+# Endringslogg
+
+Alle merkbare endringer i prosjektet føres her.
+Formatet følger [Keep a Changelog](https://keepachangelog.com/no/1.1.0/), og prosjektet
+bruker [semantisk versjonering](https://semver.org/lang/no/).
+
+## [Ukommet]
+
+### Lagt til
+- Realistisk vann: speiling av rommet (Reflector), lysbrytning av bassengbunnen
+  (Refractor), dybdeavhengig farge og absorpsjon, Fresnel og rolige bølger. Egne
+  vannparametere per tema.
+- «Toggle water reflections» i View-menyen for svakere maskiner (faller tilbake til enkel,
+  gjennomsiktig vannflate).
+- 3D-oversikten rammer inn rommet automatisk når det første gulvet tegnes.
+- Takhøyde per sone: verktøyet «Ceiling» (C) maler egen takhøyde (2,2–8 m) på deler av
+  rommet. Overgangen mellom soner får en vegg, og armaturene henger under sonens tak.
+- Vanndybde: «Water depth» for hele rommet i Room-panelet, og verktøyet «Depth» (D) for
+  egne dybder (0,3–3 m) i deler av bassenget. Bunnen får trinn, vannfargen følger dybden
+  og kaustikkene blir svakere i dypt vann.
+- Svømming: der vannet er dypere enn ca. 1,4 m flyter man i overflaten og beveger seg
+  saktere.
+- Skissen viser sonene med farge, stiplede grenser og etiketter (↕ høyde / dybde). Ruten
+  under pekeren viser takhøyde og dybde, og nøkkeltallene viser tak- og dybdespenn.
+- Nytt tema «The Basement»: rent beige teppe med støvsugerstriper, matt beige maling, hvite
+  gulvlister og karmer, varme takplafonder (ny armaturform «dome») og egen generator med
+  stue, små rom, bærestolper, boder og en trapp. Nytt eksempel «The Basement».
+- Dører: verktøyet «Door» (O) setter et dørblad i en døråpning – lukket, på gløtt eller
+  åpent – eller lager en «dør til ingensteds» i en vegg med rom bare på én side. Klikk
+  igjen for å snu døren; høyreklikk fjerner bladet. Dørene får karm, foring og håndtak
+  etter temaet, boder på gulvnivå kan få egne (lamell)dører, og skissen viser dørblad med
+  slagbue.
+- Lukkede dører stenger for spilleren og for det bakte lyset.
+- Generatorene setter inn dører: kontoret får dører i åpningene, hotellet lukkede dører
+  mellom gangene og den uendelige gangen lukkede dører i nisjene.
+- Gulvhøyde: verktøyet «Raise» (H) hever gulvet (0–4 m) for plattformer og reposer.
+  Taket holdes alltid minst 2,1 m over gulvet.
+- Trapper: verktøyet «Stairs» (S) – dra fra bunn til topp. Trappen stiger til et høyere
+  gulv i enden, ellers 0,6 m per rute opp i en trappesjakt (trapp til ingensteds). En
+  døråpning på toppen får trappens høyde. Penselstørrelsen gir bredden.
+- Man går ikke rett opp på kanter høyere enn 0,45 m (bare via trapper), men kommer alltid
+  opp av bassenget.
+- Rekkverk: åpne sider av trapper og kanter med mer enn 0,45 m fall får håndlist med spiler
+  og stolper der rekkverket slutter; trappesider mot vegg får håndlist på veggen. Vernet
+  stopper spilleren. Farger per tema (eik og hvite spiler i kjelleren, gult i garasjen).
+- Fliser: verktøyet «Tiles» (T) gir gulv og nedre del av veggene (1,4 m) fliser, for bad og
+  vaskerom. Skissen viser flisfuger. Kjelleren får et flislagt bad.
+- Vannsklier: verktøyet «Slide» (L) – dra fra et hevet gulv (minst 1 m) ned til vannet, med
+  så mange svinger du vil. Banen glattes til myke kurver, høyden faller jevnt til litt over
+  vannflaten, og hver sklie er en åpen renne eller et lukket rør. Rennen glitrer som en
+  vannfilm, krenger i svingene og står på støtteben; taket løftes der den trenger plass,
+  og vernet på plattformen får en åpning. Sklier som ikke virker vises røde i skissen med
+  forklaring. Høyreklikk fjerner en sklie.
+- Skliing: gå inn i toppen av en sklie, så tar den over – farten kommer av helningen,
+  kameraet sitter i rennen og krenger i svingene, og du hører vannsus. Nede blir det plask,
+  et kort dukk under vannflaten, og du svømmer videre.
+- Poolrooms-generatoren lager plattform med trapp og en vannsklie i det største bassenget
+  (også i eksempelet «The Poolrooms»). Plattformen er 1,2, 1,8 eller 2,4 m høy, og hele
+  bassengrommet får tak 2,5 m over plattformen (minst temaets takhøyde).
+- Sklier har farge: blå, rød, grønn eller hvit (velges i verktøyet; tilfeldig i generatoren).
+- Dører kan åpnes og lukkes mens man går: stå foran en dør med rom bak og trykk E (teksten
+  «E – open the door» vises). Døren svinger opp og slår igjen med et dunk. Selve
+  rommet endres ikke – dørene står som i editoren neste gang.
+- Skumle lyder i rykk og napp (med lyd på): banking, knirk, fjerne skritt, hvisking,
+  elektrisk surr, metallstønn, en telefon langt unna, gurgling og drønn – ulike lyder per
+  tema, fra tilfeldige retninger og avstander, av og til flere tett etter hverandre.
+- Nytt tema «The Playroom» (lekerom): puslematter i rødt, blått, gult og grønt, hvite vegger
+  med fargeblokker, og ballbinger i stedet for bassenger – tusenvis av baller i rødt, grønt,
+  gult og blått (én instansiert mesh med bakt lys). Myke trinn på mattene, raslende baller
+  når man vasser eller lander fra sklien, og spilledåse blant de skumle lydene. Egen
+  generator med lekesaler, ballbinger, dører og en sklie ned i den største bingen. Nytt
+  eksempel «The Playroom». Temaer kan fylle bassengene med baller (`pit: 'balls'`,
+  `pitColors`), og skissen viser ballbingene som konfetti.
+- Dørkarmene har fått en stopperlist som dørbladet lukker seg mot.
+- Dekker (andre etasje): verktøyet «Deck» (K) gir gulv- og søyleruter et dekke i 2,4–5,5 m
+  høyde, så man kan gå både under og oppå – en mesanin eller et galleri. Ruter uten dekke
+  blir et åpent atrium man ser ned i. Platen får gulv oppå, himling under og kantlist mot
+  atriet; kanten får vern i dekkets høyde, og trapper kan gå opp til dekket. Et lys i en
+  rute med dekke gir én armatur i hver etasje, og platen stenger lyset mellom etasjene.
+  Skissen viser dekker med skravur, tykk kant og etiketten «▤ deck». Går man utfor kanten
+  der det ikke er vern, faller man ned i etasjen under.
+- Nytt tema «The Mall» (kjøpesenter): blanke terrazzofliser, steinpanel nederst på veggene,
+  høyt atrium, egne skumle lyder (heismusikk langt borte og en høyttalerklokke) og stor
+  romklang. Generatoren lager butikker i to etasjer langs langsidene (noen stengt med dør),
+  gallerier rundt atriet med søyler, en bro over atriet, fontener, trapper opp i hver ende
+  og nødutganger. Nytt eksempel «The Mall».
+- Gjenstander (ferdige 3D-modeller): verktøyet «Object» (J) setter en gjenstand i en
+  gulvrute. Den vender ryggen mot en vegg ved siden av og står inntil den; klikk igjen for å
+  snu den en kvart omdreining, høyreklikk fjerner den. Modellene får rommets bakte lys og en
+  myk kontaktskygge, stopper spilleren og vises i skissen med forsiden markert. Første
+  modell: et CRT-TV (Television 02 fra Poly Haven, CC0).
+- Flere gjenstander: boombox, laptop, skrivebord (2 m bredt, går over flere ruter) og
+  badeand – alle fra Poly Haven (CC0). Små gjenstander settes oppå skrivebordet (klikk en
+  rute bordet dekker), og trekkes inn så de står helt på bordplaten. Gjenstander går ikke
+  inn i vegger eller i hverandre; finnes det ingen retning der en får plass, settes den ikke
+  inn. Viskelæret tar den øverste gjenstanden først.
+- Badeender flyter i vannet og har enkel fysikk i gåmodus: de duver, dyttes når man vasser
+  eller svømmer inn i dem, glir videre med vannmotstand, snurrer, spretter av bassengkanten
+  og av hverandre, og skyves utover når man plasker ned fra en sklie. De er tilbake på
+  plass når man går ut av gåmodus.
+- Ballbingene får kjølvann: ballene rundt deg dyttes til side og hoper seg opp når du
+  vasser (eller lander fra sklien), og glir sakte tilbake. Bunnen av bingene viser mørkere
+  baller lenger ned, så glippene ser dype ut.
+- Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
+  én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
+  geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Publisering med `npm run deploy`: kjører testene, bygger og laster opp `dist/` over SFTP
+  (ressurser først, sidene sist). Tilkoblingen ligger i `.env.deploy` utenfor git; `--clean`
+  fjerner gamle byggfiler i `assets/` på serveren, `--dry-run` viser hva som lastes opp.
+- Prosjektet ligger i git.
+- `.htaccess` i bygget sender besøk over http:// videre til https:// (Apache/one.com).
+- Forside (`index.html`): presentasjon med en VHS-korridor, kort for hvert eksempel med ekte
+  planbilde og «Walk it»-lenke, «How it works» og plass til et reklamebanner (`#ad-slot`,
+  skjules når den er tom). Lenken `app/#example=<id>` åpner et eksempel direkte.
+
+### Endret
+- Romformatet er versjon 2 med de valgfrie feltene `waterDepth`, `ceilings`, `depths`,
+  `floors`, `finish` og `meta` (ett tegn per rute), rutetypen trapp og listen `slides`.
+  Eldre filer og lenker åpnes som før.
+- Gulvlist og brystning på veggene følger gulvhøyden (veggens v-koordinat regnes fra gulvet).
+- Høyder per rute ligger i `core/heights.js` og nøkkeltallene i `core/stats.js`.
+- Bakt lys tar hensyn til høyde: lavere tak, døroverliggere og bassengkanter kaster skygge.
+- Veggtoppene i 3D-oversikten følger det høyeste taket rundt seg, og sprang mellom ulike
+  høyder lukkes.
+- Verktøypanelet, peker-input i skissen, skissebildet og app-koblingene ligger nå i egne
+  filer (`ui/tool-panel.js`, `editor/pointer.js`, `editor/plan-image.js`,
+  `app/wiring.js`, `app/status.js`).
+- Hele brukergrensesnittet er nå på engelsk (menyer, verktøy, dialoger, HUD, temaer,
+  eksempler og feilmeldinger).
+- Delingslenker bruker `#room=` og filformatet heter `liminal-room`; gamle `#rom=`-lenker
+  og `liminal-rom`-filer kan fortsatt åpnes.
+- Fyll-verktøyet har fått hurtigtasten F (før G).
+- Svakere kaustikker på bassengbunnen; `THREE.Clock` er erstattet med `THREE.Timer`.
+- Den konstante vannsusen i Poolrooms (som lignet hav og bølger) er fjernet; de sjeldne
+  vanndryppene er beholdt (`sound.drips` i temaet).
+- Fottrinn på fliser (Poolrooms) høres ikke lenger ut som stiletthæler: et dumpt slag og et
+  lavt klask i stedet for skarpe klikk og ringing, og litt svakere i de ekkoaktige rommene.
+- Lysrørsurret er dempet til omtrent en tredjedel, nesten borte langt fra lysene, og glir
+  sakte opp og ned i stedet for å ligge jevnt hele tiden. Lydeffektene (sklie, plask, dør)
+  ligger i `audio/effects.js`.
+- Dørverktøyet godtar også en åpning i en vegg (gulvrute med vegg i begge ender), viser
+  grønt/rødt om døren får plass, og forklarer hvorfor når den ikke gjør det.
+- Romformatet har den valgfrie listen `objects` ({ id, x, z, rot }); ukjente modeller hoppes
+  over når et rom åpnes.
+- Romformatet har det valgfrie laget `decks` (dekkehøyde per rute); trapper kan lagres opp
+  til 5,5 m. `groundAt`/`headAt` tar høyden man står i, og kollisjon, vern og gange velger
+  etasje ut fra den. Temaene etter hotellet ligger i `core/themes-more.js`.
+- Simulatoren ligger nå i `app/` (delingslenker blir `…/app/#room=…`). Gamle lenker til
+  roten med `#room=`/`#rom=` sendes automatisk videre. Logoen i simulatoren lenker til forsiden.
+- Poolrooms har større rom: haller deles ikke opp under 8 ruter, stopper oftere tidlig og
+  har bredere åpninger; de største bassengene får 3 ruters kant.
+- Fottrinnene er dempet til omtrent halvparten og mykere i anslaget på alle underlag.
+- Ny dørlyd: klikk i smekklåsen, et mykt sus mens bladet svinger og et dempet dunk i karmen
+  når døren lukkes, i stedet for den syntetiske knirkingen.
+
+### Fikset
+- Håndlister på rekkverk stod av og til på skrå: høyden ble lest i naborutens hjørne.
+- Vernet får åpning også der en sklie går diagonalt over et hjørne av plattformen, og der
+  rennen (som er bredere enn én rute) passerer tett forbi – rekkverket stod før på tvers
+  over starten av sklien.
+- Sklier er rundere og glattere (flere kanter og lys per hjørne), banen jevnes ut så rennen
+  ikke vrir seg i svinger, og rør er åpne ved inngangen i stedet for tette i toppen.
+- Glipe mellom dørblad og karm: man kunne se gjennom åpningen langs kanten av en lukket dør.
+- Poolrooms-generatoren la ikke sklie i de aller største bassengrommene.
+
+## [0.1.0] – 2026-10-17
+
+### Lagt til
+- Prosjektoppsett med Vite, three.js 0.186 og Vitest.
+- Romformat med vegg, gulv, vann, søyle og døråpning, pluss lys (på, blinkende, ødelagt)
+  og startpunkt.
+- 2D-skisse med linjaler, rutenett, panorering/zoom og verktøyene pensel, rektangel og fyll.
+- 3D-forhåndsvisning synkronisert med skissen: oversikt («dukkehus»), toppvisning og
+  «Gå i rommet» i førsteperson, med fullskjerm.
+- Fem temaer med prosedyrelle teksturer: Nivå 0 (gule rom), Bassengrommene, Kontoret om
+  natten, Parkeringskjelleren og Hotellgangen.
+- Bakt lys med skygger fra vegger, blinkende og ødelagte lysrør, tåke, bloom, filmkorn og
+  valgfritt VHS-filter.
+- Prosedyrell lyd: lysrørsurr, romtone, fottrinn per underlag og romklang.
+- Generator for tilfeldige rom per tema og seks ferdige eksempler.
+- Lagring i nettleseren («Mine rom»), eksport/import av JSON og deling via lenke.
+- Autolagring av utkast, angre/gjør om (også for størrelse, generering og lys).
+- 3D-oversikten sentreres på det som er bygget; massive vegger vises som tak ovenfra.
+- Startpunktet vises i skissen der spilleren faktisk starter.
+- Vitest-tester for romformat, serialisering, verktøy, generatorer, lys, flater og kollisjon.

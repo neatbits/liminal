@@ -1,0 +1,6 @@
+# Send alle besøk over http:// til https:// (one.com har gyldig sertifikat, men sender ikke
+# videre selv). X-Forwarded-Proto dekker tilfellet der TLS avsluttes i en proxy foran Apache.
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
