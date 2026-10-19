@@ -128,7 +128,7 @@ function contactShadow() {
  * Gjenstandene i rommet. Modellene lastes i bakgrunnen; `ready` løses når alle er på plass.
  * Hver gjenstand er en egen gruppe (`items[i]` for level.objects[i]) som kan flyttes – flytende
  * gjenstander dyttes rundt i gåmodus (view3d/floaters.js). Lyset er bakt der den står i editoren.
- * @returns {{ group, items: Array<THREE.Group|undefined>, ready: Promise, dispose() }}
+ * @returns {{ group, items: Array<THREE.Group|undefined>, ready: Promise, update(dt), dispose() }}
  */
 export function createObjects(level, field, shared) {
   const group = new THREE.Group();
@@ -158,6 +158,7 @@ export function createObjects(level, field, shared) {
   };
 
   const items = [];
+  const spinners = []; // gjenstander som snurrer (takvifter)
   const jobs = (level.objects ?? []).map(async (o, index) => {
     const def = OBJECTS[o.id];
     if (!def) return;
@@ -179,6 +180,7 @@ export function createObjects(level, field, shared) {
       item.add(new THREE.Mesh(geometry, materialFor(part, def)));
     }
     items[index] = item;
+    if (def.spin) spinners.push([item, def.spin]);
     group.add(item);
     if (def.floats && level.tiles[o.z * level.w + o.x] === TILE.WATER) return; // flyter: ingen skygge på vannet
     const shadow = new THREE.Mesh(new THREE.PlaneGeometry(pose.w * 1.5, pose.d * 1.5), shadowMat);
@@ -195,6 +197,10 @@ export function createObjects(level, field, shared) {
     group,
     items,
     ready,
+    /** Takvifter snurrer. */
+    update(dt) {
+      for (const [item, spin] of spinners) item.rotation.y += spin * dt;
+    },
     dispose() {
       disposed = true;
       for (const d of owned) d.dispose();

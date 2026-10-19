@@ -131,3 +131,25 @@ describe('gjenstander', () => {
     expect(objectColliders(level, 5, 3)).toEqual([]); // man vasser forbi den
   });
 });
+
+describe('gjenstander på vegg og i tak', () => {
+  it('veggklokken henger på veggen bak seg, takvifta under taket', async () => {
+    const { generateLevel } = await import('../src/gen/index.js');
+    const { ceilingAt } = await import('../src/core/heights.js');
+    const level = generateLevel({ theme: 'basement', w: 36, h: 28, seed: 3 });
+    const fan = level.objects.find((o) => o.id === 'fan');
+    const clock = level.objects.find((o) => o.id === 'clock');
+    expect(fan).toBeTruthy();
+    const fp = objectPose(level, fan);
+    expect(fp.y + fp.h).toBeCloseTo(ceilingAt(level, fan.x, fan.z) - 0.01, 3);
+    expect(level.lights[fan.z * level.w + fan.x]).toBe(0);
+    expect(clock).toBeTruthy();
+    expect(objectPose(level, clock).y).toBeGreaterThan(1.8);
+    // En klokke uten vegg bak kan ikke henge der.
+    const r = room();
+    expect(placeObject(r, 4, 3, 'clock')).toBe(0);
+    expect(placeObject(r, 4, 1, 'clock')).toBe(1);
+    // Takvifta og klokka er ikke i veien når man går.
+    expect(objectColliders(level, fan.x, fan.z).filter((c) => c.bottom < 1.75)).toHaveLength(0);
+  });
+});

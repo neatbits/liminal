@@ -93,6 +93,8 @@ src/
   dyttes slike rundt (`world/floaters.js` via `view3d/water-play.js`). Med `build` i stedet for
   `file` bygges gjenstanden av enkle former i `world/props.js` (variant per tema/rute via
   `propKey`); deler med `unlit` lyser av seg selv (skilt, lyskasser). `soft` = lekeklosser: de
+  `mount: 'ceiling'|'wall'` (+ `lift`) henger gjenstanden under taket eller på veggen bak, `spin`
+  får den til å snurre (takvifte). `soft` = lekeklosser: de
   stables på klossene før seg i listen, er ikke faste hindringer, og i gåmodus styres de av
   fysikk (`world/softphysics.js` med cannon-es, lastet dynamisk av `view3d/softplay.js`).
 - **Rekkverk** (`core/railings.js`): reglene for hvilke kanter som får vern/håndlist brukes

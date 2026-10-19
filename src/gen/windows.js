@@ -6,7 +6,7 @@ import { canHoldWindow, paintWindows } from '../core/windows.js';
 // Per tema: hvor mange av rutene i ytterveggen som kan få vindu (mønster: vindu, vindu, vegg …).
 const PLANS = {
   office: { run: 2, gap: 1, chance: 0.85 },
-  pool: { run: 3, gap: 1, chance: 0.9 },
+  pool: { run: 2, gap: 2, chance: 0.75 },
   playroom: { run: 2, gap: 2, chance: 0.8 },
   school: { run: 3, gap: 1, chance: 0.9 },
   ward: { run: 1, gap: 1, chance: 0.85 },

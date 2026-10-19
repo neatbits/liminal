@@ -114,39 +114,71 @@ function kiosk(key) {
     { color: '#fbfbf6', unlit: true, geoms: [box(1.4, 0.03, 0.5, 0, H - 0.1, -0.2)] },
     { color: '#ffffff', map: menuTexture(), unlit: true, geoms: [box(1.2, 0.45, 0.03, 0.35, 1.95, -zf + 0.07)] },
     // Sider, tak og en hylle bak disken.
-    { color: '#e6dcc4', geoms: [box(0.08, H, D, -W / 2 + 0.04, H / 2, 0), box(0.08, H, D, W / 2 - 0.04, H / 2, 0), box(W, 0.06, D, 0, H - 0.03, 0), box(W - 0.16, 0.04, 0.35, 0, 1.1, -zf + 0.25)] },
+    { color: '#e6dcc4', geoms: [box(0.08, H, D, -W / 2 + 0.04, H / 2, 0), box(0.08, H, D, W / 2 - 0.04, H / 2, 0), box(W + 0.04, 0.06, D + 0.02, 0, H - 0.025, 0.01), box(W - 0.16, 0.04, 0.35, 0, 1.1, -zf + 0.25)] },
     // Kjøleskap og to maskiner på hylla.
     { color: '#a9aeb1', geoms: [box(0.6, 1.85, 0.5, -0.95, 0.93, -zf + 0.32), box(0.3, 0.32, 0.28, 0.3, 1.28, -zf + 0.22), box(0.3, 0.32, 0.28, 0.8, 1.28, -zf + 0.22)] },
     // Disken: front med logo, benkeplate i stål og en mørk sokkel.
     { color: '#ffffff', map: counterTexture(sign), geoms: [box(W - 0.16, 0.95, 0.08, 0, 0.55, zf - 0.08)] },
     { color: '#c3c6c4', geoms: [box(W - 0.16, 0.05, 0.45, 0, 1.05, zf - 0.22)] },
     { color: '#3a3a38', geoms: [box(W - 0.16, 0.1, 0.1, 0, 0.05, zf - 0.06)] },
-    // Det opplyste skiltet over åpningen.
-    { color: '#ffffff', map: signTexture(sign), unlit: true, geoms: [box(W, 0.45, 0.08, 0, H - 0.29, zf - 0.04)] },
+    // Det opplyste skiltet over åpningen – litt bredere og utenfor sideveggene (ingen flimring der
+    // flatene ellers ville ligget oppå hverandre).
+    { color: '#ffffff', map: signTexture(sign), unlit: true, geoms: [box(W + 0.08, 0.45, 0.08, 0, H - 0.29, zf - 0.01)] },
   ]);
 }
 
-/** Kafébordet: rundt bord med søyle og tre stoler i burgunder vinyl. */
+/** Rør (stålramme) fra a til b: [x, y, z]. */
+function tube(r, a, b) {
+  const d = new THREE.Vector3(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+  const g = new THREE.CylinderGeometry(r, r, d.length(), 8);
+  g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.clone().normalize()));
+  g.translate((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
+  return g;
+}
+
+/**
+ * En kafestol (forsiden mot +z): stålrør der de bakre beina fortsetter opp som stolper for
+ * ryggen, tverrstag under setet, polstret sete og en rygg som heller litt bakover.
+ * @returns {{ frame, vinyl }} geometrier i stolens egne koordinater
+ */
+function chair() {
+  const r = 0.013;
+  const w = 0.2; // halv bredde mellom rørene
+  const tilt = 0.06; // så mye ryggen heller bakover per meter
+  const back = (y) => -0.2 - (y - 0.45) * tilt;
+  const frame = [];
+  for (const x of [-w, w]) {
+    frame.push(tube(r, [x, 0, 0.19], [x, 0.44, 0.19])); // forbein
+    frame.push(tube(r, [x, 0, -0.2], [x, 0.45, -0.2]), tube(r, [x, 0.45, -0.2], [x, 0.9, back(0.9)])); // bakbein og ryggstolpe
+    frame.push(tube(r, [x, 0.41, 0.19], [x, 0.41, -0.2])); // stag under setet
+  }
+  frame.push(tube(r, [-w, 0.16, 0.19], [w, 0.16, 0.19]), tube(r, [-w, 0.16, -0.2], [w, 0.16, -0.2]));
+  const seat = box(0.44, 0.07, 0.43, 0, 0.46, 0);
+  const rest = box(0.42, 0.27, 0.05, 0, 0, 0);
+  rest.rotateX(-Math.atan(tilt));
+  rest.translate(0, 0.74, back(0.74) - 0.02);
+  return { frame, vinyl: [seat, rest] };
+}
+
+/** Kafébordet: rundt bord med søyle og tre stoler i burgunder vinyl som vender mot bordet. */
 function cafe() {
-  const seat = [];
-  const legs = [];
+  const frame = [];
+  const vinyl = [];
   for (const a of [Math.PI * 0.15, Math.PI * 0.85, Math.PI * 1.5]) {
-    const cx = Math.cos(a) * 0.58;
-    const cz = Math.sin(a) * 0.58;
-    const ry = -a - Math.PI / 2; // stolen vender mot bordet
-    const out = [Math.cos(a), Math.sin(a)];
-    seat.push(box(0.42, 0.06, 0.42, cx, 0.46, cz, ry));
-    seat.push(box(0.42, 0.36, 0.05, cx + out[0] * 0.2, 0.72, cz + out[1] * 0.2, ry));
-    for (const [lx, lz] of [[-0.17, -0.17], [0.17, -0.17], [-0.17, 0.17], [0.17, 0.17]]) {
-      const c = Math.cos(-ry);
-      const s = Math.sin(-ry);
-      legs.push(box(0.025, 0.44, 0.025, cx + lx * c - lz * s, 0.22, cz + lx * s + lz * c));
+    const c = chair();
+    const ry = Math.atan2(-Math.cos(a), -Math.sin(a)); // forsiden mot bordet
+    for (const g of [...c.frame, ...c.vinyl]) {
+      g.rotateY(ry);
+      g.translate(Math.cos(a) * 0.6, 0, Math.sin(a) * 0.6);
     }
+    frame.push(...c.frame);
+    vinyl.push(...c.vinyl);
   }
   return parts([
     { color: '#ece6d6', geoms: [cylinder(0.4, 0.03, 0, 0.75, 0, 24)] },
-    { color: '#3b3b3b', geoms: [cylinder(0.03, 0.72, 0, 0.37, 0), cylinder(0.22, 0.02, 0, 0.01, 0, 20), ...legs] },
-    { color: '#6e2a2a', geoms: seat },
+    { color: '#3b3b3b', geoms: [cylinder(0.03, 0.72, 0, 0.37, 0), cylinder(0.22, 0.02, 0, 0.01, 0, 20)] },
+    { color: '#9a9ca0', geoms: frame },
+    { color: '#6e2a2a', geoms: vinyl },
   ]);
 }
 

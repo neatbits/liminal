@@ -33,6 +33,17 @@ export function drawObjects(ctx, view, level) {
     const [x0, y0] = view.toScreen(p.x - p.w / 2, p.z - p.d / 2);
     const w = p.w * s;
     const d = p.d * s;
+    if (def.mount === 'ceiling') {
+      // Under taket (takvifte): bare et stiplet omriss, så gulvet under synes.
+      ctx.save();
+      ctx.strokeStyle = 'rgba(58, 52, 64, 0.7)';
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.arc(x0 + w / 2, y0 + d / 2, w / 2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      continue;
+    }
     ctx.fillStyle = 'rgba(58, 52, 64, 0.85)';
     ctx.fillRect(x0, y0, w, d);
     // Forsiden: tykk, lys strek langs siden gjenstanden vender mot.

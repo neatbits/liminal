@@ -104,6 +104,11 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Nye gjenstander fra Poly Haven (CC0): takvifte (henger under taket og snurrer sakte), veggklokke
+  (henger på veggen), spillkonsoll, spillkontrollere og kassettspiller. Kjelleren får TV med konsoll
+  og kontrollere på gulvet, takvifter og klokke; hotellet takvifter, klokker og en og annen
+  kassettspiller; skolen og sykehuset klokker i rommene; lekerommet TV med konsoll; kontoret og
+  Level 0 en klokke her og der. Kassettspiller og konsoll kan også ligge på skrivebord.
 - Myke lekeklosser i lekerommet, som på en lekeplass innendørs: kuber, plattformer, søyler, bjelker
   og vegger i skumgummi, trukket med stoff i lyse farger. Genererte lekerom får små byggverk –
   portaler (to søyler med en bjelke over), tårn, plattformer med en kube oppå, trapper. I gåmodus
@@ -227,6 +232,12 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - CRT-TV-et er dobbelt så stort, laptopen halvparten så stor (katalogen har nå `scale`).
 - Romformatet har feltet `sky` (tiden på døgnet), og vinduer er vegger med `meta` = 1.
 - Vinduer i genererte rom settes i ytterveggen uansett hvor tykk den er.
+- Vinduer blendet i lyse rom (Poolrooms), særlig mange sammen: dagslyset legges nå til mindre jo
+  lysere rommet allerede er, vinduer som sitter tett deler på lyset, glasset og solflekkene dempes i
+  temaer med høy eksponering, og Poolrooms får glissere vinduer.
+- Kafestolene har en ordentlig ramme: bakbeina fortsetter opp som stolper som holder ryggen, med
+  stag under setet og en rygg som heller litt bakover (før svevde ryggen).
+- Flimring (z-fighting) mellom kioskskiltet, taket og sideveggene.
 - Vinduene skinner mindre: himmelen i glasset er dempet så den ikke blender, og dagslyset inn i
   rommet er svakere, så rom med både taklys og mange vinduer ikke «brenner ut».
 - Hjelperne for lydbuffere ligger i `audio/buffers.js`; nye skumle lyder i `audio/eerie-more.js`.

@@ -5,7 +5,7 @@
 // stikke inn i naboruter. Små gjenstander settes oppå en flate (`surface`, f.eks. et
 // skrivebord) som dekker ruten, og flytende (`floats`) kan ligge i vannet. Ren logikk.
 import { TILE, getTile, inBounds, WATER_SURFACE } from './level.js';
-import { floorAt } from './heights.js';
+import { floorAt, ceilingAt } from './heights.js';
 import { OBJECTS } from './object-catalog.js';
 
 export { OBJECTS, OBJECT_IDS } from './object-catalog.js';
@@ -37,12 +37,15 @@ function basePose(level, o) {
   let x = o.x + 0.5;
   let z = o.z + 0.5;
   if (getTile(level, o.x - fx, o.z - fz) === TILE.WALL) {
-    const back = 0.5 - d / 2 - WALL_GAP; // negativ: dypere enn ruten, skyves fram fra veggen
+    // Negativ: dypere enn ruten, skyves fram fra veggen. Veggklokker henger helt inntil.
+    const back = 0.5 - d / 2 - (OBJECTS[o.id].mount === 'wall' ? 0.005 : WALL_GAP);
     x -= fx * back;
     z -= fz * back;
   }
   const water = getTile(level, o.x, o.z) === TILE.WATER;
-  const y = water ? WATER_SURFACE - FLOAT_DEPTH : floorAt(level, o.x, o.z);
+  const def = OBJECTS[o.id];
+  const floor = floorAt(level, o.x, o.z);
+  const y = water ? WATER_SURFACE - FLOAT_DEPTH : def.mount === 'ceiling' ? ceilingAt(level, o.x, o.z) - h - 0.01 : floor + (def.lift ?? 0);
   const across = fx === 0; // forsiden mot ±z: bredden ligger langs x
   return { x, y, z, rot: o.rot & 3, w: across ? w : d, d: across ? d : w, h };
 }
@@ -117,6 +120,8 @@ export function objectFits(level, o, objects = list(level)) {
   const def = OBJECTS[o.id];
   const tile = getTile(level, o.x, o.z);
   if (!def || !(tile === TILE.FLOOR || (def.floats && tile === TILE.WATER))) return false;
+  // På veggen: det må være vegg bak.
+  if (def.mount === 'wall' && getTile(level, o.x - FACING[o.rot & 3][0], o.z - FACING[o.rot & 3][1]) !== TILE.WALL) return false;
   const lv = { ...level, objects };
   const p = objectPose(lv, o);
   const box = objectBox(p);

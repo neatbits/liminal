@@ -94,12 +94,13 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true } = {}) 
       const map = own(skyCanvas(sky.sky));
       map.colorSpace = THREE.SRGBColorSpace;
       // Lys nok til et svakt skjær rundt vinduet, men ikke så lyst at det blender.
-      return new THREE.MeshBasicMaterial({ map, color: new THREE.Color(1, 1, 1).multiplyScalar(sky.sun ? 1.05 : 0.55) });
+      return new THREE.MeshBasicMaterial({ map, color: new THREE.Color(1, 1, 1).multiplyScalar((sky.sun ? 1.05 : 0.55) / theme.exposure / (1 + theme.bloom * 0.5)) });
     },
     sunPatch: () =>
       new THREE.MeshBasicMaterial({
         map: own(sunCanvas()),
-        color: new THREE.Color(sky.sun?.color ?? '#000').multiplyScalar(sky.sun?.strength ?? 0),
+        // Svakere i lyse temaer (Poolrooms): hvite fliser med høy eksponering blir ellers helt hvite.
+        color: new THREE.Color(sky.sun?.color ?? '#000').multiplyScalar((sky.sun?.strength ?? 0) / theme.exposure ** 2),
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
@@ -167,6 +168,7 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true } = {}) 
       const dt = Math.min(0.1, Math.max(0, time - (lastTime ?? time)));
       doors.update(dt);
       balls?.update(dt);
+      objects.update(dt);
       lastTime = time;
       shared.uTime.value = time;
       shared.uFlick.value.set(flicker[0], flicker[1], flicker[2], flicker[3]);

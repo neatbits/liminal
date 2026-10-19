@@ -7,7 +7,9 @@
  * surface = høyden på en flate andre gjenstander kan stå på. screen = området i teksturen
  * [u0, v0, u1, v1] der en skjerm viser sne-støy, glow = hvor sterkt den lyser opp rundt seg
  * (andel av et taklys). soft = myke lekeklosser: kan stables, og i gåmodus har de fysikk (de
- * dyttes, velter og faller ned) i stedet for å stå fast (world/softphysics.js).
+ * dyttes, velter og faller ned) i stedet for å stå fast (world/softphysics.js). mount = 'ceiling'
+ * (henger under taket) eller 'wall' (henger på veggen bak seg, `lift` m over gulvet). spin = rad/s
+ * (snurrer, f.eks. en takvifte).
  * Alle modellene er fra Poly Haven (CC0).
  */
 export const OBJECTS = {
@@ -23,6 +25,11 @@ export const OBJECTS = {
   boombox: { label: 'Boombox', file: 'classic_boombox', size: [0.724, 0.47, 0.186], credit: 'Boombox – Poly Haven (CC0)' },
   laptop: { label: 'Laptop', file: 'classic_laptop', size: [0.326, 0.272, 0.243], scale: 0.5, credit: 'Classic Laptop – Poly Haven (CC0)' },
   desk: { label: 'Office desk', file: 'office_desk', size: [2, 0.788, 0.947], surface: 0.788, credit: 'Metal Office Desk – Poly Haven (CC0)' },
+  fan: { label: 'Ceiling fan', file: 'ceiling_fan', size: [1.463, 0.516, 1.463], mount: 'ceiling', spin: 2.2, credit: 'Ceiling Fan – Poly Haven (CC0)' },
+  clock: { label: 'Wall clock', file: 'wall_clock', size: [0.32, 0.32, 0.047], mount: 'wall', lift: 1.95, credit: 'Wall Clock – Poly Haven (CC0)' },
+  console: { label: 'Game console', file: 'gaming_console', size: [0.325, 0.1, 0.319], credit: 'Gaming Console – Poly Haven (CC0)' },
+  gamepad: { label: 'Game controllers', file: 'game_pad', size: [0.404, 0.019, 0.435], credit: 'Game Pad – Poly Haven (CC0)' },
+  cassette: { label: 'Cassette player', file: 'cassette_player', size: [0.129, 0.237, 0.049], credit: 'Cassette Player – Poly Haven (CC0)' },
   duck: { label: 'Rubber duck', file: 'rubber_duck', size: [0.214, 0.286, 0.3], floats: true, credit: 'Rubber Duck Toy – Poly Haven (CC0)' },
   // Bygget av enkle former (world/props.js), uten modellfil.
   kiosk: { label: 'Food kiosk', build: 'kiosk', size: [3, 2.6, 1.5], glow: 0.22 },

@@ -11,7 +11,7 @@ const ids = (level) => new Set(level.objects.map((o) => o.id));
 describe('gjenstander i genererte rom', () => {
   it('hvert tema får bare gjenstander som hører hjemme der', () => {
     for (const theme of THEME_IDS) {
-      const sets = { desk: ['desk', 'laptop', 'tv', 'boombox'], tvrow: ['tv'], foodspot: ['kiosk', 'cafe'], softplay: ['softcube', 'softblock', 'softpillar', 'softbeam', 'softslab'] };
+      const sets = { desk: ['desk', 'laptop', 'tv', 'boombox', 'cassette', 'console'], tvrow: ['tv'], foodspot: ['kiosk', 'cafe'], gaming: ['tv', 'console', 'gamepad'], softplay: ['softcube', 'softblock', 'softpillar', 'softbeam', 'softslab'] };
       const allowed = new Set(PLANS[theme].flatMap((p) => sets[p.set] ?? [p.id]).concat(theme === 'mall' ? SHOP_ITEMS : []));
       for (const seed of [1, 2]) {
         for (const id of ids(generateLevel({ theme, w: 44, h: 38, seed }))) expect(allowed.has(id), `${theme}: ${id}`).toBe(true);

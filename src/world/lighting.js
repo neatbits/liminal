@@ -43,12 +43,16 @@ export function collectLights(level) {
   }
   const sky = skyOf(level);
   const rgb = hexToLinear(sky.light);
-  for (const win of windows(level)) {
+  // Vinduer som sitter tett deler på dagslyset (ellers summeres de, og med taklyset blir det
+  // hvitt): hvert vindu får styrken delt på hvor mange vinduer som er innen 3 m.
+  const wins = windows(level);
+  for (const win of wins) {
+    const near = wins.filter((o) => Math.hypot(o.x - win.x, o.z - win.z) <= 3).length;
     const [nx, nz] = win.n;
     const x = win.x + 0.5 + nx * 0.9;
     const z = win.z + 0.5 + nz * 0.9;
     const y = (win.sill + win.head) / 2;
-    out.push({ cx: Math.floor(x), cz: Math.floor(z), x, z, y, ceil: y, state: LIGHT.ON, group: 0, object: true, power: sky.power, rgb });
+    out.push({ cx: Math.floor(x), cz: Math.floor(z), x, z, y, ceil: y, state: LIGHT.ON, group: 0, object: true, power: sky.power / (1 + (near - 1) * 0.7), rgb });
   }
   return out;
 }
@@ -206,6 +210,7 @@ export function createLightField(level, theme, lights = collectLights(level)) {
     const hit = cache.get(key);
     if (hit) return hit;
     const out = [ambient[0], ambient[1], ambient[2], 0, 0, 0, 0];
+    const day = [0, 0, 0]; // dagslys fra vinduer, lagt til til slutt
     const [sx, sz] = settle(level, heights, x + nx * 0.02, z + nz * 0.02, y);
     for (const l of near(sx, sz, R)) {
       const dx = l.x - sx;
@@ -223,11 +228,17 @@ export function createLightField(level, theme, lights = collectLights(level)) {
         out[3 + l.group] += c;
       } else {
         const col = l.rgb ?? color;
-        out[0] += c * col[0];
-        out[1] += c * col[1];
-        out[2] += c * col[2];
+        const to = l.rgb ? day : out;
+        to[0] += c * col[0];
+        to[1] += c * col[1];
+        to[2] += c * col[2];
       }
     }
+    // Dagslyset legges til mindre jo lysere det allerede er (ellers blir lyse rom med mange
+    // vinduer helt hvite): et mørkt rom får nesten alt, et opplyst rom en liten del.
+    const lit = (out[0] + out[1] + out[2]) / 3;
+    const share = 1 / (1 + lit * lit * 2);
+    for (let c = 0; c < 3; c++) out[c] += day[c] * share;
     cache.set(key, out);
     return out;
   }

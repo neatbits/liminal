@@ -17,27 +17,30 @@ const DIRS = [
  * brøkdel blir en sjanse, så store rom får flere og små rom kanskje ingen.
  * set 'desk' = skrivebord med noe oppå, 'tvrow' = tre TV-er på rad mot en vegg, 'foodspot' = en
  * gatekjøkkenkiosk mot veggen med et kafébord foran, 'softplay' = et byggverk av myke klosser.
- * open = midt på gulvet (ikke mot en vegg).
+ * 'gaming' = TV med spillkonsoll ved siden av og kontrollere på gulvet foran. open = midt på gulvet
+ * (ikke mot en vegg), ceiling = under taket midt i et rom, unna taklysene (takvifter).
  */
 const PLANS = {
-  backrooms: [{ set: 'foodspot', every: 2200 }, { id: 'tv', every: 1100 }, { id: 'boombox', every: 1600 }],
-  office: [{ set: 'desk', every: 110 }, { id: 'tv', every: 1500 }, { id: 'cafe', open: true, every: 1500 }],
-  basement: [{ id: 'tv', every: 1200, min: 1 }, { id: 'boombox', every: 900 }, { set: 'desk', every: 700 }],
+  backrooms: [{ set: 'foodspot', every: 2200 }, { id: 'clock', every: 1400 }, { id: 'tv', every: 1100 }, { id: 'boombox', every: 1600 }],
+  office: [{ set: 'desk', every: 110 }, { id: 'clock', every: 300 }, { id: 'tv', every: 1500 }, { id: 'cafe', open: true, every: 1500 }],
+  basement: [{ set: 'gaming', every: 1000, min: 1, rooms: true }, { id: 'fan', ceiling: true, every: 300, rooms: true }, { id: 'clock', every: 500 }, { id: 'tv', every: 1600 }, { id: 'boombox', every: 900 }, { set: 'desk', every: 700 }],
   pool: [{ id: 'duck', water: true, every: 70 }, { id: 'boombox', every: 1000 }],
-  playroom: [{ set: 'softplay', open: true, every: 110 }, { id: 'duck', water: true, every: 110 }, { id: 'tv', every: 700 }, { id: 'boombox', every: 900 }],
-  hotel: [{ id: 'tv', every: 800 }, { id: 'cafe', open: true, every: 1600 }],
+  playroom: [{ set: 'softplay', open: true, every: 110 }, { set: 'gaming', every: 900 }, { id: 'clock', every: 600 }, { id: 'duck', water: true, every: 110 }, { id: 'tv', every: 700 }, { id: 'boombox', every: 900 }],
+  hotel: [{ id: 'fan', ceiling: true, every: 600 }, { id: 'clock', every: 700 }, { id: 'cassette', every: 1500 }, { id: 'tv', every: 800 }, { id: 'cafe', open: true, every: 1600 }],
   garage: [{ id: 'boombox', every: 1500 }, { id: 'tv', every: 2200 }],
   // Butikkene (teppe = belegg) innredes av mall-shops.js; her bare gangene og atriet.
   mall: [{ set: 'foodspot', every: 900, min: 1, rooms: true }, { id: 'cafe', open: true, every: 250, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
   // rooms: bare i rommene, ikke i korridorer med skap eller på badene (ruter med belegg).
-  school: [{ set: 'foodspot', every: 2500, min: 1, rooms: true }, { id: 'cafe', open: true, every: 600, rooms: true }, { set: 'desk', every: 110, rooms: true }, { id: 'tv', every: 700, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
-  ward: [{ set: 'foodspot', every: 3000, rooms: true }, { id: 'tv', every: 260, rooms: true }, { set: 'desk', every: 900, rooms: true }],
+  school: [{ set: 'foodspot', every: 2500, min: 1, rooms: true }, { id: 'cafe', open: true, every: 600, rooms: true }, { set: 'desk', every: 110, rooms: true }, { id: 'clock', every: 150, rooms: true }, { id: 'tv', every: 700, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
+  ward: [{ set: 'foodspot', every: 3000, rooms: true }, { id: 'clock', every: 220, rooms: true }, { id: 'tv', every: 260, rooms: true }, { set: 'desk', every: 900, rooms: true }],
 };
 
 const ON_DESK = [
-  ['laptop', 0.6],
-  ['tv', 0.25],
-  ['boombox', 0.15],
+  ['laptop', 0.5],
+  ['tv', 0.2],
+  ['boombox', 0.12],
+  ['cassette', 0.1],
+  ['console', 0.08],
 ];
 
 function count(rand, amount, every, min = 0) {
@@ -72,6 +75,23 @@ function openSpots(level, spawn) {
     }
   }
   return out;
+}
+
+/** TV mot veggen, en spillkonsoll ved siden av og kontrollerne på gulvet et stykke foran. */
+function gaming(level, rand, x, z) {
+  const tv = tryPlace(level, x, z, 'tv', 2);
+  if (!tv) return false;
+  const [fx, fz] = FACING[tv.rot];
+  const s = rand() < 0.5 ? -1 : 1;
+  tryPlace(level, x - fz * s, z + fx * s, 'console', 1);
+  placeObject(level, x + fx * 2, z + fz * 2, 'gamepad');
+  return true;
+}
+
+/** Ingen taklys i ruten eller rundt den (en takvifte skal ikke henge i en lampe). */
+function unlit(level, x, z) {
+  for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) if (level.lights[(z + dz) * level.w + x + dx]) return false;
+  return true;
 }
 
 /** Kiosk mot veggen, og et kafébord et par meter foran den (litt til siden). */
@@ -131,11 +151,15 @@ export function furnish(level, rand, spawn = level.spawn) {
         if (placeObject(level, x, z, 'duck')) k++;
         continue;
       }
-      const list = item.open ? open : spots;
+      const list = item.open || item.ceiling ? open : spots;
       if (!list.length) break;
       const [x, z] = take(list, rand);
       if (item.rooms && level.finish[z * level.w + x]) continue;
-      if (item.set === 'softplay') {
+      if (item.ceiling) {
+        if (!unlit(level, x, z) || !placeObject(level, x, z, item.id)) continue;
+      } else if (item.set === 'gaming') {
+        if (!gaming(level, rand, x, z)) continue;
+      } else if (item.set === 'softplay') {
         if (!softBuild(level, rand, x, z)) continue;
       } else if (item.open) {
         if (objectsAt(level, x, z).length || !placeObject(level, x, z, item.id)) continue;
