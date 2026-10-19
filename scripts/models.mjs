@@ -9,7 +9,8 @@
 //   ofte med unlit-materialer) får emissive-teksturen som fargetekstur – three.js viser ellers
 //   ikke teksturen på unlit-materialer.
 // - Valgfri 3dmodels/<navn>/model.json: { "drop": ["Plane_BakedTable", …] } fjerner deler av
-//   modellen (noder med navn som begynner slik), f.eks. et bord eller et gulv modellen kom med.
+//   modellen (noder med navn som begynner slik), f.eks. et bord eller et gulv modellen kom med,
+//   og "textureSize": 512 gir mindre teksturer (for store filer).
 // Bare modeller som er nyere enn sin .glb (eller mangler den) bygges; --all bygger alle.
 import { readdirSync, mkdirSync, statSync, existsSync, readFileSync, rmSync } from 'node:fs';
 import { join, extname } from 'node:path';
@@ -69,7 +70,7 @@ for (const name of readdirSync(SRC)) {
       out,
       '--compress', 'meshopt',
       '--texture-compress', 'webp',
-      '--texture-size', '1024',
+      '--texture-size', String(config.textureSize ?? 1024),
       '--simplify', 'false',
     ],
     { stdio: 'inherit' },

@@ -75,9 +75,13 @@ function supportAt(level, x, z) {
 export function objectPose(level, o) {
   const p = basePose(level, o);
   if (OBJECTS[o.id].soft) return softPose(level, o, p);
-  const s = OBJECTS[o.id].surface ? null : supportAt(level, o.x + 0.5, o.z + 0.5);
+  // Flaten under der gjenstanden ville stått (ikke midten av ruten: en smal benk inntil veggen
+  // dekker ikke midten).
+  const s = OBJECTS[o.id].surface ? null : supportAt(level, p.x, p.z);
   if (s) {
-    const clamp = (v, lo, hi) => (lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, v)));
+    // Er gjenstanden bredere/dypere enn flaten, holdes den på den siden den ble skjøvet mot (ryggen
+    // mot veggen) og stikker ut på den andre.
+    const clamp = (v, lo, hi) => (lo > hi ? (Math.abs(v - lo) < Math.abs(v - hi) ? lo : hi) : Math.max(lo, Math.min(hi, v)));
     p.y = s.top;
     p.x = clamp(p.x, s.box[0] + p.w / 2, s.box[2] - p.w / 2);
     p.z = clamp(p.z, s.box[1] + p.d / 2, s.box[3] - p.d / 2);

@@ -104,6 +104,15 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- TV-benk («Brunn Design KAALM Lowboard Sand» av Brunn Design, CC BY 4.0, kreditert): TV-en i
+  kjellerstua står på en benk, med konsollen ved siden av og sofaen foran; hotellet, sykehuset og
+  kjelleren får også TV på benk. En gjenstand som er dypere enn flaten den står på, holder ryggen
+  mot veggen og stikker ut foran (før ble den sentrert og havnet i veggen), og flaten den står på
+  finnes der gjenstanden står, ikke midt i ruten.
+- `model.json` kan ha `textureSize` (f.eks. 512) for modeller med store teksturer.
+- Fysikken for lekeklossene lastes mer robust: Vite forhåndsbunter cannon-es, og innlastingen prøves
+  på nytt om den feiler (ellers kunne klossene bli stående stille hvis dev-serveren startet før
+  biblioteket var installert).
 - Plaststol og flamingo-badering fra Sketchfab (CC BY 4.0, kreditert): Poolrooms får plaststoler
   langs bassengkanten med ansiktet mot vannet, én eller to sammen, og flamingoer som flyter og
   dyttes rundt i gåmodus akkurat som endene (flytende gjenstander har nå hver sin størrelse).

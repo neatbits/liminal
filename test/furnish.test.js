@@ -12,7 +12,7 @@ describe('gjenstander i genererte rom', () => {
   it('hvert tema får bare gjenstander som hører hjemme der', () => {
     for (const theme of THEME_IDS) {
       const desk = ['desk', 'desk2', 'officechair', 'laptop', 'pc', 'tv', 'boombox', 'cassette', 'console'];
-      const sets = { desk, tvrow: ['tv'], table: ['cafe', 'dinerset'], foodspot: ['kiosk', 'cafe', 'dinerset'], chairs: ['dinerchair'], arcades: ['arcade2'], poolside: ['plasticchair'], gaming: ['tv', 'console', 'gamepad'], livingroom: ['tv', 'console', 'gamepad', 'sofa'], softplay: ['softcube', 'softblock', 'softpillar', 'softbeam', 'softslab'] };
+      const sets = { desk, tvrow: ['tv'], table: ['cafe', 'dinerset'], foodspot: ['kiosk', 'cafe', 'dinerset'], chairs: ['dinerchair'], arcades: ['arcade2'], poolside: ['plasticchair'], gaming: ['tv', 'tvbench', 'console', 'gamepad'], livingroom: ['tv', 'tvbench', 'console', 'gamepad', 'sofa'], tvstand: ['tv', 'tvbench'], softplay: ['softcube', 'softblock', 'softpillar', 'softbeam', 'softslab'] };
       const allowed = new Set(PLANS[theme].flatMap((p) => sets[p.set] ?? [p.id]).concat(theme === 'mall' ? SHOP_ITEMS : []));
       for (const seed of [1, 2]) {
         for (const id of ids(generateLevel({ theme, w: 44, h: 38, seed }))) expect(allowed.has(id), `${theme}: ${id}`).toBe(true);
@@ -87,5 +87,8 @@ describe('kjellerstua', () => {
     const [fx, fz] = FACING[sp.rot];
     // Sofaens forside peker mot TV-en.
     expect(fx * (tp.x - sp.x) + fz * (tp.z - sp.z)).toBeGreaterThan(2);
+    // TV-en står på en TV-benk.
+    expect(level.objects.some((o) => o.id === 'tvbench')).toBe(true);
+    expect(tp.y).toBeCloseTo(0.6, 2);
   });
 });

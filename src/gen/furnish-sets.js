@@ -63,13 +63,26 @@ export function desk(level, rand, x, z) {
   return true;
 }
 
-/** TV mot veggen, en spillkonsoll ved siden av og kontrollerne foran – og kanskje en sofa. */
+/** TV-benk mot veggen med en TV oppå. Returnerer TV-en (eller null). */
+export function tvstand(level, rand, x, z, front = 2) {
+  if (!tryPlace(level, x, z, 'tvbench', front)) return null;
+  if (placeObject(level, x, z, 'tv')) return level.objects[level.objects.length - 1];
+  level.objects = level.objects.slice(0, -1);
+  return null;
+}
+
+/**
+ * TV mot veggen (på en TV-benk i stua, ellers ofte på gulvet), spillkonsoll ved siden av og
+ * kontrollerne foran – og kanskje en sofa som vender mot TV-en.
+ */
 export function gaming(level, rand, x, z, sofa = false) {
-  const tv = tryPlace(level, x, z, 'tv', sofa ? 4 : 2);
+  const bench = sofa || rand() < 0.5;
+  const tv = (bench && tvstand(level, rand, x, z, sofa ? 4 : 2)) || tryPlace(level, x, z, 'tv', sofa ? 4 : 2);
   if (!tv) return false;
   const [fx, fz] = FACING[tv.rot];
   const s = rand() < 0.5 ? -1 : 1;
-  tryPlace(level, x - fz * s, z + fx * s, 'console', 1);
+  // Konsollen på gulvet ved siden av (benken er bred nok til at den da står ved enden av den).
+  tryPlace(level, x - fz * s * (bench ? 2 : 1), z + fx * s * (bench ? 2 : 1), 'console', 1);
   placeObject(level, x + fx * 2, z + fz * 2, 'gamepad');
   // Sofaen 3,5 m foran TV-en, med ansiktet mot den.
   if (sofa) put(level, 'sofa', x + fx * 4, z + fz * 4, (tv.rot + 2) % 4);

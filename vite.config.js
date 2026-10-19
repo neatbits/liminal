@@ -4,6 +4,8 @@ export default defineConfig({
   // Relativ base slik at bygget fungerer fra hvilken som helst mappe/statisk host.
   base: './',
   server: { port: 5180 },
+  // Fysikken (lekeklossene) lastes dynamisk; forhåndsbunt den, så første innlasting i dev ikke feiler.
+  optimizeDeps: { include: ['cannon-es'] },
   // three.js alene er ~600 kB minifisert; det er forventet.
   build: {
     chunkSizeWarningLimit: 900,

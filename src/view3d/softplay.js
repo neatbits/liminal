@@ -23,7 +23,7 @@ export class SoftPlay {
   }
 
   /** Ny fysikk med klossene der de står i rommet (også når man går ut av gåmodus). */
-  reset() {
+  reset(attempt = 0) {
     const level = this.level;
     this.phys = null;
     if (!level?.objects?.some((o) => OBJECTS[o.id]?.soft)) return;
@@ -34,7 +34,11 @@ export class SoftPlay {
         if (this.walk.sound) bump(this.walk.audio, strength);
       };
       this._apply();
-    }).catch((e) => console.warn('Soft play physics could not load:', e)); // klossene står da bare stille
+    }).catch((e) => {
+      // Prøv igjen et par ganger (f.eks. mens dev-serveren bunter avhengigheter); ellers står klossene stille.
+      if (attempt < 3) setTimeout(() => this.level === level && this.reset(attempt + 1), 1500);
+      else console.warn('Soft play physics could not load:', e);
+    });
   }
 
   update(dt, walker, riding) {

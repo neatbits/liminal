@@ -201,6 +201,22 @@ export const OBJECTS = {
       licenseUrl: 'http://creativecommons.org/licenses/by/4.0/',
     },
   },
+  tvbench: {
+    label: 'TV bench',
+    file: 'tv_bench',
+    scale: 0.0254, // modellen er i tommer
+    size: [1.8, 0.6, 0.42],
+    surface: 0.6, // TV-en står oppå
+    credit: '“Brunn Design KAALM Lowboard Sand” by Brunn Design (CC BY 4.0)',
+    attribution: {
+      title: 'Brunn Design KAALM Lowboard Sand',
+      source: 'https://sketchfab.com/3d-models/brunn-design-kaalm-lowboard-sand-b4c4b0b7ad85457a84e5ea6f947cdc19',
+      author: 'Brunn Design',
+      authorUrl: 'https://sketchfab.com/brunndesign',
+      license: 'CC BY 4.0',
+      licenseUrl: 'http://creativecommons.org/licenses/by/4.0/',
+    },
+  },
   duck: { label: 'Rubber duck', file: 'rubber_duck', size: [0.214, 0.286, 0.3], floats: true, credit: 'Rubber Duck Toy – Poly Haven (CC0)' },
   // Bygget av enkle former (world/props.js), uten modellfil.
   kiosk: { label: 'Food kiosk', build: 'kiosk', size: [3, 2.6, 1.5], glow: 0.22 },
