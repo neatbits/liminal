@@ -104,6 +104,10 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Monsteret er skumlere: altfor høyt og tynt, med oppdratte skuldre, armer med albuer som henger
+  rett ned til knærne og ender i lange fingre (før stakk de ut som en V), en tynn hals og et avlangt
+  hode på skakke. Det puster, armene svaier, hodet rykker brått til siden innimellom, og det lener
+  seg fram når det jakter. Smilet er bredere og øynene ulike.
 - Stemningsskala for gåmodus: Normal → Abandoned → Liminal → Uncanny → Nightmare (velger over
   3D-visningen, knapp i gålinjen, tasten X; huskes). Én innstilling styrer tåke og lysstyrke,
   andelen ødelagte og blinkende lys, «Make it wrong» (genererte nivåer fra Liminal, ditt eget rom
