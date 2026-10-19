@@ -235,6 +235,8 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Vinduer blendet i lyse rom (Poolrooms), særlig mange sammen: dagslyset legges nå til mindre jo
   lysere rommet allerede er, vinduer som sitter tett deler på lyset, glasset og solflekkene dempes i
   temaer med høy eksponering, og Poolrooms får glissere vinduer.
+- Solflekker fra vinduer gikk gjennom innervegger og landet i rom uten vinduer (stripene på kryss og
+  tvers i skolen): nå må hele flekken ligge på åpent gulv, ikke bare hjørnene og midten.
 - Kafestolene har en ordentlig ramme: bakbeina fortsetter opp som stolper som holder ryggen, med
   stag under setet og en rygg som heller litt bakover (før svevde ryggen).
 - Flimring (z-fighting) mellom kioskskiltet, taket og sideveggene.

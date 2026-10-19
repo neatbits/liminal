@@ -87,3 +87,15 @@ describe('vinduer', () => {
     expect(windows(generateLevel({ theme: 'backrooms', w: 40, h: 32, seed: 2 }))).toHaveLength(0);
   });
 });
+
+describe('solflekker', () => {
+  it('går aldri gjennom en innervegg og inn i rommet ved siden av', () => {
+    // Rom med vindu mot nord og en innervegg 2 m inn i rommet (z 3), med gulv også bak den.
+    const level = createLevel({ w: 12, h: 12, height: 2.7 });
+    fillTiles(level, rectIndices(level, { x0: 1, z0: 1, x1: 10, z1: 10 }), TILE.FLOOR);
+    fillTiles(level, rectIndices(level, { x0: 1, z0: 3, x1: 10, z1: 3 }), TILE.WALL);
+    paintWindows(level, [[5, 0]], true);
+    const patch = sunPatch(level, windowInfo(level, 5, 0), SKIES.golden.sun);
+    for (const [, z] of patch?.points ?? []) expect(z).toBeLessThanOrEqual(3);
+  });
+});

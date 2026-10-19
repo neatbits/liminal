@@ -105,8 +105,14 @@ export function sunPatch(level, win, sun) {
   for (let top = win.head - win.floor; top > SILL + 0.25; top -= 0.2) {
     const at = (s, h) => [face[0] + ux * s + dir[0] * h * reach, face[1] + uz * s + dir[1] * h * reach];
     const pts = [at(-a, SILL), at(a, SILL), at(a, top), at(-a, top)];
-    const mid = at(0, (SILL + top) / 2);
-    if ([...pts, mid].every(([x, z]) => open(x, z))) return { points: pts, top: (top - SILL) / (win.head - win.sill) };
+    // Hele flekken må ligge på åpent gulv: et rutenett av punkter hvert ~20 cm, så den aldri går
+    // gjennom en innervegg og inn i rommet ved siden av (ikke bare hjørnene og midten).
+    const n = Math.ceil(((top - SILL) * reach) / 0.2) + 1;
+    let ok = true;
+    for (let i = 0; i <= 4 && ok; i++) {
+      for (let j = 0; j <= n && ok; j++) ok = open(...at(-a + (2 * a * i) / 4, SILL + ((top - SILL) * j) / n));
+    }
+    if (ok) return { points: pts, top: (top - SILL) / (win.head - win.sill) };
   }
   return null;
 }
