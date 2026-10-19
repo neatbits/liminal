@@ -78,3 +78,24 @@ export function mallCeiling(rand) {
   pixelPass(ctx, S, (x, y, i, d) => shade(d, i, 0.98 + (n[y * S + x] - 0.5) * 0.05));
   return canvas;
 }
+
+/** Butikkteppe: tett, blågrått nålefilt med et diskret rutemønster (2 m). */
+export function shopCarpet(rand) {
+  const S = 256;
+  const { canvas, ctx } = makeCanvas(S);
+  ctx.fillStyle = '#6f7682';
+  ctx.fillRect(0, 0, S, S);
+  ctx.strokeStyle = 'rgba(40,46,58,0.25)';
+  ctx.lineWidth = 2;
+  for (let k = 0; k <= 8; k++) {
+    ctx.beginPath();
+    ctx.moveTo((k * S) / 8, 0);
+    ctx.lineTo((k * S) / 8, S);
+    ctx.moveTo(0, (k * S) / 8);
+    ctx.lineTo(S, (k * S) / 8);
+    ctx.stroke();
+  }
+  const n = fbm(S, 32, 3, rand);
+  pixelPass(ctx, S, (x, y, i, d) => shade(d, i, 0.92 + (n[y * S + x] - 0.5) * 0.12 + (rand() - 0.5) * 0.12));
+  return canvas;
+}

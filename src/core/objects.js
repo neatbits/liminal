@@ -31,6 +31,9 @@ export const OBJECTS = {
   // Bygget av enkle former (world/props.js), uten modellfil.
   kiosk: { label: 'Food kiosk', build: 'kiosk', size: [3, 2.6, 1.5], glow: 0.22 },
   cafe: { label: 'Café table', build: 'cafe', size: [1.7, 0.92, 1.7] },
+  shelf: { label: 'Shop shelf', build: 'shelf', size: [2.1, 1.62, 0.9] },
+  wallshelf: { label: 'Wall shelf', build: 'wallshelf', size: [2, 2, 0.45] },
+  counter: { label: 'Shop counter', build: 'counter', size: [1.86, 1.2, 0.72] },
 };
 
 export const OBJECT_IDS = Object.keys(OBJECTS);

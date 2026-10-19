@@ -104,6 +104,11 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Butikker i kjøpesenteret: større (7–11 m brede, dypere), med blågrått teppe og mørk fotlist, og
+  ryddig innredning etter butikktypen – rader med tomme, tosidige hyllereoler, tomme veggreoler
+  langs bakveggen, TV-er på rad i en elektronikkbutikk, en skranke med kasseapparat ved inngangen,
+  eller helt tomt. Kiosker, kafébord og boombox holdes ute i gangene og atriet. Nye gjenstander
+  (også i Object-verktøyet): «Shop shelf», «Wall shelf» og «Shop counter».
 - Gatekjøkken: en kiosk (3 × 1,5 m) med opplyst skilt med oppdiktet navn (Burger Stop, Pizza
   Plaza, Noodle Bar, Hot Dog Hut, Fries & Co – «Cafeteria» på skolen, «Kiosk» på sykehuset), rød
   eller farget disk med en enkel burgerlogo, og et hvitt, flislagt bakrom med kjøleskap, maskiner

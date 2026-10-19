@@ -8,7 +8,7 @@ import { hotelCarpet, hotelWallpaper, hotelWood, plaster } from './hotel.js';
 import { carpetClean, paintBeige } from './basement.js';
 import { doorPanel, doorLouver, doorFlat } from './doors.js';
 import { foamMat, playWall, playStripe, ballBed } from './playroom.js';
-import { mallFloor, mallWall, mallStone, mallCeiling } from './mall.js';
+import { mallFloor, mallWall, mallStone, mallCeiling, shopCarpet } from './mall.js';
 import { schoolFloor, blockWall, lockers, wardFloor, wardMint } from './school.js';
 
 const PAINTERS = {
@@ -38,6 +38,7 @@ const PAINTERS = {
   mallWall,
   mallStone,
   mallCeiling,
+  shopCarpet,
   schoolFloor,
   blockWall,
   lockers,

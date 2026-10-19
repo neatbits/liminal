@@ -25,7 +25,8 @@ const PLANS = {
   playroom: [{ id: 'duck', water: true, every: 110 }, { id: 'tv', every: 700 }, { id: 'boombox', every: 900 }],
   hotel: [{ id: 'tv', every: 800 }, { id: 'cafe', open: true, every: 1600 }],
   garage: [{ id: 'boombox', every: 1500 }, { id: 'tv', every: 2200 }],
-  mall: [{ set: 'foodspot', every: 900, min: 1 }, { id: 'cafe', open: true, every: 250 }, { set: 'tvrow', every: 1400, min: 1 }, { set: 'desk', every: 1000 }, { id: 'boombox', every: 1200 }],
+  // Butikkene (teppe = belegg) innredes av mall-shops.js; her bare gangene og atriet.
+  mall: [{ set: 'foodspot', every: 900, min: 1, rooms: true }, { id: 'cafe', open: true, every: 250, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
   // rooms: bare i rommene, ikke i korridorer med skap eller på badene (ruter med belegg).
   school: [{ set: 'foodspot', every: 2500, min: 1, rooms: true }, { id: 'cafe', open: true, every: 600, rooms: true }, { set: 'desk', every: 110, rooms: true }, { id: 'tv', every: 700, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
   ward: [{ set: 'foodspot', every: 3000, rooms: true }, { id: 'tv', every: 260, rooms: true }, { set: 'desk', every: 900, rooms: true }],

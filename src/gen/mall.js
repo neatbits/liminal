@@ -1,6 +1,6 @@
 // Kjøpesenteret: butikker i to etasjer langs begge langsidene, gallerier (dekker) rundt et
 // åpent atrium, en bro over atriet i andre etasje, fontener, trapper opp i hver ende og
-// nødutganger i endeveggene.
+// nødutganger i endeveggene. Butikkene får teppe og ryddig innredning (mall-shops.js).
 import { TILE } from '../core/level.js';
 import { autoLights, rectIndices } from '../core/ops.js';
 import { fillZone } from '../core/zones.js';
@@ -9,6 +9,7 @@ import { DOOR, setDoor } from '../core/doors.js';
 import { randInt } from '../core/rng.js';
 import { getTheme } from '../core/themes.js';
 import { fillInterior, fillRect } from './util.js';
+import { furnishShops } from './mall-shops.js';
 
 export const MALL_DECK = 4.4; // gulvet i andre etasje
 
@@ -19,7 +20,7 @@ export const MALL_DECK = 4.4; // gulvet i andre etasje
 export function mallLayout(w, h) {
   const gallery = 4;
   const ends = w >= 24 ? 4 : 2;
-  let shop = Math.max(4, Math.min(8, Math.floor(h * 0.2)));
+  let shop = Math.max(4, Math.min(10, Math.floor(h * 0.24)));
   while (shop > 3 && h - 2 * (shop + gallery + 2) < 6) shop--;
   const z0 = 1 + shop + 1 + gallery;
   const z1 = h - 2 - shop - 1 - gallery;
@@ -29,16 +30,22 @@ export function mallLayout(w, h) {
   return { shop, gallery, atrium };
 }
 
-/** Butikkrekke mellom x0 og x1 i båndet z0..z1, med front mot gangen i rad `front`. */
+/**
+ * Butikkrekke mellom x0 og x1 i båndet z0..z1, med front mot gangen i rad `front`.
+ * @returns {{ doors, list }} dørene i stengte butikker og butikkene { x0, z0, x1, z1, front, closed }
+ */
 function shops(level, rand, x0, x1, z0, z1, front) {
   const doors = [];
+  const list = [];
   fillRect(level, x0, front, x1, front, TILE.WALL);
   let a = x0;
   while (a <= x1) {
-    let b = a + randInt(rand, 4, 7) - 1;
-    if (x1 - b < 5) b = x1; // ingen smal rest
+    let b = a + randInt(rand, 7, 11) - 1;
+    if (x1 - b < 8) b = x1; // ingen smal rest
     if (b < x1) fillRect(level, b + 1, z0, b + 1, z1, TILE.WALL);
-    if (rand() < 0.2) {
+    const closed = rand() < 0.2;
+    list.push({ x0: a, z0, x1: b, z1, front, closed });
+    if (closed) {
       // Stengt butikk: hel front med én dør.
       const d = Math.floor((a + b) / 2);
       fillRect(level, d, front, d, front, TILE.DOOR);
@@ -48,7 +55,7 @@ function shops(level, rand, x0, x1, z0, z1, front) {
     }
     a = b + 2;
   }
-  return doors;
+  return { doors, list };
 }
 
 export function mall(level, rand) {
@@ -62,10 +69,8 @@ export function mall(level, rand) {
   // Endeveggene er to ruter tykke, så det er plass til nødutganger (dører til ingensteds).
   fillRect(level, 1, 1, 1, h - 2, TILE.WALL);
   fillRect(level, w - 2, 1, w - 2, h - 2, TILE.WALL);
-  const doors = [
-    ...shops(level, rand, 2, w - 3, 1, shop, shop + 1),
-    ...shops(level, rand, 2, w - 3, h - 1 - shop, h - 2, h - 2 - shop),
-  ];
+  const rows = [shops(level, rand, 2, w - 3, 1, shop, shop + 1), shops(level, rand, 2, w - 3, h - 1 - shop, h - 2, h - 2 - shop)];
+  const doors = rows.flatMap((r) => r.doors);
   // Andre etasje over alt unntatt atriet; en bro over midten av atriet.
   fillZone(level, 'deck', rectIndices(level, { x0: 2, z0: 1, x1: w - 3, z1: h - 2 }), MALL_DECK);
   const mid = Math.floor((atrium.x0 + atrium.x1) / 2);
@@ -101,4 +106,5 @@ export function mall(level, rand) {
     setDoor(level, w - 2, z, DOOR.CLOSED);
   }
   for (const [x, z] of doors) setDoor(level, x, z, rand() < 0.7 ? DOOR.CLOSED : DOOR.AJAR);
+  furnishShops(level, rand, rows.flatMap((r) => r.list));
 }

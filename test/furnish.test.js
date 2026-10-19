@@ -4,6 +4,7 @@ import { THEME_IDS } from '../src/core/themes.js';
 import { objectPose, objectBox, OBJECTS } from '../src/core/objects.js';
 import { generateLevel } from '../src/gen/index.js';
 import { PLANS } from '../src/gen/furnish.js';
+import { SHOP_ITEMS } from '../src/gen/mall-shops.js';
 
 const ids = (level) => new Set(level.objects.map((o) => o.id));
 
@@ -11,7 +12,7 @@ describe('gjenstander i genererte rom', () => {
   it('hvert tema får bare gjenstander som hører hjemme der', () => {
     for (const theme of THEME_IDS) {
       const sets = { desk: ['desk', 'laptop', 'tv', 'boombox'], tvrow: ['tv'], foodspot: ['kiosk', 'cafe'] };
-      const allowed = new Set(PLANS[theme].flatMap((p) => sets[p.set] ?? [p.id]));
+      const allowed = new Set(PLANS[theme].flatMap((p) => sets[p.set] ?? [p.id]).concat(theme === 'mall' ? SHOP_ITEMS : []));
       for (const seed of [1, 2]) {
         for (const id of ids(generateLevel({ theme, w: 44, h: 38, seed }))) expect(allowed.has(id), `${theme}: ${id}`).toBe(true);
       }

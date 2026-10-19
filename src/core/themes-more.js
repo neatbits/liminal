@@ -70,6 +70,8 @@ export const MORE_THEMES = {
       ceiling: { tex: 'mallCeiling', size: [2.4, 2.4] },
       basin: { tex: 'poolTilesBlue', size: [1, 1] },
     },
+    // Belegget (FINISH.TILES) er teppe i butikkene, med en mørk fotlist.
+    tiles: { floor: { tex: 'shopCarpet', size: [2, 2] }, wall: { tex: 'mallStone', size: [1.2, 1.2] }, height: 0.1, trim: '#4a4c4e' },
     // Høyt nok til to etasjer: dekker (gallerier) i ca. 4,4 m og tak i 7,8 m over atriet.
     defaultHeight: 7.8,
     lightSpacing: 4,

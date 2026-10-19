@@ -90,3 +90,28 @@ describe('kjøpesenteret – gange', () => {
     expect(below.floorY).toBeCloseTo(0, 2);
   });
 });
+
+describe('kjøpesenteret – butikkene', () => {
+  it('butikkene er store, har teppe og ryddig innredning – og ingen kiosker inne i dem', async () => {
+    const { objectPose, objectBox } = await import('../src/core/objects.js');
+    const level = presetById('mall').make();
+    const carpet = level.tiles.filter((t, i) => t === TILE.FLOOR && level.finish[i]).length;
+    expect(carpet).toBeGreaterThan(400);
+    const ids = level.objects.map((o) => o.id);
+    expect(ids).toContain('counter');
+    expect(ids.filter((id) => id === 'shelf' || id === 'wallshelf').length).toBeGreaterThan(4);
+    for (const o of level.objects) {
+      if (!['kiosk', 'cafe', 'boombox'].includes(o.id)) continue;
+      expect(level.finish[o.z * level.w + o.x], o.id).toBe(0);
+    }
+    // Reolene står med god plass rundt seg: ingen to gjenstander overlapper.
+    const boxes = level.objects.map((o) => objectBox(objectPose(level, o)));
+    for (let a = 0; a < boxes.length; a++) {
+      for (let b = a + 1; b < boxes.length; b++) {
+        const [p, q] = [boxes[a], boxes[b]];
+        const overlap = p[0] < q[2] - 0.02 && q[0] < p[2] - 0.02 && p[1] < q[3] - 0.02 && q[1] < p[3] - 0.02;
+        expect(overlap && !(level.objects[a].id === 'desk' || level.objects[b].id === 'desk')).toBe(false);
+      }
+    }
+  });
+});
