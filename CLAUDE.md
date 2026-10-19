@@ -43,7 +43,7 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
    `src/world/ball-layout.js`, `src/world/monster-ai.js`, `src/world/paths.js`,
    `src/world/autopilot.js`, `src/world/windows.js`, `src/view3d/flicker.js`,
    `src/view3d/events.js`, `src/audio/acoustics.js`, `src/audio/director.js`,
-   `src/world/softphysics.js`) slik at den
+   `src/world/softphysics.js`, `src/world/anomalies.js`) slik at den
    kan testes i Node.
 5. Brukergrensesnittet er på **engelsk** (all tekst brukeren ser: knapper, menyer,
    dialoger, feilmeldinger, temanavn og eksempler). Kode, identifikatorer og kommentarer
@@ -126,6 +126,11 @@ src/
   subtile hver for seg, aldri skumle, og ikke dele rommet i to (testen sjekker at det henger sammen).
 - **Drømmegange** (`view3d/drift.js` + `world/autopilot.js`): autopiloten bruker
   `world/paths.js` (som monsteret) og går gjennom dører til ingensteds via `walk.onExit`.
+- **Romlige avvik** (`world/anomalies.js`, ren logikk): `findLoops` finner rette ganger der
+  alle lag og gjenstander ±3 ruter gjentar seg med periode L; `Loops` (i `WalkMode`) flytter
+  gåeren `loopShift` (multiplum av L som går opp i teksturene, `textureRepeats`) når den krysser
+  midten. Korridornivåer: `gen/corridors.js`; «samme rom igjen» og dør tilbake: `gen/endless.js`
+  og `view3d/explore.js`.
 - **Scary mode** (`settings.scary`): `view3d/scary.js` styrer monsteret (`world/monster-ai.js`,
   ren logikk: avstandskart over rutenettet, lukkede dører stenger; `view3d/monster.js` tegner
   det) og lydene (`audio/scary.js`). Det jakter bare når strømmen er borte (`Blackout`).

@@ -54,7 +54,7 @@ export class Viewer {
     this.walk.sound = this.settings.sound;
     // Kassetter, strømbrudd og uendelige nivåer (dører til ingensteds) i gåmodus.
     this.explorer = new Explorer(this);
-    this.walk.onExit = () => this.explorer.goDeeper();
+    this.walk.onExit = (door) => this.explorer.goDeeper({ door });
     this.hud.setToggles(this.settings);
 
     renderer.domElement.addEventListener('click', () => {

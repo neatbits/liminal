@@ -14,12 +14,13 @@ export function tapeCount(level) {
 /**
  * @returns {Array<{ x, y, z, rot }>} kassettene (rot = dreining om loddaksen, radianer)
  */
-export function placeTapes(level, spawn, rand, count = tapeCount(level)) {
+export function placeTapes(level, spawn, rand, count = tapeCount(level), skip = null) {
   const cells = [];
   for (let z = 1; z < level.h - 1; z++) {
     for (let x = 1; x < level.w - 1; x++) {
       if (level.tiles[z * level.w + x] !== TILE.FLOOR || objectsAt(level, x, z).length) continue;
       if (spawn && Math.hypot(x + 0.5 - spawn.x, z + 0.5 - spawn.z) < 8) continue;
+      if (skip?.(x, z)) continue;
       cells.push([x, z]);
     }
   }

@@ -3,6 +3,7 @@
 // i gåmodus; går man ut, er man tilbake i rommet fra editoren. I Scary mode (view3d/scary.js)
 // kommer strømbruddene oftere og varer lenger, og noe kommer etter deg i mørket.
 import { nextLevel } from '../gen/endless.js';
+import { exitSpots } from '../world/autopilot.js';
 import { Blackout } from './events.js';
 import { Tapes } from './tapes.js';
 import { Scary } from './scary.js';
@@ -90,8 +91,12 @@ export class Explorer {
     this.goDeeper({ title: 'YOU NOCLIPPED', wait: 900 });
   }
 
-  /** Gjennom en dør til ingensteds: svart, nytt nivå, tittel – og videre. */
-  async goDeeper({ title = null, wait = 650 } = {}) {
+  /**
+   * Gjennom en dør til ingensteds: svart, nytt nivå, tittel – og videre. Av og til fører døren
+   * tilbake inn i det samme rommet, gjennom en annen dør (ingen tittel, ingen forklaring).
+   * @param door døren man gikk gjennom ({ info: { x, z } }), eller null (noclip)
+   */
+  async goDeeper({ title = null, wait = 650, door = null } = {}) {
     const v = this.v;
     if (this.busy) return;
     this.busy = true;
@@ -105,9 +110,18 @@ export class Explorer {
       this.busy = false;
       return;
     }
+    if (door && this._backIntoRoom(door)) {
+      await sleep(250);
+      v.hud.fade(false);
+      this.busy = false;
+      return;
+    }
     this.home ??= v.level;
     this.depth++;
-    const { level, label } = nextLevel(this.depth, v.world.theme.id, Math.random);
+    const { level, label, kind } = nextLevel(this.depth, v.world.theme.id, Math.random, v.level);
+    // Samme rom igjen: man kommer ut av den samme døren man nettopp gikk inn i.
+    const spot = kind === 'again' && door && exitSpots(level).find((s) => s.x === door.info.x && s.z === door.info.z);
+    if (spot) level.spawn = { x: spot.fx + 0.5, z: spot.fz + 0.5, a: spot.yaw + Math.PI };
     v.setLevel(level, { explorer: true });
     v.walk.enter();
     this.blackout = this._newBlackout();
@@ -119,6 +133,23 @@ export class Explorer {
     this.busy = false;
   }
 
+  /**
+   * En dør tilbake til det samme rommet (25 % av gangene, når det finnes en annen dør til
+   * ingensteds): man kommer ut av den andre døren, med ryggen mot den.
+   */
+  _backIntoRoom(door) {
+    if (Math.random() > 0.25) return false;
+    const others = exitSpots(this.v.walk.level).filter((s) => s.x !== door.info.x || s.z !== door.info.z);
+    if (!others.length) return false;
+    const s = others[Math.floor(Math.random() * others.length)];
+    const w = this.v.walk.walker;
+    w.x = s.fx + 0.5;
+    w.z = s.fz + 0.5;
+    w.vx = w.vz = 0;
+    w.yaw = s.yaw + Math.PI;
+    return true;
+  }
+
   _newBlackout() {
     return new Blackout(Math.random, this.v.settings.scary ? SCARY_TIMING : undefined);
   }
@@ -126,7 +157,10 @@ export class Explorer {
   /** Nye kassetter på nivået; de man ikke fant på forrige nivå, telles ikke lenger. */
   _placeTapes() {
     const v = this.v;
-    this.total = this.found + this.tapes.place(v.walk.level, v.world.field, v.walk.walker);
+    // Ikke i uendelige ganger: der ville kassettene hoppet når man flyttes én periode.
+    const loops = v.walk.loops?.loops ?? [];
+    const inLoop = (x, z) => loops.some((l) => (l.axis === 'x' ? x >= l.u0 && x <= l.u1 && z >= l.v0 - 3 && z <= l.v1 + 3 : z >= l.u0 && z <= l.u1 && x >= l.v0 - 3 && x <= l.v1 + 3));
+    this.total = this.found + this.tapes.place(v.walk.level, v.world.field, v.walk.walker, Math.random, inLoop);
   }
 
   _hasExits() {

@@ -11,6 +11,7 @@ import { Rider } from './rider.js';
 import { WalkInput } from './input.js';
 import { WaterPlay } from './water-play.js';
 import { Drift } from './drift.js';
+import { Loops, textureRepeats } from '../world/anomalies.js';
 import { glowSources } from '../core/objects.js';
 import { windows } from '../core/windows.js';
 
@@ -52,6 +53,7 @@ export class WalkMode {
     this.doors = doors;
     this.play.setWorld(this.level, extras.objects, extras.balls);
     this.screens = glowSources(this.level);
+    this.loops = new Loops(this.level, Math.random, undefined, textureRepeats(theme)); // ganger som er lengre innenfra enn utenfra
     this.windows = windows(this.level);
     this.drift.reset();
     this.theme = theme;
@@ -69,6 +71,7 @@ export class WalkMode {
     const spawn = resolveSpawn(this.level);
     if (!spawn) return false;
     this.walker.reset(this.level, spawn);
+    this.loops = new Loops(this.level, Math.random, undefined, textureRepeats(this.theme));
     this.play.reset();
     this.rider.path = null;
     this.input.reset();
@@ -190,7 +193,9 @@ export class WalkMode {
     if (this.rider.active) {
       this._ride(dt, camera);
     } else {
+      const [px, pz] = [this.walker.x, this.walker.z];
       const surface = this.walker.update(dt, this.drift.input(dt) ?? this.input, this.level, this.theme);
+      this.loops.update(px, pz, this.walker); // flyttes sømløst én periode tilbake i en uendelig gang
       if (surface && this.sound) this.audio.step(surface);
       this.walker.applyToCamera(camera);
       this._maybeSlide();

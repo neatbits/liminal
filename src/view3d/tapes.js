@@ -28,10 +28,13 @@ export class Tapes {
     this.items = [];
   }
 
-  /** Nye kassetter for rommet. Returnerer hvor mange. */
-  place(level, field, spawn, rand = Math.random) {
+  /**
+   * Nye kassetter for rommet. Returnerer hvor mange.
+   * @param skip (x, z) → true for ruter kassettene ikke skal ligge i
+   */
+  place(level, field, spawn, rand = Math.random, skip = null) {
     this.clear();
-    for (const t of placeTapes(level, spawn, rand)) {
+    for (const t of placeTapes(level, spawn, rand, undefined, skip)) {
       const s = field.sample(t.x, t.y + 0.03, t.z, 0, 1, 0);
       const light = new THREE.Color(s[0], s[1], s[2]);
       const body = new THREE.MeshBasicMaterial();

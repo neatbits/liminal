@@ -104,6 +104,19 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Romlige avvik i gåmodus:
+  - Ganger som er lengre innenfra enn utenfra: i en rett gang der vegger, dører, lys og gjenstander
+    gjentar seg i et fast mønster, flyttes man sømløst tilbake når man krysser midten – alt ser likt
+    ut, men enden kommer aldri nærmere. Etter 2–5 runder slipper gangen taket. Flyttingen går opp i
+    både mønsteret og teksturene (teppe, tapet), så ingenting hopper. Virker i «The Endless
+    Corridor» og i ganger man tegner selv med jevnt fordelte lys.
+  - De uendelige nivåene får av og til et korridornivå: en lang gang i hotell-, kontor-, skole-,
+    sykehus-, kjeller- eller Level 0-stil med dører og lys i fast takt og utgangen helt i enden.
+  - En dør til ingensteds fører av og til (25 %) tilbake inn i det samme rommet, ut av en annen dør –
+    uten tittel og uten forklaring.
+  - Av og til er neste nivå det samme rommet igjen, med noen små endringer («Make it wrong»,
+    subtilt) – og man kommer ut av den samme døren man nettopp gikk inn i.
+  - Kassetter legges ikke i uendelige ganger.
 - TV-benk («Brunn Design KAALM Lowboard Sand» av Brunn Design, CC BY 4.0, kreditert): TV-en i
   kjellerstua står på en benk, med konsollen ved siden av og sofaen foran; hotellet, sykehuset og
   kjelleren får også TV på benk. En gjenstand som er dypere enn flaten den står på, holder ryggen
