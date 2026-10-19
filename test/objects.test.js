@@ -32,7 +32,7 @@ describe('gjenstander', () => {
     level.tiles[3 * 10 + 5] = TILE.WATER;
     expect(placeObject(level, 0, 0, 'tv')).toBe(0);
     expect(placeObject(level, 5, 3, 'tv')).toBe(0);
-    expect(placeObject(level, 4, 3, 'sofa')).toBe(0);
+    expect(placeObject(level, 4, 3, 'grand-piano')).toBe(0);
   });
 
   it('ved en vegg vender den ryggen mot veggen og står inntil den', () => {

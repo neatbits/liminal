@@ -104,6 +104,10 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Sofa («Old Reliable Couch» av Jace B., Sketchfab, CC BY 4.0 – kreditert med lenker på About-siden):
+  kjellerstua får en sofa som vender mot TV-en (med konsoll og kontrollere), og hotellet, kontoret
+  og sykehuset en og annen sofa mot veggen. Katalogen har nå `turn` (dreie modellfilen så forsiden
+  vender riktig) og `attribution` (kreditering som lisensen krever).
 - Nye gjenstander fra Poly Haven (CC0): takvifte (henger under taket og snurrer sakte), veggklokke
   (henger på veggen), spillkonsoll, spillkontrollere og kassettspiller. Kjelleren får TV med konsoll
   og kontrollere på gulvet, takvifter og klokke; hotellet takvifter, klokker og en og annen

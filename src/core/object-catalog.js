@@ -9,7 +9,9 @@
  * (andel av et taklys). soft = myke lekeklosser: kan stables, og i gåmodus har de fysikk (de
  * dyttes, velter og faller ned) i stedet for å stå fast (world/softphysics.js). mount = 'ceiling'
  * (henger under taket) eller 'wall' (henger på veggen bak seg, `lift` m over gulvet). spin = rad/s
- * (snurrer, f.eks. en takvifte).
+ * (snurrer, f.eks. en takvifte). turn = dreining av modellfilen (radianer) så forsiden vender mot
+ * +z. attribution = kreditering som lisensen krever (CC BY): vises med lenker på About-siden.
+ * Modellene er fra Poly Haven (CC0) med mindre annet står.
  * Alle modellene er fra Poly Haven (CC0).
  */
 export const OBJECTS = {
@@ -30,6 +32,22 @@ export const OBJECTS = {
   console: { label: 'Game console', file: 'gaming_console', size: [0.325, 0.1, 0.319], credit: 'Gaming Console – Poly Haven (CC0)' },
   gamepad: { label: 'Game controllers', file: 'game_pad', size: [0.404, 0.019, 0.435], credit: 'Game Pad – Poly Haven (CC0)' },
   cassette: { label: 'Cassette player', file: 'cassette_player', size: [0.129, 0.237, 0.049], credit: 'Cassette Player – Poly Haven (CC0)' },
+  sofa: {
+    label: 'Sofa',
+    file: 'couch',
+    turn: Math.PI / 2, // modellen står på langs med ryggen mot +x
+    scale: 0.027,
+    size: [2.001, 0.862, 0.916],
+    credit: '“Old Reliable Couch” by Jace B. (CC BY 4.0)',
+    attribution: {
+      title: 'Old Reliable Couch',
+      source: 'https://sketchfab.com/3d-models/old-reliable-couch-c9a365e5ba9f456db4887dc1e5f4b5d5',
+      author: 'Jace B.',
+      authorUrl: 'https://sketchfab.com/snomss',
+      license: 'CC BY 4.0',
+      licenseUrl: 'http://creativecommons.org/licenses/by/4.0/',
+    },
+  },
   duck: { label: 'Rubber duck', file: 'rubber_duck', size: [0.214, 0.286, 0.3], floats: true, credit: 'Rubber Duck Toy – Poly Haven (CC0)' },
   // Bygget av enkle former (world/props.js), uten modellfil.
   kiosk: { label: 'Food kiosk', build: 'kiosk', size: [3, 2.6, 1.5], glow: 0.22 },

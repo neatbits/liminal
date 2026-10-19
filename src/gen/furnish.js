@@ -2,7 +2,7 @@
 // kjellerstua, ender i bassengene, en «elektronikkbutikk» med TV-er på rad i kjøpesenteret –
 // og bare en og annen forlatt TV eller boombox i de tommeste rommene. Ren logikk.
 import { TILE, getTile } from '../core/level.js';
-import { FACING, placeObject, objectsAt } from '../core/objects.js';
+import { FACING, placeObject, objectsAt, objectFits } from '../core/objects.js';
 import { softBuild } from './softplay.js';
 
 const DIRS = [
@@ -17,22 +17,23 @@ const DIRS = [
  * brøkdel blir en sjanse, så store rom får flere og små rom kanskje ingen.
  * set 'desk' = skrivebord med noe oppå, 'tvrow' = tre TV-er på rad mot en vegg, 'foodspot' = en
  * gatekjøkkenkiosk mot veggen med et kafébord foran, 'softplay' = et byggverk av myke klosser.
- * 'gaming' = TV med spillkonsoll ved siden av og kontrollere på gulvet foran. open = midt på gulvet
+ * 'gaming' = TV med spillkonsoll ved siden av og kontrollere på gulvet foran, 'livingroom' = det
+ * samme med en sofa som vender mot TV-en. open = midt på gulvet
  * (ikke mot en vegg), ceiling = under taket midt i et rom, unna taklysene (takvifter).
  */
 const PLANS = {
   backrooms: [{ set: 'foodspot', every: 2200 }, { id: 'clock', every: 1400 }, { id: 'tv', every: 1100 }, { id: 'boombox', every: 1600 }],
-  office: [{ set: 'desk', every: 110 }, { id: 'clock', every: 300 }, { id: 'tv', every: 1500 }, { id: 'cafe', open: true, every: 1500 }],
-  basement: [{ set: 'gaming', every: 1000, min: 1, rooms: true }, { id: 'fan', ceiling: true, every: 300, rooms: true }, { id: 'clock', every: 500 }, { id: 'tv', every: 1600 }, { id: 'boombox', every: 900 }, { set: 'desk', every: 700 }],
+  office: [{ id: 'sofa', every: 1600 }, { set: 'desk', every: 110 }, { id: 'clock', every: 300 }, { id: 'tv', every: 1500 }, { id: 'cafe', open: true, every: 1500 }],
+  basement: [{ set: 'livingroom', every: 1000, min: 1, rooms: true }, { id: 'sofa', every: 1400, rooms: true }, { id: 'fan', ceiling: true, every: 300, rooms: true }, { id: 'clock', every: 500 }, { id: 'tv', every: 1600 }, { id: 'boombox', every: 900 }, { set: 'desk', every: 700 }],
   pool: [{ id: 'duck', water: true, every: 70 }, { id: 'boombox', every: 1000 }],
   playroom: [{ set: 'softplay', open: true, every: 110 }, { set: 'gaming', every: 900 }, { id: 'clock', every: 600 }, { id: 'duck', water: true, every: 110 }, { id: 'tv', every: 700 }, { id: 'boombox', every: 900 }],
-  hotel: [{ id: 'fan', ceiling: true, every: 600 }, { id: 'clock', every: 700 }, { id: 'cassette', every: 1500 }, { id: 'tv', every: 800 }, { id: 'cafe', open: true, every: 1600 }],
+  hotel: [{ id: 'sofa', every: 900 }, { id: 'fan', ceiling: true, every: 600 }, { id: 'clock', every: 700 }, { id: 'cassette', every: 1500 }, { id: 'tv', every: 800 }, { id: 'cafe', open: true, every: 1600 }],
   garage: [{ id: 'boombox', every: 1500 }, { id: 'tv', every: 2200 }],
   // Butikkene (teppe = belegg) innredes av mall-shops.js; her bare gangene og atriet.
   mall: [{ set: 'foodspot', every: 900, min: 1, rooms: true }, { id: 'cafe', open: true, every: 250, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
   // rooms: bare i rommene, ikke i korridorer med skap eller på badene (ruter med belegg).
   school: [{ set: 'foodspot', every: 2500, min: 1, rooms: true }, { id: 'cafe', open: true, every: 600, rooms: true }, { set: 'desk', every: 110, rooms: true }, { id: 'clock', every: 150, rooms: true }, { id: 'tv', every: 700, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
-  ward: [{ set: 'foodspot', every: 3000, rooms: true }, { id: 'clock', every: 220, rooms: true }, { id: 'tv', every: 260, rooms: true }, { set: 'desk', every: 900, rooms: true }],
+  ward: [{ id: 'sofa', every: 1400, rooms: true }, { set: 'foodspot', every: 3000, rooms: true }, { id: 'clock', every: 220, rooms: true }, { id: 'tv', every: 260, rooms: true }, { set: 'desk', every: 900, rooms: true }],
 };
 
 const ON_DESK = [
@@ -78,14 +79,22 @@ function openSpots(level, spawn) {
 }
 
 /** TV mot veggen, en spillkonsoll ved siden av og kontrollerne på gulvet et stykke foran. */
-function gaming(level, rand, x, z) {
-  const tv = tryPlace(level, x, z, 'tv', 2);
+function gaming(level, rand, x, z, sofa = false) {
+  const tv = tryPlace(level, x, z, 'tv', sofa ? 4 : 2);
   if (!tv) return false;
   const [fx, fz] = FACING[tv.rot];
   const s = rand() < 0.5 ? -1 : 1;
   tryPlace(level, x - fz * s, z + fx * s, 'console', 1);
   placeObject(level, x + fx * 2, z + fz * 2, 'gamepad');
+  // Sofaen 3,5 m foran TV-en, med ansiktet mot den.
+  if (sofa) put(level, 'sofa', x + fx * 4, z + fz * 4, (tv.rot + 2) % 4);
   return true;
+}
+
+function put(level, id, x, z, rot) {
+  const o = { id, x, z, rot };
+  const next = [...level.objects, o];
+  if (objectFits({ ...level, objects: next }, o, next)) level.objects = next;
 }
 
 /** Ingen taklys i ruten eller rundt den (en takvifte skal ikke henge i en lampe). */
@@ -157,8 +166,8 @@ export function furnish(level, rand, spawn = level.spawn) {
       if (item.rooms && level.finish[z * level.w + x]) continue;
       if (item.ceiling) {
         if (!unlit(level, x, z) || !placeObject(level, x, z, item.id)) continue;
-      } else if (item.set === 'gaming') {
-        if (!gaming(level, rand, x, z)) continue;
+      } else if (item.set === 'gaming' || item.set === 'livingroom') {
+        if (!gaming(level, rand, x, z, item.set === 'livingroom')) continue;
       } else if (item.set === 'softplay') {
         if (!softBuild(level, rand, x, z)) continue;
       } else if (item.open) {

@@ -11,7 +11,7 @@ const ids = (level) => new Set(level.objects.map((o) => o.id));
 describe('gjenstander i genererte rom', () => {
   it('hvert tema får bare gjenstander som hører hjemme der', () => {
     for (const theme of THEME_IDS) {
-      const sets = { desk: ['desk', 'laptop', 'tv', 'boombox', 'cassette', 'console'], tvrow: ['tv'], foodspot: ['kiosk', 'cafe'], gaming: ['tv', 'console', 'gamepad'], softplay: ['softcube', 'softblock', 'softpillar', 'softbeam', 'softslab'] };
+      const sets = { desk: ['desk', 'laptop', 'tv', 'boombox', 'cassette', 'console'], tvrow: ['tv'], foodspot: ['kiosk', 'cafe'], gaming: ['tv', 'console', 'gamepad'], livingroom: ['tv', 'console', 'gamepad', 'sofa'], softplay: ['softcube', 'softblock', 'softpillar', 'softbeam', 'softslab'] };
       const allowed = new Set(PLANS[theme].flatMap((p) => sets[p.set] ?? [p.id]).concat(theme === 'mall' ? SHOP_ITEMS : []));
       for (const seed of [1, 2]) {
         for (const id of ids(generateLevel({ theme, w: 44, h: 38, seed }))) expect(allowed.has(id), `${theme}: ${id}`).toBe(true);
@@ -71,5 +71,20 @@ describe('gatekjøkken', () => {
   it('skolen og sykehuset har egne skilt (CAFETERIA, KIOSK)', async () => {
     const level = generateLevel({ theme: 'school', w: 52, h: 40, seed: 6 });
     expect(level.objects.some((o) => o.id === 'kiosk')).toBe(true);
+  });
+});
+
+describe('kjellerstua', () => {
+  it('har en sofa som vender mot TV-en', async () => {
+    const { FACING, objectPose } = await import('../src/core/objects.js');
+    const level = generateLevel({ theme: 'basement', w: 40, h: 30, seed: 12 });
+    const sofa = level.objects.find((o) => o.id === 'sofa');
+    const tv = level.objects.find((o) => o.id === 'tv');
+    expect(sofa && tv).toBeTruthy();
+    const sp = objectPose(level, sofa);
+    const tp = objectPose(level, tv);
+    const [fx, fz] = FACING[sp.rot];
+    // Sofaens forside peker mot TV-en.
+    expect(fx * (tp.x - sp.x) + fz * (tp.z - sp.z)).toBeGreaterThan(2);
   });
 });

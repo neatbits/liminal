@@ -1,0 +1,11 @@
+Model Information:
+* title:	Old Reliable Couch
+* source:	https://sketchfab.com/3d-models/old-reliable-couch-c9a365e5ba9f456db4887dc1e5f4b5d5
+* author:	Jace B. (https://sketchfab.com/snomss)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Old Reliable Couch" (https://sketchfab.com/3d-models/old-reliable-couch-c9a365e5ba9f456db4887dc1e5f4b5d5) by Jace B. (https://sketchfab.com/snomss) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

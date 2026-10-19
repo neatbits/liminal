@@ -1,11 +1,26 @@
-// About-siden: stilene fra forsiden, og krediteringen av modellene rett fra katalogen.
+// About-siden: stilene fra forsiden, og krediteringen av modellene rett fra katalogen. Modeller
+// med CC BY-lisens krediteres med tittel, skaper, kilde og lisens (lenket), slik lisensen krever.
 import './styles/landing.css';
 import './styles/landing-sections.css';
 import { OBJECTS } from './core/objects.js';
 
+function link(text, href) {
+  const a = document.createElement('a');
+  a.href = href;
+  a.rel = 'noopener';
+  a.textContent = text;
+  return a;
+}
+
 const list = document.getElementById('model-credits');
 for (const o of Object.values(OBJECTS).filter((def) => def.credit)) {
   const li = document.createElement('li');
-  li.textContent = `${o.label}: ${o.credit}`;
+  const a = o.attribution;
+  if (a) {
+    // «This work is based on "Title" (kilde) by Author licensed under CC BY 4.0»
+    li.append(`${o.label}: based on “`, link(a.title, a.source), '” by ', link(a.author, a.authorUrl), ', licensed under ', link(a.license, a.licenseUrl), '.');
+  } else {
+    li.textContent = `${o.label}: ${o.credit}`;
+  }
   list.append(li);
 }

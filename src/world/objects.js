@@ -49,7 +49,7 @@ function center(parts) {
 }
 
 /** Laster og forbereder en modell: [{ geometry, map, arm, color }], sentrert. */
-function loadModel(file) {
+function loadModel(file, turn = 0) {
   if (!cache.has(file)) {
     const url = URLS[file];
     const promise = url
@@ -64,6 +64,7 @@ function loadModel(file) {
             if (m.geometry.attributes.uv) g.setAttribute('uv', toFloat(m.geometry.attributes.uv, 2));
             if (m.geometry.index) g.setIndex(m.geometry.index);
             g.applyMatrix4(m.matrixWorld);
+            if (turn) g.rotateY(turn); // forsiden mot +z
             const mat = m.material;
             parts.push({
               geometry: g,
@@ -162,7 +163,7 @@ export function createObjects(level, field, shared) {
   const jobs = (level.objects ?? []).map(async (o, index) => {
     const def = OBJECTS[o.id];
     if (!def) return;
-    const parts = await (def.build ? loadProp(propKey(def, level, o)) : loadModel(def.file));
+    const parts = await (def.build ? loadProp(propKey(def, level, o)) : loadModel(def.file, def.turn));
     if (disposed) return;
     const pose = objectPose(level, o);
     const s = def.scale ?? 1;

@@ -86,8 +86,10 @@ src/
 - **Gjenstander** (`core/objects.js`): katalogen `OBJECTS` (id → label, file, size, credit) og
   `level.objects` = [{ id, x, z, rot }], som sklielisten aldri endret på stedet. Ny modell:
   legg glTF i `3dmodels/<navn>/`, kjør `npm run models`, og legg en oppføring i `OBJECTS`
-  (size = utstrekning i meter, forsiden mot +z). Bruk bare CC0/CC-BY-modeller (siden har
-  reklame) og før opp kreditering i `credit`. 3D-delen (`world/objects.js`) laster .glb
+  (size = utstrekning i meter etter `scale`, forsiden mot +z – bruk `turn` om modellen vender
+  feil). Bruk bare CC0/CC-BY-modeller (siden har reklame) og før opp kreditering i `credit`;
+  CC BY krever i tillegg `attribution` (tittel, kilde, skaper, lisens med lenker – About-siden
+  viser det). Behold lisensfilen i `3dmodels/<navn>/`. 3D-delen (`world/objects.js`) laster .glb
   asynkront, sentrerer modellen og baker rommets lys per vertex. `surface` (høyde) gjør en
   gjenstand til en flate andre settes oppå; `floats` lar den ligge i vann, og i gåmodus
   dyttes slike rundt (`world/floaters.js` via `view3d/water-play.js`). Med `build` i stedet for
