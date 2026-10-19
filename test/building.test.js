@@ -26,10 +26,11 @@ describe('skolen', () => {
     expect(getTheme('school').tiles.wall.tex).toBe('lockers');
   });
 
-  it('gjenstandene står i klasserommene, ikke i korridorene', () => {
+  it('gjenstandene står i klasserommene, ikke i korridorene (bortsett fra brusautomater)', () => {
     const level = generateLevel({ theme: 'school', w: 52, h: 40, seed: 6 });
     expect(level.objects.length).toBeGreaterThan(3);
-    for (const o of level.objects) expect(level.finish[o.z * level.w + o.x]).toBe(0);
+    // Unntak: brusautomater står i korridorene, ved skapene.
+    for (const o of level.objects) if (o.id !== 'soda') expect(level.finish[o.z * level.w + o.x]).toBe(0);
   });
 
   it('eksempelet er i gyllen time, med vinduer', () => {

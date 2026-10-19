@@ -1,9 +1,11 @@
-// Gjenstander i genererte rom, valgt etter temaet: skrivebord med laptop på kontoret, TV i
-// kjellerstua, ender i bassengene, en «elektronikkbutikk» med TV-er på rad i kjøpesenteret –
-// og bare en og annen forlatt TV eller boombox i de tommeste rommene. Ren logikk.
+// Gjenstander i genererte rom, valgt etter temaet: skrivebord med stol og PC på kontoret, TV-hjørne
+// med sofa i kjellerstua, ender i bassengene, brusautomater i gangene, arkademaskiner i lekerommet
+// – og bare en og annen forlatt TV, stol eller arkademaskin i de tommeste rommene. Oppsettene
+// ligger i furnish-sets.js. Ren logikk.
 import { TILE, getTile } from '../core/level.js';
-import { FACING, placeObject, objectsAt, objectFits } from '../core/objects.js';
+import { placeObject, objectsAt } from '../core/objects.js';
 import { softBuild } from './softplay.js';
+import { tryPlace, desk, gaming, foodspot, chairs, arcades, tvrow, table } from './furnish-sets.js';
 
 const DIRS = [
   [0, -1],
@@ -13,36 +15,26 @@ const DIRS = [
 ];
 
 /**
- * Per tema: { id | set, every } – én per `every` m² gulv (eller vannruter for ender); en
- * brøkdel blir en sjanse, så store rom får flere og små rom kanskje ingen.
- * set 'desk' = skrivebord med noe oppå, 'tvrow' = tre TV-er på rad mot en vegg, 'foodspot' = en
- * gatekjøkkenkiosk mot veggen med et kafébord foran, 'softplay' = et byggverk av myke klosser.
- * 'gaming' = TV med spillkonsoll ved siden av og kontrollere på gulvet foran, 'livingroom' = det
- * samme med en sofa som vender mot TV-en. open = midt på gulvet
- * (ikke mot en vegg), ceiling = under taket midt i et rom, unna taklysene (takvifter).
+ * Per tema: { id | set, every } – én per `every` m² gulv (eller vannruter for ender); en brøkdel
+ * blir en sjanse, så store rom får flere og små rom kanskje ingen. min = minst så mange.
+ * Oppsett (set): 'desk', 'gaming', 'livingroom' (gaming + sofa), 'foodspot', 'chairs', 'arcades',
+ * 'tvrow' (furnish-sets.js), 'table' (dinersett eller kafébord) og 'softplay' (lekeklosser).
+ * open = midt på gulvet (ikke mot en vegg), ceiling = under taket, unna taklysene (takvifter),
+ * rooms = ikke på ruter med belegg (korridorer med skap, bad, butikker med teppe).
  */
 const PLANS = {
-  backrooms: [{ set: 'foodspot', every: 2200 }, { id: 'clock', every: 1400 }, { id: 'tv', every: 1100 }, { id: 'boombox', every: 1600 }],
-  office: [{ id: 'sofa', every: 1600 }, { set: 'desk', every: 110 }, { id: 'clock', every: 300 }, { id: 'tv', every: 1500 }, { id: 'cafe', open: true, every: 1500 }],
-  basement: [{ set: 'livingroom', every: 1000, min: 1, rooms: true }, { id: 'sofa', every: 1400, rooms: true }, { id: 'fan', ceiling: true, every: 300, rooms: true }, { id: 'clock', every: 500 }, { id: 'tv', every: 1600 }, { id: 'boombox', every: 900 }, { set: 'desk', every: 700 }],
-  pool: [{ id: 'duck', water: true, every: 70 }, { id: 'boombox', every: 1000 }],
-  playroom: [{ set: 'softplay', open: true, every: 110 }, { set: 'gaming', every: 900 }, { id: 'clock', every: 600 }, { id: 'duck', water: true, every: 110 }, { id: 'tv', every: 700 }, { id: 'boombox', every: 900 }],
-  hotel: [{ id: 'sofa', every: 900 }, { id: 'fan', ceiling: true, every: 600 }, { id: 'clock', every: 700 }, { id: 'cassette', every: 1500 }, { id: 'tv', every: 800 }, { id: 'cafe', open: true, every: 1600 }],
-  garage: [{ id: 'boombox', every: 1500 }, { id: 'tv', every: 2200 }],
+  backrooms: [{ set: 'foodspot', every: 2200 }, { id: 'arcade2', every: 3500 }, { id: 'dinerchair', open: true, every: 2500 }, { id: 'clock', every: 1400 }, { id: 'tv', every: 1100 }, { id: 'boombox', every: 1600 }, { id: 'soda', every: 3000 }],
+  office: [{ set: 'desk', every: 110 }, { id: 'sofa', every: 1600 }, { id: 'soda', every: 1500 }, { id: 'whiteshelf', every: 1000 }, { id: 'clock', every: 300 }, { id: 'tv', every: 1500 }, { set: 'table', open: true, every: 1500 }],
+  basement: [{ set: 'livingroom', every: 1000, min: 1, rooms: true }, { id: 'sofa', every: 1400, rooms: true }, { id: 'fan', ceiling: true, every: 300, rooms: true }, { id: 'whiteshelf', every: 700, rooms: true }, { id: 'clock', every: 500 }, { id: 'tv', every: 1600 }, { id: 'boombox', every: 900 }, { set: 'desk', every: 700, rooms: true }],
+  pool: [{ id: 'duck', water: true, every: 70 }, { id: 'soda', every: 1500 }, { id: 'boombox', every: 1000 }],
+  playroom: [{ set: 'softplay', open: true, every: 110 }, { set: 'arcades', every: 900 }, { set: 'gaming', every: 900 }, { id: 'soda', every: 1200 }, { id: 'clock', every: 600 }, { id: 'duck', water: true, every: 110 }, { id: 'tv', every: 700 }, { id: 'boombox', every: 900 }],
+  hotel: [{ id: 'sofa', every: 900 }, { set: 'chairs', every: 1200 }, { id: 'fan', ceiling: true, every: 600 }, { id: 'soda', every: 1500 }, { id: 'clock', every: 700 }, { id: 'cassette', every: 1500 }, { id: 'tv', every: 800 }, { set: 'desk', every: 1500 }, { set: 'table', open: true, every: 1600 }],
+  garage: [{ id: 'soda', every: 2000 }, { id: 'boombox', every: 1500 }, { id: 'tv', every: 2200 }],
   // Butikkene (teppe = belegg) innredes av mall-shops.js; her bare gangene og atriet.
-  mall: [{ set: 'foodspot', every: 900, min: 1, rooms: true }, { id: 'cafe', open: true, every: 250, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
-  // rooms: bare i rommene, ikke i korridorer med skap eller på badene (ruter med belegg).
-  school: [{ set: 'foodspot', every: 2500, min: 1, rooms: true }, { id: 'cafe', open: true, every: 600, rooms: true }, { set: 'desk', every: 110, rooms: true }, { id: 'clock', every: 150, rooms: true }, { id: 'tv', every: 700, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
-  ward: [{ id: 'sofa', every: 1400, rooms: true }, { set: 'foodspot', every: 3000, rooms: true }, { id: 'clock', every: 220, rooms: true }, { id: 'tv', every: 260, rooms: true }, { set: 'desk', every: 900, rooms: true }],
+  mall: [{ set: 'foodspot', every: 900, min: 1, rooms: true }, { set: 'table', open: true, every: 250, rooms: true }, { id: 'soda', every: 700, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
+  school: [{ set: 'foodspot', every: 2500, min: 1, rooms: true }, { set: 'table', open: true, every: 600, rooms: true }, { set: 'desk', every: 110, rooms: true }, { id: 'soda', every: 800 }, { id: 'whiteshelf', every: 600, rooms: true }, { id: 'clock', every: 150, rooms: true }, { id: 'tv', every: 700, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
+  ward: [{ id: 'sofa', every: 1400, rooms: true }, { set: 'chairs', every: 500, rooms: true }, { set: 'foodspot', every: 3000, rooms: true }, { id: 'soda', every: 900 }, { id: 'whiteshelf', every: 900, rooms: true }, { id: 'clock', every: 220, rooms: true }, { id: 'tv', every: 260, rooms: true }, { set: 'desk', every: 900, rooms: true }],
 };
-
-const ON_DESK = [
-  ['laptop', 0.5],
-  ['tv', 0.2],
-  ['boombox', 0.12],
-  ['cassette', 0.1],
-  ['console', 0.08],
-];
 
 function count(rand, amount, every, min = 0) {
   const n = amount / every;
@@ -78,47 +70,9 @@ function openSpots(level, spawn) {
   return out;
 }
 
-/** TV mot veggen, en spillkonsoll ved siden av og kontrollerne på gulvet et stykke foran. */
-function gaming(level, rand, x, z, sofa = false) {
-  const tv = tryPlace(level, x, z, 'tv', sofa ? 4 : 2);
-  if (!tv) return false;
-  const [fx, fz] = FACING[tv.rot];
-  const s = rand() < 0.5 ? -1 : 1;
-  tryPlace(level, x - fz * s, z + fx * s, 'console', 1);
-  placeObject(level, x + fx * 2, z + fz * 2, 'gamepad');
-  // Sofaen 3,5 m foran TV-en, med ansiktet mot den.
-  if (sofa) put(level, 'sofa', x + fx * 4, z + fz * 4, (tv.rot + 2) % 4);
-  return true;
-}
-
-function put(level, id, x, z, rot) {
-  const o = { id, x, z, rot };
-  const next = [...level.objects, o];
-  if (objectFits({ ...level, objects: next }, o, next)) level.objects = next;
-}
-
 /** Ingen taklys i ruten eller rundt den (en takvifte skal ikke henge i en lampe). */
 function unlit(level, x, z) {
   for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) if (level.lights[(z + dz) * level.w + x + dx]) return false;
-  return true;
-}
-
-/** Kiosk mot veggen, og et kafébord et par meter foran den (litt til siden). */
-function foodspot(level, rand, x, z) {
-  const kiosk = tryPlace(level, x, z, 'kiosk', 3);
-  if (!kiosk) return false;
-  const [fx, fz] = FACING[kiosk.rot];
-  const side = rand() < 0.5 ? -1 : 1;
-  for (const [ahead, across] of [[3, side], [3, -side], [4, 0], [3, 0]]) {
-    if (placeObject(level, x + fx * ahead - fz * across, z + fz * ahead + fx * across, 'cafe')) break;
-  }
-  return true;
-}
-
-/** Er det åpent gulv `n` ruter foran gjenstanden (så den ikke stenger en smal gang)? */
-function roomInFront(level, o, n) {
-  const [fx, fz] = FACING[o.rot];
-  for (let k = 1; k <= n; k++) if (getTile(level, o.x + fx * k, o.z + fz * k) !== TILE.FLOOR) return false;
   return true;
 }
 
@@ -126,19 +80,15 @@ function take(list, rand) {
   return list.splice(Math.floor(rand() * list.length), 1)[0];
 }
 
-/** Setter inn gjenstanden i ruten; tar den tilbake hvis den stenger for mye. */
-function tryPlace(level, x, z, id, front = 1) {
-  if (objectsAt(level, x, z).length || !placeObject(level, x, z, id)) return null;
-  const o = level.objects[level.objects.length - 1];
-  if (roomInFront(level, o, front)) return o;
-  level.objects = level.objects.slice(0, -1);
-  return null;
-}
+const SETS = { desk, foodspot, chairs, arcades, tvrow, gaming: (l, r, x, z) => gaming(l, r, x, z), livingroom: (l, r, x, z) => gaming(l, r, x, z, true) };
 
-function pick(rand, weights) {
-  let r = rand();
-  for (const [id, w] of weights) if ((r -= w) < 0) return id;
-  return weights[0][0];
+/** Én gjenstand eller ett oppsett i ruten. Returnerer true hvis noe ble satt inn. */
+function place(level, rand, item, x, z) {
+  if (item.ceiling) return unlit(level, x, z) && !!placeObject(level, x, z, item.id);
+  if (item.set === 'softplay') return !!softBuild(level, rand, x, z);
+  if (item.open) return !objectsAt(level, x, z).length && !!placeObject(level, x, z, item.set === 'table' ? table(rand) : item.id);
+  if (SETS[item.set]) return SETS[item.set](level, rand, x, z);
+  return !!tryPlace(level, x, z, item.id, 1);
 }
 
 /** Møblerer et generert rom etter temaet. Returnerer antall gjenstander som ble satt inn. */
@@ -154,39 +104,11 @@ export function furnish(level, rand, spawn = level.spawn) {
   for (const item of plan) {
     const n = count(rand, item.water ? water.length : floor, item.every, item.min);
     for (let k = 0, tries = 0; k < n && tries < n * 20; tries++) {
-      if (item.water) {
-        if (!water.length) break;
-        const [x, z] = take(water, rand);
-        if (placeObject(level, x, z, 'duck')) k++;
-        continue;
-      }
-      const list = item.open || item.ceiling ? open : spots;
+      const list = item.water ? water : item.open || item.ceiling ? open : spots;
       if (!list.length) break;
       const [x, z] = take(list, rand);
       if (item.rooms && level.finish[z * level.w + x]) continue;
-      if (item.ceiling) {
-        if (!unlit(level, x, z) || !placeObject(level, x, z, item.id)) continue;
-      } else if (item.set === 'gaming' || item.set === 'livingroom') {
-        if (!gaming(level, rand, x, z, item.set === 'livingroom')) continue;
-      } else if (item.set === 'softplay') {
-        if (!softBuild(level, rand, x, z)) continue;
-      } else if (item.open) {
-        if (objectsAt(level, x, z).length || !placeObject(level, x, z, item.id)) continue;
-      } else if (item.set === 'foodspot') {
-        if (!foodspot(level, rand, x, z)) continue;
-      } else if (item.set === 'desk') {
-        if (!tryPlace(level, x, z, 'desk', 2)) continue;
-        if (rand() < 0.85) placeObject(level, x, z, pick(rand, ON_DESK));
-      } else if (item.set === 'tvrow') {
-        // Tre TV-er ved siden av hverandre langs veggen (en butikk som aldri stengte).
-        const o = tryPlace(level, x, z, 'tv', 1);
-        if (!o) continue;
-        const [fx, fz] = FACING[o.rot];
-        for (const s of [-1, 1]) tryPlace(level, x - fz * s, z + fx * s, 'tv', 1);
-      } else if (!tryPlace(level, x, z, item.id, 1)) {
-        continue;
-      }
-      k++;
+      if (item.water ? placeObject(level, x, z, 'duck') : place(level, rand, item, x, z)) k++;
     }
   }
   return level.objects.length - before;

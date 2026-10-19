@@ -104,6 +104,21 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Ti nye modeller fra Sketchfab, alle kreditert med lenker på About-siden (CC BY 4.0; den hvite
+  reolen CC BY-SA 4.0): to arkademaskiner, kasseapparat, diner-stol, diner-bordsett, kontorstol,
+  treskrivebord, retro-PC, brusautomat og hvit reol. Bruk:
+  - kontoret: skrivebord med kontorstol foran (av og til skjev) og PC, laptop m.m. oppå; hvite reoler
+  - skolen, kjelleren og hotellet: treskrivebord med stol; reoler i klasserom og kjeller
+  - kjøpesenteret: ny butikktype «spillehall» med arkademaskiner og brusautomat; kasseapparat på
+    alle skrankene; dinersett og kafébord i food court; brusautomater i gangene
+  - sykehuset og hotellet: ventestoler på rad mot veggen
+  - lekerommet: et hjørne med arkademaskiner; Level 0: en ensom arkademaskin eller stol
+  - brusautomater i gangene på skolen, sykehuset, kontoret, hotellet, bassengene og garasjen
+- `npm run models` forbehandler modellene: gamle spec/gloss-materialer gjøres om til metal/rough,
+  fargeteksturer som ligger i emissive-plassen (bakt lys, unlit) flyttes til fargeplassen, og en
+  valgfri `model.json` (`drop`) fjerner deler modellen kom med (f.eks. bordplaten under PC-en).
+  Bare endrede modeller bygges (`--all` bygger alle).
+- Modeller uten normaler (unlit) får dem regnet ut ved lasting.
 - Sofa («Old Reliable Couch» av Jace B., Sketchfab, CC BY 4.0 – kreditert med lenker på About-siden):
   kjellerstua får en sofa som vender mot TV-en (med konsoll og kontrollere), og hotellet, kontoret
   og sykehuset en og annen sofa mot veggen. Katalogen har nå `turn` (dreie modellfilen så forsiden

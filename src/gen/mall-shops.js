@@ -5,13 +5,14 @@ import { fillZone, FINISH } from '../core/zones.js';
 import { objectFits } from '../core/objects.js';
 
 /** Gjenstandene butikkene kan få (til testene). */
-export const SHOP_ITEMS = ['shelf', 'wallshelf', 'counter', 'tv'];
+export const SHOP_ITEMS = ['shelf', 'wallshelf', 'counter', 'register', 'tv', 'arcade', 'arcade2', 'whiteshelf', 'soda'];
 
 const KINDS = [
-  ['shelves', 0.45],
-  ['tv', 0.15],
-  ['empty', 0.25],
-  ['bare', 0.15],
+  ['shelves', 0.4],
+  ['tv', 0.12],
+  ['arcade', 0.13],
+  ['empty', 0.22],
+  ['bare', 0.13],
 ];
 
 function kindOf(rand, closed) {
@@ -47,6 +48,11 @@ export function furnishShops(level, rand, shops) {
       // Langs bakveggen: veggreoler (2 m) eller TV-er (hver annen rute).
       for (let x = s.x0 + 1; x + 1 <= s.x1; x += 2) put(level, kind === 'tv' ? 'tv' : 'wallshelf', x, back, toFront);
     }
+    if (kind === 'arcade') {
+      // Spillehall: arkademaskiner side om side langs bakveggen, og en brusautomat i hjørnet.
+      for (let x = s.x0 + 1; x <= s.x1 - 1; x++) put(level, (x - s.x0) % 2 ? 'arcade' : 'arcade2', x, back, toFront);
+      put(level, 'soda', s.x1, back, toFront);
+    }
     if (kind === 'shelves') {
       // Rader med tosidige reoler, med god plass til å gå mellom dem og mot fronten.
       for (let z = back - d * 3; (z - frontRow) * d >= 3; z -= d * 3) {
@@ -56,7 +62,8 @@ export function furnishShops(level, rand, shops) {
     if (kind !== 'bare') {
       // Skranken innenfor fronten, langs den ene sideveggen, med kunden ut mot butikken.
       const left = rand() < 0.5;
-      put(level, 'counter', left ? s.x0 + 1 : s.x1 - 1, frontRow + d * 2, left ? 3 : 1);
+      const cx = left ? s.x0 + 1 : s.x1 - 1;
+      if (put(level, 'counter', cx, frontRow + d * 2, left ? 3 : 1)) put(level, 'register', cx, frontRow + d * 2, left ? 3 : 1);
     }
     return kind;
   });

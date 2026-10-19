@@ -60,9 +60,11 @@ function loadModel(file, turn = 0) {
             if (!m.isMesh) return;
             const g = new THREE.BufferGeometry();
             g.setAttribute('position', toFloat(m.geometry.attributes.position, 3));
-            g.setAttribute('normal', toFloat(m.geometry.attributes.normal, 3));
             if (m.geometry.attributes.uv) g.setAttribute('uv', toFloat(m.geometry.attributes.uv, 2));
             if (m.geometry.index) g.setIndex(m.geometry.index);
+            // Noen modeller (med «unlit»-materialer) har ingen normaler: regn dem ut.
+            if (m.geometry.attributes.normal) g.setAttribute('normal', toFloat(m.geometry.attributes.normal, 3));
+            else g.computeVertexNormals();
             g.applyMatrix4(m.matrixWorld);
             if (turn) g.rotateY(turn); // forsiden mot +z
             const mat = m.material;

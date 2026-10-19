@@ -26,11 +26,11 @@ export function wallshelf() {
   ]);
 }
 
-/** Butikkskranke, 1,8 × 0,7 m: disk med lys front, benkeplate og et kasseapparat. */
+/** Butikkskranke, 1,8 × 0,7 m: disk med lys front og benkeplate (kasseapparatet er en egen modell). */
 export function counter() {
   return parts([
     { color: '#e8e2d2', geoms: [box(1.8, 0.95, 0.66, 0, 0.475, 0)] },
     { color: '#6b5a48', geoms: [box(1.86, 0.05, 0.72, 0, 0.975, 0)] },
-    { color: '#2c2d2f', geoms: [box(0.4, 0.14, 0.32, 0.45, 1.07, -0.08), box(0.3, 0.16, 0.04, 0.45, 1.2, -0.2), box(1.8, 0.08, 0.05, 0, 0.04, 0.31)] },
+    { color: '#2c2d2f', geoms: [box(1.8, 0.08, 0.05, 0, 0.04, 0.31)] },
   ]);
 }

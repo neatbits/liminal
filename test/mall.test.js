@@ -104,13 +104,15 @@ describe('kjøpesenteret – butikkene', () => {
       if (!['kiosk', 'cafe', 'boombox'].includes(o.id)) continue;
       expect(level.finish[o.z * level.w + o.x], o.id).toBe(0);
     }
-    // Reolene står med god plass rundt seg: ingen to gjenstander overlapper.
-    const boxes = level.objects.map((o) => objectBox(objectPose(level, o)));
+    // Ingen to gjenstander står i hverandre (oppå hverandre er greit: kasseapparatet på skranken).
+    const poses = level.objects.map((o) => objectPose(level, o));
+    const boxes = poses.map(objectBox);
     for (let a = 0; a < boxes.length; a++) {
       for (let b = a + 1; b < boxes.length; b++) {
         const [p, q] = [boxes[a], boxes[b]];
         const overlap = p[0] < q[2] - 0.02 && q[0] < p[2] - 0.02 && p[1] < q[3] - 0.02 && q[1] < p[3] - 0.02;
-        expect(overlap && !(level.objects[a].id === 'desk' || level.objects[b].id === 'desk')).toBe(false);
+        const stacked = poses[a].y >= poses[b].y + poses[b].h - 0.01 || poses[b].y >= poses[a].y + poses[a].h - 0.01;
+        expect(overlap && !stacked).toBe(false);
       }
     }
   });

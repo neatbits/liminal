@@ -1,0 +1,11 @@
+Model Information:
+* title:	Office desk
+* source:	https://sketchfab.com/3d-models/office-desk-bf2f5c812068489c92188cde9932ef0d
+* author:	ms_Butor (https://sketchfab.com/butortervezo)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Office desk" (https://sketchfab.com/3d-models/office-desk-bf2f5c812068489c92188cde9932ef0d) by ms_Butor (https://sketchfab.com/butortervezo) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

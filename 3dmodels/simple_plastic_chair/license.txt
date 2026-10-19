@@ -1,0 +1,11 @@
+Model Information:
+* title:	Simple Plastic Chair
+* source:	https://sketchfab.com/3d-models/simple-plastic-chair-3f63a5ab46df4f78a5df646001a5fced
+* author:	Artem P (https://sketchfab.com/temp0.crazy)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Simple Plastic Chair" (https://sketchfab.com/3d-models/simple-plastic-chair-3f63a5ab46df4f78a5df646001a5fced) by Artem P (https://sketchfab.com/temp0.crazy) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

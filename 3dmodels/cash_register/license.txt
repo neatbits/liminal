@@ -1,0 +1,11 @@
+Model Information:
+* title:	Cash Register
+* source:	https://sketchfab.com/3d-models/cash-register-1e04d7a73a004e2380e2ee715ce7bd06
+* author:	BumBácBonifác (https://sketchfab.com/ondraman43)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Cash Register" (https://sketchfab.com/3d-models/cash-register-1e04d7a73a004e2380e2ee715ce7bd06) by BumBácBonifác (https://sketchfab.com/ondraman43) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

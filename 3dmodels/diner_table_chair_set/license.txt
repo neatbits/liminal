@@ -1,0 +1,11 @@
+Model Information:
+* title:	Retro Diner Table Set
+* source:	https://sketchfab.com/3d-models/retro-diner-table-set-307918ddc85645da9805b105584ee77b
+* author:	deleted_cube (https://sketchfab.com/deleted_cube)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Retro Diner Table Set" (https://sketchfab.com/3d-models/retro-diner-table-set-307918ddc85645da9805b105584ee77b) by deleted_cube (https://sketchfab.com/deleted_cube) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

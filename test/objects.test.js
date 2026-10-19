@@ -153,3 +153,18 @@ describe('gjenstander på vegg og i tak', () => {
     expect(objectColliders(level, fan.x, fan.z).filter((c) => c.bottom < 1.75)).toHaveLength(0);
   });
 });
+
+describe('kreditering', () => {
+  it('modeller med CC BY / CC BY-SA har full kreditering og lisensfilen sin', async () => {
+    const { existsSync } = await import('node:fs');
+    for (const [id, def] of Object.entries(OBJECTS)) {
+      if (!def.file) continue;
+      expect(def.credit, id).toBeTruthy();
+      if (/CC0/.test(def.credit)) continue;
+      const a = def.attribution;
+      expect(a, id).toBeTruthy();
+      for (const k of ['title', 'source', 'author', 'authorUrl', 'license', 'licenseUrl']) expect(a[k], `${id}.${k}`).toBeTruthy();
+      expect(existsSync(`3dmodels/${def.file}/license.txt`), id).toBe(true);
+    }
+  });
+});
