@@ -206,8 +206,9 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   grønt/rødt om døren får plass, og forklarer hvorfor når den ikke gjør det.
 - CRT-TV-et er dobbelt så stort, laptopen halvparten så stor (katalogen har nå `scale`).
 - Romformatet har feltet `sky` (tiden på døgnet), og vinduer er vegger med `meta` = 1.
-- Vinduer i genererte rom settes i ytterveggen uansett hvor tykk den er; dagslyset er dempet
-  litt, så rom med både taklys og mange vinduer ikke «brenner ut».
+- Vinduer i genererte rom settes i ytterveggen uansett hvor tykk den er.
+- Vinduene skinner mindre: himmelen i glasset er dempet så den ikke blender, og dagslyset inn i
+  rommet er svakere, så rom med både taklys og mange vinduer ikke «brenner ut».
 - Hjelperne for lydbuffere ligger i `audio/buffers.js`; nye skumle lyder i `audio/eerie-more.js`.
 - Romklangen er ikke lenger fast per tema: temaets `reverb`/`reverbTime` gir nå hvor klangfullt
   temaet er og lengden på klangen i store rom (`audio/space.js`, `audio/acoustics.js`).

@@ -93,7 +93,8 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true } = {}) 
     windowGlass: () => {
       const map = own(skyCanvas(sky.sky));
       map.colorSpace = THREE.SRGBColorSpace;
-      return new THREE.MeshBasicMaterial({ map, color: new THREE.Color(1, 1, 1).multiplyScalar(sky.sun ? 1.6 : 0.7) });
+      // Lys nok til et svakt skjær rundt vinduet, men ikke så lyst at det blender.
+      return new THREE.MeshBasicMaterial({ map, color: new THREE.Color(1, 1, 1).multiplyScalar(sky.sun ? 1.05 : 0.55) });
     },
     sunPatch: () =>
       new THREE.MeshBasicMaterial({
