@@ -5,6 +5,7 @@ import { collectLights, createLightField } from './lighting.js';
 import { buildSurfaces } from './surfaces.js';
 import { createSharedUniforms, surfaceMaterial, toGeometry } from './materials.js';
 import { buildFixtures } from './fixtures.js';
+import { createGlossUniforms } from './gloss.js';
 import { buildDoors } from './doors.js';
 import { buildRailings } from './railings.js';
 import { createSwingDoors } from './swing-doors.js';
@@ -25,8 +26,8 @@ const DEFAULT_RAILING = { rail: '#8c8a84', bars: '#8c8a84' };
 const SLIDE_LEGS = '#c6cbcf';
 // Flislagte rom: flisgulv, og fliser på veggene opp til `height` med en list øverst.
 const DEFAULT_TILES = {
-  floor: { tex: 'tileFloorGrey', size: [0.9, 0.9] },
-  wall: { tex: 'tileWallWhite', size: [0.6, 0.6] },
+  floor: { tex: 'tileFloorGrey', size: [0.9, 0.9], gloss: { amount: 0.8, grid: 3 } },
+  wall: { tex: 'tileWallWhite', size: [0.6, 0.6], gloss: { amount: 1, grid: 4 } },
   height: 1.4,
   trim: '#d8d8d2',
 };
@@ -64,6 +65,8 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true } = {}) 
     return t;
   };
   const shared = createSharedUniforms(field.color);
+  const gloss = createGlossUniforms(level, lights, theme); // armaturene speiler seg i blanke fliser
+  Object.assign(shared, gloss.uniforms);
   const s = theme.surfaces;
 
   // Materialene lages bare for flater som finnes (teksturene males første gang de brukes).
@@ -186,6 +189,7 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true } = {}) 
       for (const g of geometries) g.dispose();
       for (const m of Object.values(materials)) m.dispose();
       for (const t of ownTextures) t.dispose();
+      gloss.dispose();
       fixtures.dispose();
       doors.dispose();
       water?.dispose();

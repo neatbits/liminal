@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { getTexture } from '../textures/index.js';
 import { WATER_DEPTH } from '../core/level.js';
+import { GLOSS_PARS } from './gloss.js';
 
 const CAUSTIC = /* glsl */ `
 float caustic(vec2 p, float t) {
@@ -55,6 +56,14 @@ uniform vec3 uBaseColor;
 varying vec2 vUv;
 varying vec3 vLight;
 varying vec3 vPos;
+#ifdef USE_GLOSS
+uniform vec4 uFlick;
+uniform vec2 uGloss; // blankhet, fliser per teksturflate
+#ifdef USE_MAP2
+uniform vec2 uGloss2;
+#endif
+${GLOSS_PARS}
+#endif
 #include <fog_pars_fragment>
 ${CAUSTIC}
 void main() {
@@ -73,6 +82,17 @@ void main() {
   if (vUv.y > -0.01 && vUv.y < uBaseH) albedo = uBaseColor;
   #endif
   vec3 col = albedo * vLight * uBoost;
+  #ifdef USE_GLOSS
+  vec2 glossUv = vUv / uTexSize * uGloss.y;
+  float glossy = uGloss.x;
+  #ifdef USE_MAP2
+  if (vUv.y < uSplit) {
+    glossUv = vUv / uTex2Size * uGloss2.y;
+    glossy = uGloss2.x;
+  }
+  #endif
+  col += gloss(glossUv, glossy, vLight) * uBoost;
+  #endif
   #ifdef USE_CAUSTICS
   // Svakere kaustikker jo dypere bunnen ligger enn standarddybden.
   float fade = exp(min(vPos.y + ${WATER_DEPTH.toFixed(2)}, 0.0) * 0.8);
@@ -101,7 +121,8 @@ function baseUniforms(shared) {
 
 /**
  * @param def { tex, size } fra temaet – eller { color } for en ensfarget flate – pluss
- *            valgfritt map2 ({ tex, size, split, trim }), base ({ h, color }) og caustics (bool)
+ *            valgfritt map2 ({ tex, size, split, trim }), base ({ h, color }), caustics (bool) og
+ *            gloss ({ amount, grid } – blanke fliser, også i map2; krever glansuniformene i shared)
  */
 export function surfaceMaterial(def, shared, anisotropy) {
   const uniforms = baseUniforms(shared);
@@ -130,6 +151,13 @@ export function surfaceMaterial(def, shared, anisotropy) {
     uniforms.uBaseColor = { value: new THREE.Color(def.base.color) };
   }
   if (def.caustics) defines.USE_CAUSTICS = '';
+  const g1 = !def.color && def.gloss;
+  const g2 = def.map2?.gloss;
+  if ((g1 || g2) && shared.uLamps) {
+    defines.USE_GLOSS = '';
+    uniforms.uGloss = { value: new THREE.Vector2(g1?.amount ?? 0, g1?.grid ?? 1) };
+    if (def.map2) uniforms.uGloss2 = { value: new THREE.Vector2(g2?.amount ?? 0, g2?.grid ?? 1) };
+  }
   return new THREE.ShaderMaterial({ uniforms, defines, vertexShader: VERT, fragmentShader: SURFACE_FRAG, fog: true });
 }
 

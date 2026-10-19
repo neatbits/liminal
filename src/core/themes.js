@@ -3,7 +3,8 @@
 // meter (r, g, b) og bølgestyrke for vannshaderen. `door`: karmfarge (null = ingen karm),
 // dørblad, dørblad for boder (dør med vegg bak, valgfri) og håndtaksfarge. `railing`:
 // farge på håndlist/stolper og spiler. Valgfri `tiles` overstyrer flisene i build.js.
-// `pit: 'balls'` fyller bassengene med baller (ballbinge) i stedet for vann. De nyeste temaene
+// `pit: 'balls'` fyller bassengene med baller (ballbinge) i stedet for vann. `gloss` på en flate
+// ({ amount, grid = fliser per teksturflate }) gjør flisene blanke (world/gloss.js). De nyeste temaene
 // ligger i themes-more.js.
 import { MORE_THEMES } from './themes-more.js';
 
@@ -39,9 +40,9 @@ export const THEMES = {
     label: 'The Poolrooms',
     description: 'White tiles, still water and light that seems to come from everywhere.',
     surfaces: {
-      wall: { tex: 'poolTiles', size: [1, 1] },
+      wall: { tex: 'poolTiles', size: [1, 1], gloss: { amount: 1, grid: 8 } },
       base: null,
-      floor: { tex: 'poolTiles', size: [1, 1] },
+      floor: { tex: 'poolTiles', size: [1, 1], gloss: { amount: 1.6, grid: 8 } },
       ceiling: { tex: 'poolTiles', size: [1, 1] },
       basin: { tex: 'poolTilesBlue', size: [1, 1] },
     },

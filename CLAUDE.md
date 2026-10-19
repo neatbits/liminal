@@ -43,7 +43,7 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
    `src/world/ball-layout.js`, `src/world/monster-ai.js`, `src/world/paths.js`,
    `src/world/autopilot.js`, `src/world/windows.js`, `src/view3d/flicker.js`,
    `src/view3d/events.js`, `src/audio/acoustics.js`, `src/audio/director.js`,
-   `src/world/softphysics.js`, `src/world/anomalies.js`) slik at den
+   `src/world/softphysics.js`, `src/world/anomalies.js`, `src/world/lamp-map.js`) slik at den
    kan testes i Node.
 5. Brukergrensesnittet er på **engelsk** (all tekst brukeren ser: knapper, menyer,
    dialoger, feilmeldinger, temanavn og eksempler). Kode, identifikatorer og kommentarer
@@ -153,6 +153,8 @@ src/
   siktlinjen krysser en rutegrense må den gå under taket og over gulvet i begge ruter, og
   ikke gjennom en lukket dør.
   Blinkende lys bakes i egne kanaler (`aFlick`, 4 grupper) som animeres via uniforms.
+  Blanke fliser (`gloss` på en flate i temaet) speiler armaturene i shaderen via et kart over
+  armaturene (`world/lamp-map.js` → `world/gloss.js`), uten ekstra tegnepass.
 - **Sprang i gulvet** (`world/surfaces.js`): den høyeste ruten eier den loddrette flaten mot
   naboen; vannruter eier bassengkanten opp til 0.
 - **3D-oversikten** bruker backface culling som «dukkehus»: tak og nære vegger forsvinner

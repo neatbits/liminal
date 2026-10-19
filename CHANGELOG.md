@@ -7,6 +7,10 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 ## [Ukommet]
 
 ### Lagt til
+- Blanke fliser: lampene i taket speiler seg i flisgulv og -vegger (Poolrooms og flislagte rom),
+  med matte fuger og fliser som ligger litt skjevt, så speilbildet brytes opp flis for flis. Det
+  slukner med lampene ved strømbrudd og blinker med dem. Billig: ingen ekstra tegnepass, bare et
+  lite kart over armaturene som shaderen slår opp i (`world/gloss.js`, `world/lamp-map.js`).
 - Realistisk vann: speiling av rommet (Reflector), lysbrytning av bassengbunnen
   (Refractor), dybdeavhengig farge og absorpsjon, Fresnel og rolige bølger. Egne
   vannparametere per tema.
