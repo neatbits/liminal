@@ -9,6 +9,7 @@ import { carpetClean, paintBeige } from './basement.js';
 import { doorPanel, doorLouver, doorFlat } from './doors.js';
 import { foamMat, playWall, playStripe, ballBed } from './playroom.js';
 import { mallFloor, mallWall, mallStone, mallCeiling } from './mall.js';
+import { schoolFloor, blockWall, lockers, wardFloor, wardMint } from './school.js';
 
 const PAINTERS = {
   wallpaperYellow,
@@ -37,6 +38,11 @@ const PAINTERS = {
   mallWall,
   mallStone,
   mallCeiling,
+  schoolFloor,
+  blockWall,
+  lockers,
+  wardFloor,
+  wardMint,
   // Dørblad per tema
   doorFlatCream: doorFlat('#d6c99c'),
   doorFlatWhite: doorFlat('#e7ecea'),

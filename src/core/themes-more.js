@@ -1,4 +1,5 @@
-// Flere temaer (samme format som i themes.js): kjelleren, lekerommet og kjøpesenteret.
+// Flere temaer (samme format som i themes.js): kjelleren, lekerommet, kjøpesenteret, skolen og
+// sykehuset. `tiles` overstyrer belegget (FINISH.TILES): på skolen er det skapene i korridoren.
 export const MORE_THEMES = {
   basement: {
     id: 'basement',
@@ -83,5 +84,59 @@ export const MORE_THEMES = {
     sound: { hum: 0.02, buzz: 0.05, room: 0.03, reverb: 0.6, reverbTime: 4.5, step: 'tile',
       eerie: ['muzak', 'chime', 'footsteps', 'boom', 'muzak', 'whisper'] },
     plan: { floor: '#ece4d4', water: '#8ccbe0' },
+  },
+  school: {
+    id: 'school',
+    label: 'The School',
+    description: 'Lockers, linoleum and empty classrooms after hours. The bell still rings.',
+    surfaces: {
+      wall: { tex: 'blockWall', size: [0.8, 1.6] },
+      base: { h: 0.1, color: '#5a4e40' },
+      floor: { tex: 'schoolFloor', size: [2.4, 2.4] },
+      ceiling: { tex: 'ceilingTiles', size: [1.2, 1.2] },
+      basin: { tex: 'poolTilesBlue', size: [1, 1] },
+    },
+    // Korridorene (belegg) har skap i full høyde langs veggene.
+    tiles: { floor: { tex: 'schoolFloor', size: [2.4, 2.4] }, wall: { tex: 'lockers', size: [1.2, 1.85] }, height: 1.85, trim: '#3a464c' },
+    defaultHeight: 3,
+    lightSpacing: 3,
+    light: { color: '#f4f6ff', intensity: 0.7, falloff: 2.6, radius: 9, ambient: '#3a3a38' },
+    fixture: { shape: 'panel', size: [1.2, 0.04, 0.3], color: '#f6f8ff', glow: 3, frame: '#b8bcc0' },
+    door: { frame: '#6d7b84', leaf: 'doorVeneer', knob: '#c9ced2' },
+    railing: { rail: '#6d7b84', bars: '#6d7b84' },
+    fog: { color: '#4a4a46', density: 0.035 },
+    exposure: 1.05,
+    bloom: 0.45,
+    water: { tint: '#3a8fa2', absorb: [0.9, 0.35, 0.25], wave: 0.3 },
+    sound: { hum: 0.04, buzz: 0.15, room: 0.025, reverb: 0.35, reverbTime: 1.8, step: 'tile',
+      eerie: ['bell', 'footsteps', 'knocks', 'whisper', 'bell', 'creak'] },
+    plan: { floor: '#e6e1d3', water: '#a9d3df' },
+  },
+
+  ward: {
+    id: 'ward',
+    label: 'The Ward',
+    description: 'A hospital corridor that goes on too long. Somewhere, a monitor is beeping.',
+    surfaces: {
+      wall: { tex: 'plaster', size: [2, 2] },
+      wall2: { tex: 'wardMint', size: [2, 0.95], split: 0.95, trim: { h: 0.07, color: '#b98d5e' } },
+      base: null,
+      floor: { tex: 'wardFloor', size: [2, 2] },
+      ceiling: { tex: 'ceilingTiles', size: [1.2, 1.2] },
+      basin: { tex: 'poolTilesBlue', size: [1, 1] },
+    },
+    defaultHeight: 2.7,
+    lightSpacing: 3,
+    light: { color: '#eef8ff', intensity: 0.72, falloff: 2.8, radius: 9, ambient: '#3c4644' },
+    fixture: { shape: 'panel', size: [1.2, 0.04, 0.6], color: '#f2fbff', glow: 3.2, frame: '#c9cfd2' },
+    door: { frame: '#c9cfd2', leaf: 'doorFlatWhite', knob: '#b9c0c2' },
+    railing: { rail: '#b98d5e', bars: '#c9cfd2' },
+    fog: { color: '#46524f', density: 0.04 },
+    exposure: 1.1,
+    bloom: 0.5,
+    water: { tint: '#3a8fa2', absorb: [0.9, 0.35, 0.25], wave: 0.3 },
+    sound: { hum: 0.05, buzz: 0.2, room: 0.03, reverb: 0.3, reverbTime: 1.6, step: 'tile',
+      eerie: ['monitor', 'footsteps', 'phone', 'whisper', 'monitor', 'knocks'] },
+    plan: { floor: '#dbe8e3', water: '#a9d3df' },
   },
 };

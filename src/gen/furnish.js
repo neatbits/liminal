@@ -25,6 +25,9 @@ const PLANS = {
   hotel: [{ id: 'tv', every: 800 }],
   garage: [{ id: 'boombox', every: 1500 }, { id: 'tv', every: 2200 }],
   mall: [{ set: 'tvrow', every: 1400, min: 1 }, { set: 'desk', every: 1000 }, { id: 'boombox', every: 1200 }],
+  // rooms: bare i rommene, ikke i korridorer med skap eller på badene (ruter med belegg).
+  school: [{ set: 'desk', every: 110, rooms: true }, { id: 'tv', every: 700, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
+  ward: [{ id: 'tv', every: 260, rooms: true }, { set: 'desk', every: 900, rooms: true }],
 };
 
 const ON_DESK = [
@@ -99,6 +102,7 @@ export function furnish(level, rand, spawn = level.spawn) {
       }
       if (!spots.length) break;
       const [x, z] = take(spots, rand);
+      if (item.rooms && level.finish[z * level.w + x]) continue;
       if (item.set === 'desk') {
         if (!tryPlace(level, x, z, 'desk', 2)) continue;
         if (rand() < 0.85) placeObject(level, x, z, pick(rand, ON_DESK));

@@ -1,29 +1,9 @@
 // Skumle lyder som kommer i rykk og napp: banking, knirk, fjerne skritt, hvisking, surr, spilledåse,
-// metallstønn, en telefon langt unna, gurgling, drønn, heismusikk og høyttalerklokke. Alt er syntetisert her (ingen
-// lydfiler). Hvert tema har sin egen liste (`sound.eerie` i themes.js).
+// metallstønn, en telefon langt unna, gurgling, drønn, heismusikk, høyttalerklokke, skoleklokke og
+// pasientmonitor (de to siste i eerie-more.js). Alt er syntetisert (ingen lydfiler). Hvert tema har sin egen liste (`sound.eerie` i themes.js).
 
-const rand = (a, b) => a + Math.random() * (b - a);
-
-function buffer(ctx, seconds) {
-  return ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * seconds)), ctx.sampleRate);
-}
-
-function normalize(d, peak) {
-  let max = 0;
-  for (let i = 0; i < d.length; i++) max = Math.max(max, Math.abs(d[i]));
-  if (max > 0) for (let i = 0; i < d.length; i++) d[i] *= peak / max;
-}
-
-/** Fyller en buffer med fn(t, i) og normaliserer. */
-function make(ctx, seconds, fn, peak = 0.8) {
-  const b = buffer(ctx, seconds);
-  const d = b.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = fn(i / ctx.sampleRate, i);
-  normalize(d, peak);
-  return b;
-}
-
-const decay = (t, tau) => (t < 0 ? 0 : Math.exp(-t / tau));
+import { rand, make, decay } from './buffers.js';
+import { bell, monitor } from './eerie-more.js';
 
 /** Knirk: «stick-slip» – korte pulser med svevende tonehøyde (dør, gulvbord). */
 function creak(ctx, up = true) {
@@ -190,7 +170,7 @@ function chime(ctx) {
   }, 0.4);
 }
 
-const MAKERS = { creak, knocks, footsteps, whisper, buzz, groan, phone, gurgle, boom, musicbox, muzak, chime };
+const MAKERS = { creak, knocks, footsteps, whisper, buzz, groan, phone, gurgle, boom, musicbox, muzak, chime, bell, monitor };
 export const EERIE_SOUNDS = Object.keys(MAKERS);
 
 /** Lager en ny variant av lyden (hver gang litt forskjellig). */

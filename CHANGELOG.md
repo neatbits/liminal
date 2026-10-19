@@ -104,6 +104,13 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Hverdagstemaer: «The School» – lange korridorer med metallskap langs veggene, flekket
+  linoleum, malte murblokker, klasserom med kateter og dører som står åpne, vinduer i
+  klasserommene og en skoleklokke som ringer et sted langt borte – og «The Ward» – en lang,
+  blank sykehusgang med mintgrønne vegger og håndlist, pasientrom med for det meste lukkede
+  dører, små flislagte bad, kaldt hvitt lys og en pasientmonitor som piper. Nye eksempler «The
+  School» (gyllen time) og «The Ward» (skumring). Felles generator for korridorbygg
+  (`gen/building.js`): bånd med rom på begge sider av korridorene, tverrkorridorer i endene.
 - «Make it wrong» (Atmosphere i sidepanelet): gjør 5–20 små endringer som hver for seg er
   nesten umerkelige, men som til sammen gjør at noe føles galt – taket litt for høyt eller lavt i
   en del av rommet, et lys som mangler, flimrer eller står litt utenfor mønsteret, en dør på gløtt
@@ -199,6 +206,9 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   grønt/rødt om døren får plass, og forklarer hvorfor når den ikke gjør det.
 - CRT-TV-et er dobbelt så stort, laptopen halvparten så stor (katalogen har nå `scale`).
 - Romformatet har feltet `sky` (tiden på døgnet), og vinduer er vegger med `meta` = 1.
+- Vinduer i genererte rom settes i ytterveggen uansett hvor tykk den er; dagslyset er dempet
+  litt, så rom med både taklys og mange vinduer ikke «brenner ut».
+- Hjelperne for lydbuffere ligger i `audio/buffers.js`; nye skumle lyder i `audio/eerie-more.js`.
 - Romklangen er ikke lenger fast per tema: temaets `reverb`/`reverbTime` gir nå hvor klangfullt
   temaet er og lengden på klangen i store rom (`audio/space.js`, `audio/acoustics.js`).
 - Veifinning (avstandskart over rutenettet) ligger i `world/paths.js`, felles for monsteret og

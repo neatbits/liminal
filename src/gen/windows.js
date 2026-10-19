@@ -8,6 +8,8 @@ const PLANS = {
   office: { run: 2, gap: 1, chance: 0.85 },
   pool: { run: 3, gap: 1, chance: 0.9 },
   playroom: { run: 2, gap: 2, chance: 0.8 },
+  school: { run: 3, gap: 1, chance: 0.9 },
+  ward: { run: 1, gap: 1, chance: 0.85 },
 };
 
 // Tiden på døgnet: oftest dag og gyllen time, av og til skumring, sjelden natt.
@@ -24,13 +26,31 @@ export function pickSky(rand) {
   return 'day';
 }
 
-/** Ruter i ytterkanten (og rett innenfor) som kan få vindu, i rekkefølge langs veggen. */
+/** Ytterveggen: rom på den ene siden og bare vegg ut til kanten av kartet på den andre. */
+function exterior(level, x, z) {
+  if (!canHoldWindow(level, x, z)) return null;
+  for (const [dx, dz] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+    if (getTile(level, x + dx, z + dz) === TILE.WALL) continue;
+    // (dx, dz) peker inn i rommet; bak veggen skal det bare være vegg ut til kanten.
+    for (let k = 1; ; k++) {
+      const [bx, bz] = [x - dx * k, z - dz * k];
+      if (bx < 0 || bz < 0 || bx >= level.w || bz >= level.h) return [dx, dz];
+      if (getTile(level, bx, bz) !== TILE.WALL) return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Rekker av ytterveggruter i rekkefølge langs veggen: rader for vinduer mot nord/sør og
+ * kolonner for vinduer mot øst/vest, så mønsteret (vindu, vindu, vegg …) følger veggen.
+ */
 function edgeRuns(level) {
   const { w, h } = level;
   const lines = [];
-  for (const z of [0, h - 1]) lines.push(Array.from({ length: w }, (_, x) => [x, z]));
-  for (const x of [0, w - 1]) lines.push(Array.from({ length: h }, (_, z) => [x, z]));
-  return lines;
+  for (let z = 0; z < h; z++) lines.push(Array.from({ length: w }, (_, x) => [x, z]).filter(([x]) => exterior(level, x, z)?.[0] === 0));
+  for (let x = 0; x < w; x++) lines.push(Array.from({ length: h }, (_, z) => [x, z]).filter(([, z]) => exterior(level, x, z)?.[1] === 0));
+  return lines.filter((l) => l.length);
 }
 
 /** Setter inn vinduer etter temaet. Returnerer antall vinduer. */
@@ -42,7 +62,7 @@ export function addWindows(level, rand) {
     let k = Math.floor(rand() * (plan.run + plan.gap));
     for (const [x, z] of line) {
       k = (k + 1) % (plan.run + plan.gap);
-      if (k >= plan.run || getTile(level, x, z) !== TILE.WALL || !canHoldWindow(level, x, z)) continue;
+      if (k >= plan.run) continue;
       if (rand() < plan.chance) n += paintWindows(level, [[x, z]], true);
     }
   }

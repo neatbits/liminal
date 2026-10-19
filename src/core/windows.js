@@ -21,10 +21,10 @@ const SIDES = [
  * taklys) og sola (høyde over horisonten, vinkel til siden, farge og styrke) – null om natta.
  */
 export const SKIES = {
-  day: { label: 'Day', sky: ['#cfe6f7', '#f4f8f8'], light: '#eef6ff', power: 2.2, sun: { elev: 0.75, side: 0.35, color: '#fff6e0', strength: 0.55 } },
-  golden: { label: 'Golden hour', sky: ['#f6c98a', '#ffe9c4'], light: '#ffd9a0', power: 2, sun: { elev: 0.32, side: -0.45, color: '#ffbe6e', strength: 0.75 } },
-  dusk: { label: 'Dusk', sky: ['#4b5d95', '#d99a8e'], light: '#a7a2d6', power: 1, sun: { elev: 0.12, side: 0.6, color: '#ff9e7a', strength: 0.35 } },
-  night: { label: 'Night', sky: ['#0b1024', '#1d2a4a'], light: '#5a6c9e', power: 0.25, sun: null },
+  day: { label: 'Day', sky: ['#cfe6f7', '#f4f8f8'], light: '#eef6ff', power: 1.5, sun: { elev: 0.75, side: 0.35, color: '#fff6e0', strength: 0.55 } },
+  golden: { label: 'Golden hour', sky: ['#f6c98a', '#ffe9c4'], light: '#ffd9a0', power: 1.4, sun: { elev: 0.32, side: -0.45, color: '#ffbe6e', strength: 0.75 } },
+  dusk: { label: 'Dusk', sky: ['#4b5d95', '#d99a8e'], light: '#a7a2d6', power: 0.75, sun: { elev: 0.12, side: 0.6, color: '#ff9e7a', strength: 0.35 } },
+  night: { label: 'Night', sky: ['#0b1024', '#1d2a4a'], light: '#5a6c9e', power: 0.2, sun: null },
 };
 export const DEFAULT_SKY = 'day';
 

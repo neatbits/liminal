@@ -12,6 +12,7 @@ import * as styles from './styles.js';
 import { basement } from './basement.js';
 import { playroom } from './playroom.js';
 import { mall, mallLayout } from './mall.js';
+import { school, ward } from './building.js';
 
 const BY_THEME = {
   backrooms: styles.backrooms,
@@ -22,6 +23,8 @@ const BY_THEME = {
   basement,
   playroom,
   mall,
+  school,
+  ward,
 };
 
 /**
@@ -121,6 +124,18 @@ export const PRESETS = [
     name: 'The Mall',
     hint: 'Two floors of shops around an empty atrium. Go upstairs and look down.',
     make: makeMall,
+  },
+  {
+    id: 'school',
+    name: 'The School',
+    hint: 'Lockers, linoleum and classrooms in the late afternoon sun. Nobody is coming back today.',
+    make: () => Object.assign(generateLevel({ theme: 'school', w: 52, h: 40, seed: 6, name: 'The School' }), { sky: 'golden' }),
+  },
+  {
+    id: 'ward',
+    name: 'The Ward',
+    hint: 'Closed doors, a pale green corridor and a monitor beeping somewhere.',
+    make: () => Object.assign(generateLevel({ theme: 'ward', w: 48, h: 36, seed: 2, name: 'The Ward' }), { sky: 'dusk' }),
   },
   {
     id: 'corridor',

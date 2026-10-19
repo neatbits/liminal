@@ -107,6 +107,9 @@ src/
 - **Vinduer** (`core/windows.js`): en veggrute med `meta & 1` er et vindu – fortsatt vegg for
   kollisjon, lys og dører. `level.sky` (SKIES) gir himmel, dagslys (lyskilder med egen farge,
   `rgb`) og solflekker (`sunPatch`). 3D i `world/windows.js`; surfaces.js lar åpningen stå åpen.
+- **Korridorbygg** (`gen/building.js`): skolen og sykehuset. Korridorene på skolen får belegg
+  (`finish`), og temaets `tiles` tegner belegget som skap – samme triks kan brukes for andre
+  vegger med eget utseende i deler av et bygg.
 - **«Make it wrong»** (`gen/wrong.js`): katalogen `CHANGES` med små endringer (hver returnerer
   `{ what, cells }` eller null), vektet (`WEIGHTS`) og begrenset (`MAX`). Nye endringer skal være
   subtile hver for seg, aldri skumle, og ikke dele rommet i to (testen sjekker at det henger sammen).
