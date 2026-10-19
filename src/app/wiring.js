@@ -37,6 +37,10 @@ export function bindButtons(app) {
   $('#btn-redo').onclick = () => app.editor.redo();
   $('#btn-fit').onclick = () => app.editor.fit();
   $('#btn-walk-top').onclick = () => app.walk(true);
+  const mood = $('#mood-select');
+  mood.value = app.settings.mood;
+  mood.onchange = () => app.viewer.setMood(mood.value);
+  app.viewer.options.onMoodChange = (id) => (mood.value = id);
   $('#view-actions').addEventListener('click', (e) => {
     const view = e.target.closest('[data-view]')?.dataset.view;
     if (view === 'walk') app.walk(false);

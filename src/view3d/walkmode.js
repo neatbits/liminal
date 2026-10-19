@@ -31,6 +31,7 @@ export class WalkMode {
     this._statsIn = 0;
     this.doors = null;
     this.power = 1; // strømmen (0..1): settes under strømbrudd (view3d/explore.js)
+    this.mood = null; // stemningen (gen/moods.js), settes av visningen
     this.play = new WaterPlay(this);
     this.drift = new Drift(this); // drømmegange (G)
     window.addEventListener('keydown', (e) => {
@@ -53,7 +54,7 @@ export class WalkMode {
     this.doors = doors;
     this.play.setWorld(this.level, extras.objects, extras.balls);
     this.screens = glowSources(this.level);
-    this.loops = new Loops(this.level, Math.random, undefined, textureRepeats(theme)); // ganger som er lengre innenfra enn utenfra
+    this.loops = this._loops(theme); // ganger som er lengre innenfra enn utenfra
     this.windows = windows(this.level);
     this.drift.reset();
     this.theme = theme;
@@ -71,7 +72,7 @@ export class WalkMode {
     const spawn = resolveSpawn(this.level);
     if (!spawn) return false;
     this.walker.reset(this.level, spawn);
-    this.loops = new Loops(this.level, Math.random, undefined, textureRepeats(this.theme));
+    this.loops = this._loops(this.theme);
     this.play.reset();
     this.rider.path = null;
     this.input.reset();
@@ -117,6 +118,11 @@ export class WalkMode {
     this.sound = on;
     this.audio.setEnabled(on);
     if (on && this.active) this.audio.start(this.theme);
+  }
+
+  /** Uendelige ganger – bare når stemningen har avvik (mood.anomalies.loops). */
+  _loops(theme) {
+    return new Loops(this.level, Math.random, this.mood?.anomalies.loops ? [2, 5] : [0, 0], textureRepeats(theme));
   }
 
   /** En dør til ingensteds (med dørblad) – i gåmodus fører den videre (onExit). */

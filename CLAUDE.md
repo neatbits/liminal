@@ -131,7 +131,11 @@ src/
   gåeren `loopShift` (multiplum av L som går opp i teksturene, `textureRepeats`) når den krysser
   midten. Korridornivåer: `gen/corridors.js`; «samme rom igjen» og dør tilbake: `gen/endless.js`
   og `view3d/explore.js`.
-- **Scary mode** (`settings.scary`): `view3d/scary.js` styrer monsteret (`world/monster-ai.js`,
+- **Stemningen** (`gen/moods.js`, `settings.mood`): MOODS styrer tåke/eksponering (viewer
+  `_applyLook`), ødelagte lys og «Make it wrong» (`moodLevel`, brukt av `view3d/explore.js` på en
+  kopi av rommet), avvik (`walk.mood.anomalies`, `nextLevel`-odds), strømbrudd, skumle lyder og
+  monsteret. Nye liminale/skumle effekter skal kobles til skalaen her.
+- **Monsteret** (Uncanny/Nightmare): `view3d/scary.js` styrer monsteret (`world/monster-ai.js`,
   ren logikk: avstandskart over rutenettet, lukkede dører stenger; `view3d/monster.js` tegner
   det) og lydene (`audio/scary.js`). Det jakter bare når strømmen er borte (`Blackout`).
 - **Gåmodus** jobber på en kopi av rommet (`cloneLevel` i `WalkMode.setWorld`), så dører

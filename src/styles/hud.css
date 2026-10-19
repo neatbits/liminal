@@ -155,6 +155,15 @@
   opacity: 1;
 }
 
+/* Stemningen i gålinjen: varmere farge jo nærmere Nightmare. */
+.hud-walkbar .hud-mood[data-mood='uncanny'] {
+  color: #f2c14e;
+}
+
+.hud-walkbar .hud-mood[data-mood='nightmare'] {
+  color: #ff6b5e;
+}
+
 /* Nivå og kassetter i gålinjen («LEVEL 2 · 📼 1/4»). */
 .hud-extra {
   color: #f2d58a;

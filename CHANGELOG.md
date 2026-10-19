@@ -104,6 +104,14 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Stemningsskala for gåmodus: Normal → Abandoned → Liminal → Uncanny → Nightmare (velger over
+  3D-visningen, knapp i gålinjen, tasten X; huskes). Én innstilling styrer tåke og lysstyrke,
+  andelen ødelagte og blinkende lys, «Make it wrong» (genererte nivåer fra Liminal, ditt eget rom
+  fra Uncanny), romlige avvik, korridornivåer, strømbrudd, hvor ofte de skumle lydene kommer og
+  monsteret (Uncanny: viser seg, tar deg aldri; Nightmare: jakter). Liminal er standard og
+  tilsvarer det som var før. Endringer i ditt eget rom gjøres på en kopi i gåmodus – rommet i
+  editoren er urørt når du går ut. Erstatter Scary-knappen (Scary → Nightmare, Scary · mild →
+  Uncanny, også for lagrede innstillinger).
 - Romlige avvik i gåmodus:
   - Ganger som er lengre innenfra enn utenfra: i en rett gang der vegger, dører, lys og gjenstander
     gjentar seg i et fast mønster, flyttes man sømløst tilbake når man krysser midten – alt ser likt

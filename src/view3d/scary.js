@@ -1,25 +1,8 @@
-// Scary mode i gåmodus: monsteret (world/monster-ai.js + view3d/monster.js) med hjertebank
+// Monsteret i de sterkeste stemningene (Uncanny, Nightmare): monsteret (world/monster-ai.js + view3d/monster.js) med hjertebank
 // og pust, og «noclip» til et nytt nivå når det tar deg. Styres av view3d/explore.js.
 import { MonsterAI } from '../world/monster-ai.js';
 import { Monster3D } from './monster.js';
 import { heartbeat, breath, caught } from '../audio/scary.js';
-
-/** Bryteren i gålinjen (X): av → på → på uten jumpscares (mild) → av. Lagrer valget. */
-export function cycleScary(viewer) {
-  const s = viewer.settings;
-  [s.scary, s.scaryMild] = !s.scary ? [true, false] : !s.scaryMild ? [true, true] : [false, false];
-  if (s.scary) {
-    viewer.hud.flash(
-      s.scaryMild
-        ? 'Scary mode, no jumpscares: it is still out there, but it will never catch you.'
-        : 'Scary mode: darker rooms, more blackouts – and something in the dark. When the lights go out, run.',
-      4500,
-    );
-  }
-  viewer.hud.setToggles(s);
-  viewer._applyLook();
-  viewer.options.onSettingsChange?.(s);
-}
 
 export class Scary {
   constructor(viewer) {

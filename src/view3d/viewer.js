@@ -10,7 +10,8 @@ import { Hud } from './hud.js';
 import { WalkMode } from './walkmode.js';
 import { shootPhoto } from './photo.js';
 import { Explorer } from './explore.js';
-import { cycleScary } from './scary.js';
+import { getMood, nextMood } from '../gen/moods.js';
+import { setMood } from './mood.js';
 
 const OVERVIEW_BG = new THREE.Color('#d8d6cf');
 
@@ -47,11 +48,12 @@ export class Viewer {
       vhs: () => this.toggle('vhs'),
       sound: () => this.toggle('sound'),
       photo: () => this.photo(),
-      scary: () => this.cycleScary(),
+      mood: () => this.setMood(nextMood(this.settings.mood)),
       drift: () => this.walk.drift.toggle(),
     });
     this.walk = new WalkMode({ canvas: renderer.domElement, hud: this.hud, audio: this.audio });
     this.walk.sound = this.settings.sound;
+    this.walk.mood = getMood(this.settings.mood);
     // Kassetter, strømbrudd og uendelige nivåer (dører til ingensteds) i gåmodus.
     this.explorer = new Explorer(this);
     this.walk.onExit = (door) => this.explorer.goDeeper({ door });
@@ -147,15 +149,9 @@ export class Viewer {
     this.enterWalk();
   }
 
-  /** Fotomodus (P): bilde av det man ser – lagres eller deles (photo.js). */
-  photo() {
-    return shootPhoto(this);
-  }
-
-  /** Scary mode: av → på → på uten jumpscares → av (scary.js). */
-  cycleScary() {
-    cycleScary(this);
-  }
+  // Fotomodus (P, photo.js) og stemningen i gåmodus (Normal … Nightmare, mood.js).
+  photo = () => shootPhoto(this);
+  setMood = (id) => setMood(this, id);
 
   toggle(key) {
     this.settings[key] = !this.settings[key];
@@ -181,9 +177,10 @@ export class Viewer {
     this.renderer.toneMappingExposure = theme.exposure;
     if (walking) {
       fog.color.set(theme.fog.color);
-      // Scary mode: tettere tåke og mørkere bilde.
-      fog.density = theme.fog.density * (this.level.fog ?? 1) * (this.settings.scary ? 1.9 : 1);
-      this.renderer.toneMappingExposure = theme.exposure * (this.settings.scary ? 0.8 : 1);
+      // Stemningen: tettere tåke og mørkere bilde jo nærmere Nightmare.
+      const mood = getMood(this.settings.mood);
+      fog.density = theme.fog.density * (this.level.fog ?? 1) * mood.fog;
+      this.renderer.toneMappingExposure = theme.exposure * mood.exposure;
       this.scene.background.copy(fog.color);
       this.camera.fov = this.settings.fov;
       this.world.setBoost(1);
@@ -203,7 +200,7 @@ export class Viewer {
       vhs: walking && this.settings.vhs,
     });
     this.hud.setVhs(walking && this.settings.vhs);
-    this.audio.eerieScale = walking && this.settings.scary ? 0.35 : 1;
+    this.audio.eerieScale = walking ? getMood(this.settings.mood).eerie : 1;
   }
 
   _onKey(e) {
@@ -211,7 +208,7 @@ export class Viewer {
     if (e.code === 'KeyV') this.toggle('vhs');
     else if (e.code === 'KeyM') this.toggle('sound');
     else if (e.code === 'KeyP') this.photo();
-    else if (e.code === 'KeyX') this.cycleScary();
+    else if (e.code === 'KeyX') this.setMood(nextMood(this.settings.mood));
     else if (e.code === 'KeyG') this.walk.drift.toggle();
     else if (e.code === 'Escape' && !this.walk.locked && !document.fullscreenElement) this.exitWalk();
   }

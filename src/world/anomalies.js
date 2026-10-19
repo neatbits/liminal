@@ -133,7 +133,7 @@ export class Loops {
   constructor(level, rand = Math.random, laps = [2, 5], repeats = []) {
     this.loops = findLoops(level)
       .map((l) => ({ ...l, shift: loopShift(l, repeats), left: laps[0] + Math.floor(rand() * (laps[1] - laps[0] + 1)) }))
-      .filter((l) => l.shift);
+      .filter((l) => l.shift && l.left > 0);
   }
 
   /**

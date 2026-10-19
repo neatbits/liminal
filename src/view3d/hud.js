@@ -1,4 +1,5 @@
 // HUD over 3D-vinduet: gålinje, hint, VHS-tekst, lastemelding, korte beskjeder og plask.
+import { getMood } from '../gen/moods.js';
 
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
@@ -10,7 +11,7 @@ function el(tag, cls, html = '') {
 }
 
 export class Hud {
-  /** @param actions { exit(), vhs(), sound(), photo(), scary(), drift() } */
+  /** @param actions { exit(), vhs(), sound(), photo(), mood(), drift() } */
   constructor(root, actions) {
     this.root = el('div', 'hud');
     this.walkbar = el(
@@ -22,7 +23,7 @@ export class Hud {
        <button type="button" data-act="drift" title="Dream walk: drift slowly through the rooms on your own (G)">Drift</button>
        <button type="button" data-act="photo" title="Take a photo (P)">📷 Photo</button>
        <button type="button" data-act="vhs" title="VHS filter (V)">VHS</button>
-       <button type="button" data-act="scary" title="Scary mode: darker rooms, more blackouts – and something in the dark (X)">Scary</button>
+       <button type="button" data-act="mood" class="hud-mood" title="Mood: Normal → Abandoned → Liminal → Uncanny → Nightmare (X)">Liminal</button>
        <button type="button" data-act="sound" title="Sound on/off (M)">Sound</button>
        <button type="button" data-act="exit" title="Back to overview (Esc)">Overview</button>`,
     );
@@ -132,10 +133,10 @@ export class Hud {
     this.walkbar.querySelector('.hud-stats').textContent = `${Math.round(meters)} m walked · ${Math.round(explored * 100)} % explored`;
   }
 
-  setToggles({ vhs, sound, scary, scaryMild }) {
-    const s = this.walkbar.querySelector('[data-act="scary"]');
-    s.classList.toggle('on', !!scary);
-    s.textContent = scary && scaryMild ? 'Scary · mild' : 'Scary';
+  setToggles({ vhs, sound, mood }) {
+    const m = this.walkbar.querySelector('[data-act="mood"]');
+    m.textContent = getMood(mood).label;
+    m.dataset.mood = mood;
     this.walkbar.querySelector('[data-act="vhs"]').classList.toggle('on', vhs);
     this.walkbar.querySelector('[data-act="sound"]').classList.toggle('on', sound);
   }

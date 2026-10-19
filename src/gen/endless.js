@@ -24,19 +24,20 @@ export function nextTheme(prev, rand) {
 /**
  * Nivå nummer `depth` (1, 2, …) etter et rom med temaet `prevTheme`. Har alltid utganger videre.
  * current = rommet man kom fra: av og til (again) er neste nivå det samme rommet, med noen små
- * endringer. corridor: en lang gang med fast mønster (uendelig i gåmodus).
+ * endringer. corridor: en lang gang med fast mønster (uendelig i gåmodus). odds = sjansene for de to
+ * (fra stemningen, gen/moods.js).
  * @returns {{ level, label, kind: 'room' | 'corridor' | 'again' }}
  */
-export function nextLevel(depth, prevTheme, rand, current = null) {
+export function nextLevel(depth, prevTheme, rand, current = null, odds = { corridor: 0.2, again: 0.15 }) {
   const r = rand();
-  if (current && depth >= 2 && r < 0.15) {
+  if (current && depth >= 2 && r < odds.again) {
     const level = cloneLevel(current);
     level.objects = [...(current.objects ?? [])];
     level.name = `Level ${depth}`;
     makeWrong(level, 'subtle', rand);
     return { level, label: getTheme(level.theme).label, kind: 'again' };
   }
-  if (r < 0.35) {
+  if (r < odds.again + odds.corridor) {
     const options = CORRIDOR_THEMES.filter((id) => id !== prevTheme);
     const theme = options[Math.floor(rand() * options.length)];
     return { level: corridorLevel(theme, rand, `Level ${depth}`), label: getTheme(theme).label, kind: 'corridor' };

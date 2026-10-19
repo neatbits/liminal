@@ -68,3 +68,11 @@
   width: 100vw;
   height: 100vh;
 }
+
+/* Stemningen i gåmodus (Normal … Nightmare) – en smal velger i panelhodet. */
+.pane-actions .mood-select {
+  flex: none;
+  width: auto;
+  padding-right: 4px;
+  cursor: pointer;
+}

@@ -87,8 +87,7 @@ export function loadDraft() {
 
 export const DEFAULT_SETTINGS = Object.freeze({
   vhs: false,
-  scary: false, // Scary mode i gåmodus (monster, flere strømbrudd)
-  scaryMild: false, // … uten jumpscares: monsteret tar deg aldri
+  mood: 'liminal', // stemningen i gåmodus (gen/moods.js): normal … nightmare
   grain: true,
   sound: true,
   volume: 0.8,
@@ -101,7 +100,12 @@ export const DEFAULT_SETTINGS = Object.freeze({
 
 export function loadSettings() {
   const s = readJSON(SETTINGS_KEY, {});
-  return { ...DEFAULT_SETTINGS, ...(s && typeof s === 'object' ? s : {}) };
+  const out = { ...DEFAULT_SETTINGS, ...(s && typeof s === 'object' ? s : {}) };
+  // Fra før stemningsskalaen: Scary mode → Nightmare, Scary · mild → Uncanny.
+  if (s?.mood === undefined && s?.scary) out.mood = s.scaryMild ? 'uncanny' : 'nightmare';
+  delete out.scary;
+  delete out.scaryMild;
+  return out;
 }
 
 export function saveSettings(settings) {
