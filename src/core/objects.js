@@ -10,7 +10,7 @@ import { floorAt } from './heights.js';
 /**
  * Katalogen. size = [bredde, høyde, dybde] i meter slik gjenstanden står i rommet (selve filen
  * sentreres av world/objects.js), scale = skalering av modellfilen (size er allerede skalert). file = models/<file>.glb. surface = høyden på en flate
- * andre gjenstander kan stå på. screen = området i teksturen [u0, v0, u1, v1] der en skjerm
+ * andre gjenstander kan stå på. build = bygges av enkle former (world/props.js) i stedet for fil. screen = området i teksturen [u0, v0, u1, v1] der en skjerm
  * viser sne-støy, glow = hvor sterkt skjermen lyser opp rundt seg (andel av et taklys).
  * Alle modellene er fra Poly Haven (CC0).
  */
@@ -28,6 +28,9 @@ export const OBJECTS = {
   laptop: { label: 'Laptop', file: 'classic_laptop', size: [0.326, 0.272, 0.243], scale: 0.5, credit: 'Classic Laptop – Poly Haven (CC0)' },
   desk: { label: 'Office desk', file: 'office_desk', size: [2, 0.788, 0.947], surface: 0.788, credit: 'Metal Office Desk – Poly Haven (CC0)' },
   duck: { label: 'Rubber duck', file: 'rubber_duck', size: [0.214, 0.286, 0.3], floats: true, credit: 'Rubber Duck Toy – Poly Haven (CC0)' },
+  // Bygget av enkle former (world/props.js), uten modellfil.
+  kiosk: { label: 'Food kiosk', build: 'kiosk', size: [3, 2.6, 1.5], glow: 0.22 },
+  cafe: { label: 'Café table', build: 'cafe', size: [1.7, 0.92, 1.7] },
 };
 
 export const OBJECT_IDS = Object.keys(OBJECTS);
@@ -58,7 +61,7 @@ function basePose(level, o) {
   let x = o.x + 0.5;
   let z = o.z + 0.5;
   if (getTile(level, o.x - fx, o.z - fz) === TILE.WALL) {
-    const back = Math.max(0, 0.5 - d / 2 - WALL_GAP);
+    const back = 0.5 - d / 2 - WALL_GAP; // negativ: dypere enn ruten, skyves fram fra veggen
     x -= fx * back;
     z -= fz * back;
   }

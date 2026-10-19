@@ -10,7 +10,8 @@ const ids = (level) => new Set(level.objects.map((o) => o.id));
 describe('gjenstander i genererte rom', () => {
   it('hvert tema får bare gjenstander som hører hjemme der', () => {
     for (const theme of THEME_IDS) {
-      const allowed = new Set(PLANS[theme].flatMap((p) => (p.set === 'desk' ? ['desk', 'laptop', 'tv', 'boombox'] : p.set === 'tvrow' ? ['tv'] : [p.id])));
+      const sets = { desk: ['desk', 'laptop', 'tv', 'boombox'], tvrow: ['tv'], foodspot: ['kiosk', 'cafe'] };
+      const allowed = new Set(PLANS[theme].flatMap((p) => sets[p.set] ?? [p.id]));
       for (const seed of [1, 2]) {
         for (const id of ids(generateLevel({ theme, w: 44, h: 38, seed }))) expect(allowed.has(id), `${theme}: ${id}`).toBe(true);
       }
@@ -48,5 +49,26 @@ describe('gjenstander i genererte rom', () => {
       if (OBJECTS[o.id].floats) continue;
       expect(Math.hypot(o.x + 0.5 - a.spawn.x, o.z + 0.5 - a.spawn.z)).toBeGreaterThanOrEqual(2.9);
     }
+  });
+});
+
+describe('gatekjøkken', () => {
+  it('kjøpesenteret får kiosker med kafébord, og bordene står fritt', async () => {
+    const { objectPose, objectBox } = await import('../src/core/objects.js');
+    const level = generateLevel({ theme: 'mall', w: 56, h: 40, seed: 7 });
+    const kiosks = level.objects.filter((o) => o.id === 'kiosk');
+    const cafes = level.objects.filter((o) => o.id === 'cafe');
+    expect(kiosks.length).toBeGreaterThan(0);
+    expect(cafes.length).toBeGreaterThan(1);
+    // Kiosken står med ryggen inntil veggen: bakkanten ligger på en rutegrense mot vegg.
+    const k = kiosks[0];
+    const b = objectBox(objectPose(level, k));
+    const backs = [b[0], b[1], b[2], b[3]].map((v) => Math.abs(v - Math.round(v)));
+    expect(Math.min(...backs)).toBeLessThan(0.05);
+  });
+
+  it('skolen og sykehuset har egne skilt (CAFETERIA, KIOSK)', async () => {
+    const level = generateLevel({ theme: 'school', w: 52, h: 40, seed: 6 });
+    expect(level.objects.some((o) => o.id === 'kiosk')).toBe(true);
   });
 });

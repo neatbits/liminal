@@ -104,6 +104,14 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Gatekjøkken: en kiosk (3 × 1,5 m) med opplyst skilt med oppdiktet navn (Burger Stop, Pizza
+  Plaza, Noodle Bar, Hot Dog Hut, Fries & Co – «Cafeteria» på skolen, «Kiosk» på sykehuset), rød
+  eller farget disk med en enkel burgerlogo, og et hvitt, flislagt bakrom med kjøleskap, maskiner
+  og menytavle som lyser av seg selv. Og et kafébord med tre stoler i burgunder. Begge bygges av
+  enkle former (`world/props.js`), ikke modellfiler, og finnes i Object-verktøyet. Level 0 får
+  av og til en kiosk med et bord foran, kjøpesenteret en food court med kiosker og bord i atriet,
+  skolen en kantine, sykehuset en kiosk, og kontoret og hotellet et og annet kafébord.
+- Store gjenstander står med ryggen inntil veggen også når de er dypere enn én rute.
 - Hverdagstemaer: «The School» – lange korridorer med metallskap langs veggene, flekket
   linoleum, malte murblokker, klasserom med kateter og dører som står åpne, vinduer i
   klasserommene og en skoleklokke som ringer et sted langt borte – og «The Ward» – en lang,

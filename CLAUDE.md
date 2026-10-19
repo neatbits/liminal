@@ -89,7 +89,9 @@ src/
   reklame) og før opp kreditering i `credit`. 3D-delen (`world/objects.js`) laster .glb
   asynkront, sentrerer modellen og baker rommets lys per vertex. `surface` (høyde) gjør en
   gjenstand til en flate andre settes oppå; `floats` lar den ligge i vann, og i gåmodus
-  dyttes slike rundt (`world/floaters.js` via `view3d/water-play.js`).
+  dyttes slike rundt (`world/floaters.js` via `view3d/water-play.js`). Med `build` i stedet for
+  `file` bygges gjenstanden av enkle former i `world/props.js` (variant per tema/rute via
+  `propKey`); deler med `unlit` lyser av seg selv (skilt, lyskasser).
 - **Rekkverk** (`core/railings.js`): reglene for hvilke kanter som får vern/håndlist brukes
   både av geometrien (`world/railings.js`) og kollisjonen – endre dem bare der.
 - **Vannsklier** (`core/slides.js`): `level.slides` er en liste med objekter
