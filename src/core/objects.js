@@ -129,7 +129,7 @@ export function objectFits(level, o, objects = list(level)) {
   for (let z = Math.floor(box[1] + 0.02); z <= Math.floor(box[3] - 0.02); z++) {
     for (let x = Math.floor(box[0] + 0.02); x <= Math.floor(box[2] - 0.02); x++) {
       const t = getTile(level, x, z);
-      if (t === TILE.WALL || t === TILE.PILLAR) return false;
+      if (t === TILE.WALL || t === TILE.PILLAR || (def.floats && t !== TILE.WATER)) return false;
     }
   }
   for (const q of objects) {

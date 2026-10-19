@@ -107,6 +107,18 @@ function row(level, rand, x, z, ids, front) {
   return true;
 }
 
+/**
+ * Plaststoler langs bassengkanten, med ansiktet mot vannet – én eller to side om side.
+ * (x, z) er en gulvrute som grenser til vann.
+ */
+export function poolside(level, rand, x, z) {
+  const rot = FACING.findIndex(([fx, fz]) => getTile(level, x + fx, z + fz) === TILE.WATER);
+  if (rot < 0 || !put(level, 'plasticchair', x, z, rot)) return false;
+  const [fx, fz] = FACING[rot];
+  if (rand() < 0.6) put(level, 'plasticchair', x - fz, z + fx, rot);
+  return true;
+}
+
 /** Ventestoler på rad mot veggen (sykehus, hotell). */
 export function chairs(level, rand, x, z) {
   return row(level, rand, x, z, ['dinerchair'], 1);
@@ -114,7 +126,7 @@ export function chairs(level, rand, x, z) {
 
 /** Arkademaskiner side om side – et spillehjørne som ingen har spilt i på lenge. */
 export function arcades(level, rand, x, z) {
-  return row(level, rand, x, z, rand() < 0.5 ? ['arcade', 'arcade2'] : ['arcade2', 'arcade'], 2);
+  return row(level, rand, x, z, ['arcade2'], 2);
 }
 
 /** Tre TV-er ved siden av hverandre langs veggen (en butikk som aldri stengte). */

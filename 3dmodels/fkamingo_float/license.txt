@@ -1,0 +1,11 @@
+Model Information:
+* title:	Flamingo Pool Float 3D Model
+* source:	https://sketchfab.com/3d-models/flamingo-pool-float-3d-model-d1c4beb004c6415d8b04de9cf7a74163
+* author:	Mohammad Rajabloo (https://sketchfab.com/MohammadRajabloo)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Flamingo Pool Float 3D Model" (https://sketchfab.com/3d-models/flamingo-pool-float-3d-model-d1c4beb004c6415d8b04de9cf7a74163) by Mohammad Rajabloo (https://sketchfab.com/MohammadRajabloo) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

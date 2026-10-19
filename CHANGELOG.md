@@ -104,11 +104,16 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
-- Ti nye modeller fra Sketchfab, alle kreditert med lenker på About-siden (CC BY 4.0; den hvite
-  reolen CC BY-SA 4.0): to arkademaskiner, kasseapparat, diner-stol, diner-bordsett, kontorstol,
-  treskrivebord, retro-PC, brusautomat og hvit reol. Bruk:
-  - kontoret: skrivebord med kontorstol foran (av og til skjev) og PC, laptop m.m. oppå; hvite reoler
-  - skolen, kjelleren og hotellet: treskrivebord med stol; reoler i klasserom og kjeller
+- Plaststol og flamingo-badering fra Sketchfab (CC BY 4.0, kreditert): Poolrooms får plaststoler
+  langs bassengkanten med ansiktet mot vannet, én eller to sammen, og flamingoer som flyter og
+  dyttes rundt i gåmodus akkurat som endene (flytende gjenstander har nå hver sin størrelse).
+  Lekerommet, garasjen og Level 0 får en og annen plaststol.
+- Åtte nye modeller fra Sketchfab, alle kreditert med lenker på About-siden (CC BY 4.0):
+  arkademaskin, kasseapparat, diner-stol, diner-bordsett, kontorstol, treskrivebord, retro-PC og
+  brusautomat. (En kopi av en kjent arkademaskin med varemerket navn og en reol med CC BY-SA ble
+  tatt ut igjen.) Bruk:
+  - kontoret: skrivebord med kontorstol foran (av og til skjev) og PC, laptop m.m. oppå
+  - skolen, kjelleren og hotellet: treskrivebord med stol
   - kjøpesenteret: ny butikktype «spillehall» med arkademaskiner og brusautomat; kasseapparat på
     alle skrankene; dinersett og kafébord i food court; brusautomater i gangene
   - sykehuset og hotellet: ventestoler på rad mot veggen

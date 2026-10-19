@@ -12,7 +12,7 @@ describe('gjenstander i genererte rom', () => {
   it('hvert tema får bare gjenstander som hører hjemme der', () => {
     for (const theme of THEME_IDS) {
       const desk = ['desk', 'desk2', 'officechair', 'laptop', 'pc', 'tv', 'boombox', 'cassette', 'console'];
-      const sets = { desk, tvrow: ['tv'], table: ['cafe', 'dinerset'], foodspot: ['kiosk', 'cafe', 'dinerset'], chairs: ['dinerchair'], arcades: ['arcade', 'arcade2'], gaming: ['tv', 'console', 'gamepad'], livingroom: ['tv', 'console', 'gamepad', 'sofa'], softplay: ['softcube', 'softblock', 'softpillar', 'softbeam', 'softslab'] };
+      const sets = { desk, tvrow: ['tv'], table: ['cafe', 'dinerset'], foodspot: ['kiosk', 'cafe', 'dinerset'], chairs: ['dinerchair'], arcades: ['arcade2'], poolside: ['plasticchair'], gaming: ['tv', 'console', 'gamepad'], livingroom: ['tv', 'console', 'gamepad', 'sofa'], softplay: ['softcube', 'softblock', 'softpillar', 'softbeam', 'softslab'] };
       const allowed = new Set(PLANS[theme].flatMap((p) => sets[p.set] ?? [p.id]).concat(theme === 'mall' ? SHOP_ITEMS : []));
       for (const seed of [1, 2]) {
         for (const id of ids(generateLevel({ theme, w: 44, h: 38, seed }))) expect(allowed.has(id), `${theme}: ${id}`).toBe(true);
@@ -29,12 +29,12 @@ describe('gjenstander i genererte rom', () => {
     expect(ids(generateLevel({ theme: 'basement', w: 36, h: 28, seed: 4 })).has('tv')).toBe(true);
   });
 
-  it('ender ligger i vannet; alt annet står på gulv og ikke i vegger', () => {
+  it('ender og flamingoer ligger i vannet; alt annet står på gulv og ikke i vegger', () => {
     for (const theme of ['pool', 'office', 'mall', 'playroom']) {
       const level = generateLevel({ theme, w: 44, h: 38, seed: 3 });
       for (const o of level.objects) {
         const tile = level.tiles[o.z * level.w + o.x];
-        expect(tile, `${theme}: ${o.id}`).toBe(o.id === 'duck' ? TILE.WATER : TILE.FLOOR);
+        expect(tile, `${theme}: ${o.id}`).toBe(OBJECTS[o.id].floats ? TILE.WATER : TILE.FLOOR);
         const b = objectBox(objectPose(level, o));
         for (const [x, z] of [[b[0] + 0.03, b[1] + 0.03], [b[2] - 0.03, b[3] - 0.03]]) {
           expect(level.tiles[Math.floor(z) * level.w + Math.floor(x)]).not.toBe(TILE.WALL);

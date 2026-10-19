@@ -5,7 +5,7 @@ import { fillZone, FINISH } from '../core/zones.js';
 import { objectFits } from '../core/objects.js';
 
 /** Gjenstandene butikkene kan få (til testene). */
-export const SHOP_ITEMS = ['shelf', 'wallshelf', 'counter', 'register', 'tv', 'arcade', 'arcade2', 'whiteshelf', 'soda'];
+export const SHOP_ITEMS = ['shelf', 'wallshelf', 'counter', 'register', 'tv', 'arcade2', 'soda'];
 
 const KINDS = [
   ['shelves', 0.4],
@@ -50,7 +50,7 @@ export function furnishShops(level, rand, shops) {
     }
     if (kind === 'arcade') {
       // Spillehall: arkademaskiner side om side langs bakveggen, og en brusautomat i hjørnet.
-      for (let x = s.x0 + 1; x <= s.x1 - 1; x++) put(level, (x - s.x0) % 2 ? 'arcade' : 'arcade2', x, back, toFront);
+      for (let x = s.x0 + 1; x <= s.x1 - 1; x++) put(level, 'arcade2', x, back, toFront);
       put(level, 'soda', s.x1, back, toFront);
     }
     if (kind === 'shelves') {

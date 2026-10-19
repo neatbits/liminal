@@ -4,7 +4,7 @@
 import { TILE, getTile, WATER_SURFACE } from '../core/level.js';
 import { OBJECTS, objectPose } from '../core/objects.js';
 
-const RADIUS = 0.14; // en ands «radius» sett ovenfra
+// Radius sett ovenfra: halve bredden (en and ~0,14 m, en flamingo ~0,5 m).
 const DRAG = 0.6; // vannmotstand (1/s)
 const SPIN_DRAG = 1.2;
 const PUSH = 1.2; // hvor mye av spillerens fart anden får
@@ -19,7 +19,7 @@ export class Floaters {
     (level.objects ?? []).forEach((o, i) => {
       if (!OBJECTS[o.id]?.floats || getTile(level, o.x, o.z) !== TILE.WATER) return;
       const p = objectPose(level, o);
-      this.bodies.push({ i, x: p.x, z: p.z, vx: 0, vz: 0, yaw: (-p.rot * Math.PI) / 2, spin: 0, phase: i * 1.7 });
+      this.bodies.push({ i, r: Math.max(p.w, p.d) * 0.45, x: p.x, z: p.z, vx: 0, vz: 0, yaw: (-p.rot * Math.PI) / 2, spin: 0, phase: i * 1.7 });
     });
   }
 
@@ -50,10 +50,10 @@ export class Floaters {
       if (player) this._push(b, player);
       // Langs hver akse for seg: spretter av kanten når neste posisjon ikke er vann.
       const nx = b.x + b.vx * dt;
-      if (this._water(nx + Math.sign(b.vx) * RADIUS, b.z)) b.x = nx;
+      if (this._water(nx + Math.sign(b.vx) * b.r, b.z)) b.x = nx;
       else b.vx = -b.vx * BOUNCE;
       const nz = b.z + b.vz * dt;
-      if (this._water(b.x, nz + Math.sign(b.vz) * RADIUS)) b.z = nz;
+      if (this._water(b.x, nz + Math.sign(b.vz) * b.r)) b.z = nz;
       else b.vz = -b.vz * BOUNCE;
       const k = Math.exp(-dt * DRAG);
       b.vx *= k;
@@ -68,7 +68,7 @@ export class Floaters {
     const dx = b.x - p.x;
     const dz = b.z - p.z;
     const d = Math.hypot(dx, dz);
-    const min = p.r + RADIUS;
+    const min = p.r + b.r;
     if (d >= min) return;
     const [nx, nz] = d > 1e-6 ? [dx / d, dz / d] : [1, 0];
     // Skyv anden ut av spilleren, og gi den farten spilleren har inn mot den.
@@ -94,10 +94,10 @@ export class Floaters {
         const dx = B.x - A.x;
         const dz = B.z - A.z;
         const d = Math.hypot(dx, dz);
-        if (d >= 2 * RADIUS || d < 1e-6) continue;
+        if (d >= A.r + B.r || d < 1e-6) continue;
         const nx = dx / d;
         const nz = dz / d;
-        const overlap = (2 * RADIUS - d) / 2;
+        const overlap = (A.r + B.r - d) / 2;
         A.x -= nx * overlap;
         A.z -= nz * overlap;
         B.x += nx * overlap;
