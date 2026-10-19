@@ -122,7 +122,7 @@ export class WalkMode {
 
   /** Uendelige ganger – bare når stemningen har avvik (mood.anomalies.loops). */
   _loops(theme) {
-    return new Loops(this.level, Math.random, this.mood?.anomalies.loops ? [2, 5] : [0, 0], textureRepeats(theme));
+    return new Loops(this.level, Math.random, this.mood?.anomalies.loops ? [1, 2] : [0, 0], textureRepeats(theme));
   }
 
   /** En dør til ingensteds (med dørblad) – i gåmodus fører den videre (onExit). */
