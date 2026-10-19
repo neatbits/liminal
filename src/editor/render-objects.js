@@ -2,6 +2,23 @@
 // forkortelse av navnet når det er plass.
 import { OBJECTS, FACING, objectPose } from '../core/objects.js';
 
+/** Stiplede ringer rundt stedene som skal vises fram: [{ x, z, r }] (highlight i editoren). */
+export function drawHighlights(ctx, view, markers) {
+  if (!markers?.length) return;
+  const s = view.scale;
+  ctx.save();
+  ctx.strokeStyle = '#e8743b';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([6, 4]);
+  for (const { x, z, r } of markers) {
+    const [cx, cy] = view.toScreen(x, z);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * s, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 export function drawObjects(ctx, view, level) {
   if (!level.objects?.length) return;
   const s = view.scale;

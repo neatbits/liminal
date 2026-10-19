@@ -1,6 +1,7 @@
 // Venstre sidepanel: verktøy, rommets egenskaper, atmosfære, nøkkeltall og tegnehjelp.
 import { THEMES, THEME_IDS, getTheme } from '../core/themes.js';
 import { SKIES } from '../core/windows.js';
+import { STRENGTHS } from '../gen/wrong.js';
 import { MIN_SIZE, MAX_SIZE, HEIGHT_MIN, HEIGHT_MAX, DEPTH_MIN, DEPTH_MAX } from '../core/level.js';
 import { h } from './dom.js';
 import { section, range, unitInput } from './fields.js';
@@ -63,6 +64,13 @@ export class Sidebar {
         h('button', { type: 'button', class: 'btn', text: 'Remove all lights', onclick: () => a.clearLights() }),
       ),
       h('button', { type: 'button', class: 'btn', style: { width: '100%', marginTop: '6px', justifyContent: 'center' }, text: '🎲 Generate random room', onclick: () => a.generate() }),
+      // «Make it wrong»: mange små endringer som gjør at noe føles galt (gen/wrong.js).
+      h(
+        'div',
+        { class: 'row wrong-row' },
+        (this.wrongStrength = h('select', { class: 'field', title: 'How wrong' }, Object.entries(STRENGTHS).map(([id, s]) => h('option', { value: id, text: s.label, selected: id === 'wrong' })))),
+        h('button', { type: 'button', class: 'btn', text: 'Make it wrong', title: 'Make 5–20 small changes that make the room feel subtly wrong (undo with Ctrl+Z)', onclick: () => a.makeWrong(this.wrongStrength.value) }),
+      ),
     );
 
     this.stats = h('dl', { class: 'stats' });

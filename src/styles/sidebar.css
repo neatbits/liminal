@@ -221,3 +221,14 @@
   font-size: 11px;
   margin: 8px 0 0;
 }
+
+/* «Make it wrong»: styrke og knapp på én linje. */
+.wrong-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.wrong-row .field {
+  flex: 1;
+}

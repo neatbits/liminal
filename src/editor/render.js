@@ -8,7 +8,7 @@ import { drawDoor } from './render-doors.js';
 import { canHoldDoor } from '../core/doors.js';
 import { drawStairs, drawStairsPreview } from './render-stairs.js';
 import { drawSlides } from './render-slides.js';
-import { drawObjects } from './render-objects.js';
+import { drawObjects, drawHighlights } from './render-objects.js';
 import { drawWindow } from './render-windows.js';
 
 export const RULER_TOP = 22;
@@ -200,6 +200,7 @@ export function drawPlan(ctx, s) {
   ctx.lineWidth = 1;
   ctx.strokeRect(Math.round(ox) + 0.5, Math.round(oy) + 0.5, Math.round(W), Math.round(H));
   if (s.zones && view.scale >= 8) drawZoneLabels(ctx, view, s.zones);
+  drawHighlights(ctx, view, s.highlight);
   // Tegn startpunktet der spilleren faktisk starter (nærmeste gulv hvis det står i en vegg).
   const spawn = resolveSpawn(level);
   if (spawn) drawSpawn(ctx, view, spawn);

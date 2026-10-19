@@ -23,6 +23,7 @@ export function sidebarActions(app) {
     bright: (v) => app.setProp('bright', v),
     fog: (v) => app.setFog(v),
     fillLights: () => app.fillLights(),
+    makeWrong: (strength) => app.makeWrong(strength),
     clearLights: () => app.clearLights(),
     generate: () => generateInto(app),
     grid: (on) => app.setHelper('grid', on),

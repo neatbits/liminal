@@ -107,6 +107,9 @@ src/
 - **Vinduer** (`core/windows.js`): en veggrute med `meta & 1` er et vindu – fortsatt vegg for
   kollisjon, lys og dører. `level.sky` (SKIES) gir himmel, dagslys (lyskilder med egen farge,
   `rgb`) og solflekker (`sunPatch`). 3D i `world/windows.js`; surfaces.js lar åpningen stå åpen.
+- **«Make it wrong»** (`gen/wrong.js`): katalogen `CHANGES` med små endringer (hver returnerer
+  `{ what, cells }` eller null), vektet (`WEIGHTS`) og begrenset (`MAX`). Nye endringer skal være
+  subtile hver for seg, aldri skumle, og ikke dele rommet i to (testen sjekker at det henger sammen).
 - **Drømmegange** (`view3d/drift.js` + `world/autopilot.js`): autopiloten bruker
   `world/paths.js` (som monsteret) og går gjennom dører til ingensteds via `walk.onExit`.
 - **Scary mode** (`settings.scary`): `view3d/scary.js` styrer monsteret (`world/monster-ai.js`,

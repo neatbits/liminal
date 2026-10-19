@@ -104,6 +104,14 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- «Make it wrong» (Atmosphere i sidepanelet): gjør 5–20 små endringer som hver for seg er
+  nesten umerkelige, men som til sammen gjør at noe føles galt – taket litt for høyt eller lavt i
+  en del av rommet, et lys som mangler, flimrer eller står litt utenfor mønsteret, en dør på gløtt
+  eller lukket, en dør til ingensteds, en TV med skjermen mot veggen, en gjenstand der den ikke
+  hører hjemme, en trapp som går opp i taket, en søyle som ikke bærer noe, et flislagt felt midt
+  på teppet, et vindu for mye, litt tettere luft og litt svakere lys. Styrke: Subtle (5–8), Wrong
+  (9–14) eller Very wrong (15–20). Stedene markeres med ringer i skissen i noen sekunder; Ctrl+Z
+  angrer alt på én gang.
 - Lyd som følger rommet: romklangen måles der du står (avstand til veggene i 16 retninger og
   takhøyden) og glir mellom en kort og en lang klang – store haller og atrier klinger lenge, smale
   ganger og små rom er nesten tørre, og fottrinn og andre lyder endrer seg når du går fra rom til

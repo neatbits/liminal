@@ -3,6 +3,7 @@ import { resizeLevel } from '../core/level.js';
 import { levelStats } from '../core/stats.js';
 import { applySnapshot } from '../core/history.js';
 import { autoLights, clearLights } from '../core/ops.js';
+import { makeWrong, changeMarkers } from '../gen/wrong.js';
 import { getTheme } from '../core/themes.js';
 import { loadSettings, saveSettings, saveDraft } from '../core/storage.js';
 import { Editor } from '../editor/editor.js';
@@ -168,6 +169,15 @@ export class App {
     this.editor.checkpoint();
     clearLights(this.level);
     this.mutated();
+  }
+
+  /** «Make it wrong»: små endringer som gjør rommet litt feil; stedene vises en kort stund i skissen. */
+  makeWrong(strength) {
+    this.editor.checkpoint();
+    const changes = makeWrong(this.level, strength);
+    this.mutated();
+    this.editor.highlight(changeMarkers(changes), 6000);
+    toast(`${changes.length} small things are now wrong. Can you find them? (Ctrl+Z undoes)`, { ms: 5000 });
   }
 
   toggleWaterReflections() {

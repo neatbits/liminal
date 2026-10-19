@@ -117,6 +117,17 @@ export class Editor {
     this.history.push(this.level);
   }
 
+  /** Markerer steder i skissen en stund: [{ x, z, r }] (f.eks. det «Make it wrong» endret). */
+  highlight(markers, ms) {
+    this._highlight = markers;
+    clearTimeout(this._highlightTimer);
+    this._highlightTimer = setTimeout(() => {
+      this._highlight = null;
+      this.invalidate();
+    }, ms);
+    this.invalidate();
+  }
+
   fit() {
     if (!this.level) return;
     const { width, height } = this._size();
@@ -181,6 +192,7 @@ export class Editor {
       erase: this.stroke?.erase ?? false,
       grid: this.grid,
       rulers: this.rulers,
+      highlight: this._highlight,
     });
   }
 }
