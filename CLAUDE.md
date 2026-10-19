@@ -40,7 +40,8 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
    `src/world/lighting.js`, `src/world/collision.js`, `src/world/floaters.js`,
    `src/world/ball-layout.js`, `src/world/monster-ai.js`, `src/world/paths.js`,
    `src/world/autopilot.js`, `src/world/windows.js`, `src/view3d/flicker.js`,
-   `src/view3d/events.js`, `src/audio/acoustics.js`, `src/audio/director.js`) slik at den
+   `src/view3d/events.js`, `src/audio/acoustics.js`, `src/audio/director.js`,
+   `src/world/softphysics.js`) slik at den
    kan testes i Node.
 5. Brukergrensesnittet er på **engelsk** (all tekst brukeren ser: knapper, menyer,
    dialoger, feilmeldinger, temanavn og eksempler). Kode, identifikatorer og kommentarer
@@ -91,7 +92,9 @@ src/
   gjenstand til en flate andre settes oppå; `floats` lar den ligge i vann, og i gåmodus
   dyttes slike rundt (`world/floaters.js` via `view3d/water-play.js`). Med `build` i stedet for
   `file` bygges gjenstanden av enkle former i `world/props.js` (variant per tema/rute via
-  `propKey`); deler med `unlit` lyser av seg selv (skilt, lyskasser).
+  `propKey`); deler med `unlit` lyser av seg selv (skilt, lyskasser). `soft` = lekeklosser: de
+  stables på klossene før seg i listen, er ikke faste hindringer, og i gåmodus styres de av
+  fysikk (`world/softphysics.js` med cannon-es, lastet dynamisk av `view3d/softplay.js`).
 - **Rekkverk** (`core/railings.js`): reglene for hvilke kanter som får vern/håndlist brukes
   både av geometrien (`world/railings.js`) og kollisjonen – endre dem bare der.
 - **Vannsklier** (`core/slides.js`): `level.slides` er en liste med objekter

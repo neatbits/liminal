@@ -143,6 +143,12 @@ export function pickup(engine) {
   engine._oneShot(engine.pickupSound, 0.8, 0.95 + Math.random() * 0.1);
 }
 
+/** En myk lekekloss som lander hardt: et dumpt, lavt dunk (strength 0..1). */
+export function bump(engine, strength) {
+  if (!engine.graph) return;
+  engine._oneShot(engine.thump, 0.12 + strength * 0.45, 1.25 + Math.random() * 0.2);
+}
+
 /** Kameralukker: to korte, mekaniske klikk (speilet slår opp og ned). */
 export function shutterBuffer(ctx) {
   const rate = ctx.sampleRate;

@@ -111,7 +111,7 @@ export function levelToJSON(level) {
     rows,
     ...Object.fromEntries(LAYERS.map((layer) => [layer.key, layerToRows(level, layer)])),
     slides: level.slides.length ? level.slides.map((s) => ({ points: s.points, ...(s.tube ? { tube: true } : {}), color: s.color })) : undefined,
-    objects: level.objects?.length ? level.objects.map(({ id, x, z, rot }) => ({ id, x, z, rot })) : undefined,
+    objects: level.objects?.length ? level.objects.map(({ id, x, z, rot, v }) => ({ id, x, z, rot, ...(v !== undefined ? { v } : {}) })) : undefined,
   };
 }
 

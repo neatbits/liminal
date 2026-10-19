@@ -30,7 +30,7 @@ export class WalkMode {
     this._statsIn = 0;
     this.doors = null;
     this.power = 1; // strømmen (0..1): settes under strømbrudd (view3d/explore.js)
-    this.play = new WaterPlay();
+    this.play = new WaterPlay(this);
     this.drift = new Drift(this); // drømmegange (G)
     window.addEventListener('keydown', (e) => {
       if (this.active && e.code === 'KeyE' && !e.repeat && !isTyping(e)) this.useDoor();

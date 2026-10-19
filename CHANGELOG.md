@@ -104,6 +104,13 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Modellrutine: kildemodeller (glTF) legges i `3dmodels/<navn>/`, og `npm run models` lager
   én komprimert `models/<navn>.glb` per modell (WebP-teksturer på maks 1024 px, meshopt-
   geometri) – TV-et gikk fra 1,24 MB til 151 kB. Modellene lastes først når et rom bruker dem.
+- Myke lekeklosser i lekerommet, som på en lekeplass innendørs: kuber, plattformer, søyler, bjelker
+  og vegger i skumgummi, trukket med stoff i lyse farger. Genererte lekerom får små byggverk –
+  portaler (to søyler med en bjelke over), tårn, plattformer med en kube oppå, trapper. I gåmodus
+  har de ekte fysikk (cannon-es, lastes bare når rommet har klosser): de dyttes når man går inn i
+  dem, velter, ramler ned og spretter litt, med et dumpt dunk når de lander. Høye klosser stopper
+  en, lave kan man gå over. Alt står der det stod når man går ut av gåmodus. Klossene finnes også
+  i Object-verktøyet, og en ny kloss på en annen legges oppå (stables).
 - Butikker i kjøpesenteret: større (7–11 m brede, dypere), med blågrått teppe og mørk fotlist, og
   ryddig innredning etter butikktypen – rader med tomme, tosidige hyllereoler, tomme veggreoler
   langs bakveggen, TV-er på rad i en elektronikkbutikk, en skranke med kasseapparat ved inngangen,
@@ -227,6 +234,8 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   temaet er og lengden på klangen i store rom (`audio/space.js`, `audio/acoustics.js`).
 - Veifinning (avstandskart over rutenettet) ligger i `world/paths.js`, felles for monsteret og
   drømmegangen; ingen av dem skjærer lenger hjørner forbi vegger eller vann.
+- Gjenstander har en valgfri variant `v` (fargen på lekeklossene), og katalogen ligger i
+  `core/object-catalog.js`.
 - Romformatet har den valgfrie listen `objects` ({ id, x, z, rot }); ukjente modeller hoppes
   over når et rom åpnes.
 - Romformatet har det valgfrie laget `decks` (dekkehøyde per rute); trapper kan lagres opp

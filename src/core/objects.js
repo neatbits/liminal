@@ -1,42 +1,15 @@
 // Ferdige 3D-modeller (gjenstander) i rommet. `level.objects` er en liste med
-// { id, x, z, rot } – id i OBJECTS, (x, z) er ruten og rot kvarte omdreininger med klokken
+// { id, x, z, rot, v? } – id i OBJECTS (object-catalog.js), v = valgfri variant (farge), (x, z) er ruten og rot kvarte omdreininger med klokken
 // sett ovenfra (0 = forsiden mot +z, sør i skissen). Som sklielisten endres listen aldri på
 // stedet. Gjenstander står midt i ruten eller inntil veggen bak seg; store gjenstander kan
 // stikke inn i naboruter. Små gjenstander settes oppå en flate (`surface`, f.eks. et
 // skrivebord) som dekker ruten, og flytende (`floats`) kan ligge i vannet. Ren logikk.
 import { TILE, getTile, inBounds, WATER_SURFACE } from './level.js';
 import { floorAt } from './heights.js';
+import { OBJECTS } from './object-catalog.js';
 
-/**
- * Katalogen. size = [bredde, høyde, dybde] i meter slik gjenstanden står i rommet (selve filen
- * sentreres av world/objects.js), scale = skalering av modellfilen (size er allerede skalert). file = models/<file>.glb. surface = høyden på en flate
- * andre gjenstander kan stå på. build = bygges av enkle former (world/props.js) i stedet for fil. screen = området i teksturen [u0, v0, u1, v1] der en skjerm
- * viser sne-støy, glow = hvor sterkt skjermen lyser opp rundt seg (andel av et taklys).
- * Alle modellene er fra Poly Haven (CC0).
- */
-export const OBJECTS = {
-  tv: {
-    label: 'CRT TV',
-    file: 'television_crt',
-    size: [0.8, 0.822, 0.7], // modellen × 2: et stort, gammelt TV
-    scale: 2,
-    screen: [0.691, 0.011, 0.994, 0.235],
-    glow: 0.16,
-    credit: 'Television 02 – Poly Haven (CC0)',
-  },
-  boombox: { label: 'Boombox', file: 'classic_boombox', size: [0.724, 0.47, 0.186], credit: 'Boombox – Poly Haven (CC0)' },
-  laptop: { label: 'Laptop', file: 'classic_laptop', size: [0.326, 0.272, 0.243], scale: 0.5, credit: 'Classic Laptop – Poly Haven (CC0)' },
-  desk: { label: 'Office desk', file: 'office_desk', size: [2, 0.788, 0.947], surface: 0.788, credit: 'Metal Office Desk – Poly Haven (CC0)' },
-  duck: { label: 'Rubber duck', file: 'rubber_duck', size: [0.214, 0.286, 0.3], floats: true, credit: 'Rubber Duck Toy – Poly Haven (CC0)' },
-  // Bygget av enkle former (world/props.js), uten modellfil.
-  kiosk: { label: 'Food kiosk', build: 'kiosk', size: [3, 2.6, 1.5], glow: 0.22 },
-  cafe: { label: 'Café table', build: 'cafe', size: [1.7, 0.92, 1.7] },
-  shelf: { label: 'Shop shelf', build: 'shelf', size: [2.1, 1.62, 0.9] },
-  wallshelf: { label: 'Wall shelf', build: 'wallshelf', size: [2, 2, 0.45] },
-  counter: { label: 'Shop counter', build: 'counter', size: [1.86, 1.2, 0.72] },
-};
+export { OBJECTS, OBJECT_IDS } from './object-catalog.js';
 
-export const OBJECT_IDS = Object.keys(OBJECTS);
 export const MAX_OBJECTS = 400;
 const WALL_GAP = 0.03; // avstand fra veggen bak
 const FLOAT_DEPTH = 0.06; // hvor dypt en flytende gjenstand ligger i vannet
@@ -98,12 +71,32 @@ function supportAt(level, x, z) {
  */
 export function objectPose(level, o) {
   const p = basePose(level, o);
+  if (OBJECTS[o.id].soft) return softPose(level, o, p);
   const s = OBJECTS[o.id].surface ? null : supportAt(level, o.x + 0.5, o.z + 0.5);
   if (s) {
     const clamp = (v, lo, hi) => (lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, v)));
     p.y = s.top;
     p.x = clamp(p.x, s.box[0] + p.w / 2, s.box[2] - p.w / 2);
     p.z = clamp(p.z, s.box[1] + p.d / 2, s.box[3] - p.d / 2);
+  }
+  return p;
+}
+
+/**
+ * Myke klosser stables: en kloss ligger oppå de klossene før den i listen som overlapper
+ * fotavtrykket (rekkefølgen gjør at det aldri blir en sirkel). Fotavtrykket beholdes.
+ */
+function softPose(level, o, p) {
+  const objects = list(level);
+  const own = objects.indexOf(o);
+  const box = objectBox(p);
+  for (let k = 0; k < (own < 0 ? objects.length : own); k++) {
+    const q = objects[k];
+    // Fotavtrykket endres ikke av stablingen, så overlapp sjekkes før høyden regnes ut (ellers
+    // ville hver kloss regnet ut alle klossene før seg, om og om igjen).
+    if (!OBJECTS[q.id]?.soft || !overlaps(box, objectBox(basePose(level, q)), 0.05)) continue;
+    const qp = objectPose(level, q);
+    p.y = Math.max(p.y, qp.y + qp.h);
   }
   return p;
 }
@@ -138,9 +131,8 @@ export function objectFits(level, o, objects = list(level)) {
     if (q === o || !OBJECTS[q.id]) continue;
     const qp = objectPose(lv, q);
     if (!overlaps(box, objectBox(qp))) continue;
-    // Oppå en flate (eller noe som står oppå en) er greit; ellers står de i hverandre.
-    const above = (a, b, bd) => bd.surface && Math.abs(a.y - (b.y + bd.surface)) < 0.01;
-    if (!above(p, qp, OBJECTS[q.id]) && !above(qp, p, def)) return false;
+    // Den ene oppå den andre (på en flate eller en stabel) er greit; ellers står de i hverandre.
+    if (p.y < qp.y + qp.h - 0.01 && qp.y < p.y + p.h - 0.01) return false;
   }
   return true;
 }
@@ -188,7 +180,7 @@ export function placeObject(level, x, z, id, erase = false) {
   if (same !== undefined) return turn(same);
   if (OBJECTS[id] && objects.length < MAX_OBJECTS) {
     const placed = tryRotations(level, (rot) => {
-      const t = { id, x, z, rot };
+      const t = { id, x, z, rot, ...(OBJECTS[id].soft ? { v: (x * 7 + z * 13 + objects.length) % 8 } : {}) };
       return { t, objects: [...objects, t] };
     }, autoRotation(level, x, z), 0);
     if (placed) return 1;
@@ -202,7 +194,7 @@ export function objectColliders(level, cx, cz) {
   const cell = [cx, cz, cx + 1, cz + 1];
   for (const o of list(level)) {
     const def = OBJECTS[o.id];
-    if (!def || def.floats || Math.abs(o.x - cx) > 2 || Math.abs(o.z - cz) > 2) continue;
+    if (!def || def.floats || def.soft || Math.abs(o.x - cx) > 3 || Math.abs(o.z - cz) > 3) continue;
     const p = objectPose(level, o);
     const box = objectBox(p);
     if (overlaps(box, cell, 0)) out.push({ box, bottom: p.y, top: p.y + p.h });
@@ -232,6 +224,9 @@ export function objectsFromJSON(level, data) {
   if (!Array.isArray(data)) throw new Error('Invalid objects in the room.');
   return data
     .slice(0, MAX_OBJECTS)
-    .map((o) => ({ id: String(o?.id), x: Math.trunc(Number(o?.x)), z: Math.trunc(Number(o?.z)), rot: Math.trunc(Number(o?.rot)) & 3 }))
+    .map((o) => {
+      const v = Math.trunc(Number(o?.v));
+      return { id: String(o?.id), x: Math.trunc(Number(o?.x)), z: Math.trunc(Number(o?.z)), rot: Math.trunc(Number(o?.rot)) & 3, ...(v >= 0 && v < 16 ? { v } : {}) };
+    })
     .filter((o) => OBJECTS[o.id] && inBounds(level, o.x, o.z));
 }

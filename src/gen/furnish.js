@@ -3,6 +3,7 @@
 // og bare en og annen forlatt TV eller boombox i de tommeste rommene. Ren logikk.
 import { TILE, getTile } from '../core/level.js';
 import { FACING, placeObject, objectsAt } from '../core/objects.js';
+import { softBuild } from './softplay.js';
 
 const DIRS = [
   [0, -1],
@@ -15,14 +16,15 @@ const DIRS = [
  * Per tema: { id | set, every } – én per `every` m² gulv (eller vannruter for ender); en
  * brøkdel blir en sjanse, så store rom får flere og små rom kanskje ingen.
  * set 'desk' = skrivebord med noe oppå, 'tvrow' = tre TV-er på rad mot en vegg, 'foodspot' = en
- * gatekjøkkenkiosk mot veggen med et kafébord foran. open = midt på gulvet (ikke mot en vegg).
+ * gatekjøkkenkiosk mot veggen med et kafébord foran, 'softplay' = et byggverk av myke klosser.
+ * open = midt på gulvet (ikke mot en vegg).
  */
 const PLANS = {
   backrooms: [{ set: 'foodspot', every: 2200 }, { id: 'tv', every: 1100 }, { id: 'boombox', every: 1600 }],
   office: [{ set: 'desk', every: 110 }, { id: 'tv', every: 1500 }, { id: 'cafe', open: true, every: 1500 }],
   basement: [{ id: 'tv', every: 1200, min: 1 }, { id: 'boombox', every: 900 }, { set: 'desk', every: 700 }],
   pool: [{ id: 'duck', water: true, every: 70 }, { id: 'boombox', every: 1000 }],
-  playroom: [{ id: 'duck', water: true, every: 110 }, { id: 'tv', every: 700 }, { id: 'boombox', every: 900 }],
+  playroom: [{ set: 'softplay', open: true, every: 110 }, { id: 'duck', water: true, every: 110 }, { id: 'tv', every: 700 }, { id: 'boombox', every: 900 }],
   hotel: [{ id: 'tv', every: 800 }, { id: 'cafe', open: true, every: 1600 }],
   garage: [{ id: 'boombox', every: 1500 }, { id: 'tv', every: 2200 }],
   // Butikkene (teppe = belegg) innredes av mall-shops.js; her bare gangene og atriet.
@@ -133,7 +135,9 @@ export function furnish(level, rand, spawn = level.spawn) {
       if (!list.length) break;
       const [x, z] = take(list, rand);
       if (item.rooms && level.finish[z * level.w + x]) continue;
-      if (item.open) {
+      if (item.set === 'softplay') {
+        if (!softBuild(level, rand, x, z)) continue;
+      } else if (item.open) {
         if (objectsAt(level, x, z).length || !placeObject(level, x, z, item.id)) continue;
       } else if (item.set === 'foodspot') {
         if (!foodspot(level, rand, x, z)) continue;

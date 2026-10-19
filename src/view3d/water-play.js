@@ -1,12 +1,16 @@
 // Lek i vannet i gåmodus: badeender som dyttes rundt (world/floaters.js) og kjølvann i
-// ballbingene (world/balls.js). Flytter gjenstandenes 3D-grupper; rommet endres ikke.
+// ballbingene (world/balls.js), og myke lekeklosser med fysikk (softplay.js). Flytter
+// gjenstandenes 3D-grupper; rommet endres ikke.
 import { TILE, getTile } from '../core/level.js';
 import { Floaters } from '../world/floaters.js';
+import { SoftPlay } from './softplay.js';
 
 const BODY_RADIUS = 0.28;
 
 export class WaterPlay {
-  constructor() {
+  /** @param walk gåmodusen (lyd til klossene) */
+  constructor(walk) {
+    this.soft = new SoftPlay(walk);
     this.level = null;
     this.objects = null;
     this.balls = null;
@@ -18,12 +22,14 @@ export class WaterPlay {
     this.level = level;
     this.objects = objects;
     this.balls = balls;
+    this.soft.setWorld(level, objects);
     this.reset();
   }
 
-  /** Endene tilbake der de står i editoren. */
+  /** Endene og klossene tilbake der de står i editoren. */
   reset() {
     if (!this.level) return;
+    this.soft.reset();
     this.floaters = new Floaters(this.level);
     this._apply();
   }
@@ -36,6 +42,7 @@ export class WaterPlay {
 
   update(dt, walker, riding) {
     if (!this.floaters) return;
+    this.soft.update(dt, walker, riding);
     const player = riding ? null : { x: walker.x, z: walker.z, vx: walker.vx, vz: walker.vz, r: BODY_RADIUS };
     if (this.floaters.bodies.length) {
       this.floaters.step(dt, player);

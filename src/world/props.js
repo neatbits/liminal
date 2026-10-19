@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { box, cylinder, parts } from './props-geo.js';
 import { shelf, wallshelf, counter } from './props-shop.js';
+import { soft, SOFT_COLORS } from './props-soft.js';
 
 /** Kioskskilt: oppdiktede navn med egen farge. Skolen og sykehuset har sine egne. */
 const SIGNS = [
@@ -18,6 +19,7 @@ const THEME_SIGNS = { school: { name: 'CAFETERIA', color: '#2c5d8f' }, ward: { n
 
 /** Hvilken variant en gjenstand får (fast for samme rute): nøkkel til bufferet av ferdige deler. */
 export function propKey(def, level, o) {
+  if (def.build === 'soft') return `soft:${o.id}:${(o.v ?? (o.x * 7 + o.z * 13)) % SOFT_COLORS.length}`;
   if (def.build !== 'kiosk') return def.build;
   if (THEME_SIGNS[level.theme]) return `kiosk:${level.theme}`;
   const h = ((o.x * 73856093) ^ (o.z * 19349663)) >>> 0;
@@ -148,7 +150,7 @@ function cafe() {
   ]);
 }
 
-const BUILDERS = { kiosk, cafe, shelf, wallshelf, counter };
+const BUILDERS = { kiosk, cafe, shelf, wallshelf, counter, soft };
 
 /** Delene til en bygget gjenstand (key fra propKey). */
 export function buildProp(key) {
