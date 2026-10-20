@@ -265,6 +265,8 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   skjules når den er tom). Lenken `app/#example=<id>` åpner et eksempel direkte.
 
 ### Endret
+- Vinduene i Poolrooms har ikke lenger sprosser (store, rene glassflater). Temaer kan slå av
+  sprossene med `window: { bars: false }`.
 - Romformatet er versjon 2 med de valgfrie feltene `waterDepth`, `ceilings`, `depths`,
   `floors`, `finish` og `meta` (ett tegn per rute), rutetypen trapp og listen `slides`.
   Eldre filer og lenker åpnes som før.

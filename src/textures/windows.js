@@ -1,5 +1,6 @@
 // Teksturer for vinduer: himmelen sett gjennom glasset (fargeovergang etter tiden på døgnet,
-// litt matt, med sprosser i et kryss) og solflekken på gulvet (myke kanter, skygge av sprossene).
+// litt matt, med sprosser i et kryss – eller uten, bars = null) og solflekken på gulvet (myke
+// kanter, skygge av sprossene).
 import { makeCanvas } from './paint.js';
 
 const BAR = 0.035; // sprossenes tykkelse (andel av ruten)
@@ -18,14 +19,16 @@ export function skyCanvas([top, bottom], bars = '#d9d6cc') {
   haze.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = haze;
   ctx.fillRect(0, 0, S, S);
-  ctx.fillStyle = bars;
-  ctx.fillRect(S * (0.5 - BAR / 2), 0, S * BAR, S);
-  ctx.fillRect(0, S * (0.5 - BAR / 2), S, S * BAR);
+  if (bars) {
+    ctx.fillStyle = bars;
+    ctx.fillRect(S * (0.5 - BAR / 2), 0, S * BAR, S);
+    ctx.fillRect(0, S * (0.5 - BAR / 2), S, S * BAR);
+  }
   return canvas;
 }
 
-/** Solflekken: hvit midt i, myk mot kantene, med skyggen av sprossekrysset. */
-export function sunCanvas() {
+/** Solflekken: hvit midt i, myk mot kantene, med skyggen av sprossekrysset (om det er sprosser). */
+export function sunCanvas(bars = true) {
   const S = 128;
   const { canvas, ctx } = makeCanvas(S);
   ctx.fillStyle = '#000';
@@ -34,8 +37,10 @@ export function sunCanvas() {
   ctx.fillStyle = '#fff';
   ctx.fillRect(S * 0.06, S * 0.06, S * 0.88, S * 0.88);
   ctx.fillStyle = '#000';
-  ctx.fillRect(S * (0.5 - BAR), 0, S * BAR * 2, S);
-  ctx.fillRect(0, S * (0.5 - BAR), S, S * BAR * 2);
+  if (bars) {
+    ctx.fillRect(S * (0.5 - BAR), 0, S * BAR * 2, S);
+    ctx.fillRect(0, S * (0.5 - BAR), S, S * BAR * 2);
+  }
   ctx.filter = 'none';
   return canvas;
 }

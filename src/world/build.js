@@ -58,6 +58,7 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true } = {}) 
   meshes.windowGlass = panes.glass;
   meshes.sunPatch = panes.sun;
   const sky = skyOf(level);
+  const bars = theme.window?.bars !== false; // sprosser i vinduene
   const ownTextures = []; // teksturer laget for akkurat dette rommet (himmel, sol)
   const own = (canvas) => {
     const t = new THREE.CanvasTexture(canvas);
@@ -94,14 +95,14 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true } = {}) 
     // Vinduer: hvit karm, himmel i glasset (så lys at den «brenner ut») og solflekker på gulvet.
     windowFrame: () => surfaceMaterial({ color: '#ecebe6' }, shared, anisotropy),
     windowGlass: () => {
-      const map = own(skyCanvas(sky.sky));
+      const map = own(skyCanvas(sky.sky, bars ? undefined : null));
       map.colorSpace = THREE.SRGBColorSpace;
       // Lys nok til et svakt skjær rundt vinduet, men ikke så lyst at det blender.
       return new THREE.MeshBasicMaterial({ map, color: new THREE.Color(1, 1, 1).multiplyScalar((sky.sun ? 1.05 : 0.55) / theme.exposure / (1 + theme.bloom * 0.5)) });
     },
     sunPatch: () =>
       new THREE.MeshBasicMaterial({
-        map: own(sunCanvas()),
+        map: own(sunCanvas(bars)),
         // Svakere i lyse temaer (Poolrooms): hvite fliser med høy eksponering blir ellers helt hvite.
         color: new THREE.Color(sky.sun?.color ?? '#000').multiplyScalar((sky.sun?.strength ?? 0) / theme.exposure ** 2),
         transparent: true,

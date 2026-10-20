@@ -2,7 +2,8 @@
 // Teksturnøkler peker til painters i src/textures/. `water`: farge, absorpsjon per
 // meter (r, g, b) og bølgestyrke for vannshaderen. `door`: karmfarge (null = ingen karm),
 // dørblad, dørblad for boder (dør med vegg bak, valgfri) og håndtaksfarge. `railing`:
-// farge på håndlist/stolper og spiler. Valgfri `tiles` overstyrer flisene i build.js.
+// farge på håndlist/stolper og spiler. `window: { bars: false }` gir vinduer uten sprosser.
+// Valgfri `tiles` overstyrer flisene i build.js.
 // `pit: 'balls'` fyller bassengene med baller (ballbinge) i stedet for vann. `gloss` på en flate
 // ({ amount, grid = fliser per teksturflate }) gjør flisene blanke (world/gloss.js). De nyeste temaene
 // ligger i themes-more.js.
@@ -52,6 +53,7 @@ export const THEMES = {
     fixture: { shape: 'panel', size: [0.5, 0.04, 0.5], color: '#f4ffff', glow: 3.6, frame: '#d4dcdc' },
     door: { frame: null, leaf: 'doorFlatWhite', knob: '#c9ced2' },
     railing: { rail: '#c8cdd1', bars: '#c8cdd1' },
+    window: { bars: false }, // store, rene glassflater uten sprosser
     fog: { color: '#a9c6ca', density: 0.035 },
     exposure: 1.2,
     bloom: 0.7,
