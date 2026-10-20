@@ -52,7 +52,7 @@ export class SoftPhysics {
       });
       world.addBody(body);
       // Lette ting er åpne (bein, sete): man kommer nærmere enn ytterkanten før man stoppes.
-      this.blocks.push({ i, body, com, give: def.loose ? GIVE : 0 });
+      this.blocks.push({ i, body, com, give: def.loose ? GIVE : 0, start: body.position.clone() });
       x0 = Math.min(x0, o.x);
       z0 = Math.min(z0, o.z);
       x1 = Math.max(x1, o.x);
@@ -137,6 +137,11 @@ export class SoftPhysics {
       this.player.position.set(-100, -100, -100);
     }
     this.world.step(1 / 60, Math.min(dt, 0.1), 4);
+  }
+
+  /** Har noe blitt flyttet (mer enn noen centimeter) fra der det stod? */
+  moved() {
+    return this.blocks.some(({ body, start }) => body.position.distanceTo(start) > 0.15);
   }
 
   /**

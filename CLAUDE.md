@@ -43,7 +43,8 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
    `src/world/ball-layout.js`, `src/world/monster-ai.js`, `src/world/paths.js`,
    `src/world/autopilot.js`, `src/world/windows.js`, `src/view3d/flicker.js`,
    `src/view3d/events.js`, `src/audio/acoustics.js`, `src/audio/director.js`,
-   `src/world/softphysics.js`, `src/world/anomalies.js`, `src/world/lamp-map.js`) slik at den
+   `src/world/softphysics.js`, `src/world/anomalies.js`, `src/world/lamp-map.js`,
+   `src/world/shifts.js`) slik at den
    kan testes i Node.
 5. Brukergrensesnittet er på **engelsk** (all tekst brukeren ser: knapper, menyer,
    dialoger, feilmeldinger, temanavn og eksempler). Kode, identifikatorer og kommentarer
@@ -141,6 +142,11 @@ src/
   `_applyLook`), ødelagte lys og «Make it wrong» (`moodLevel`, brukt av `view3d/explore.js` på en
   kopi av rommet), avvik (`walk.mood.anomalies`, `nextLevel`-odds), strømbrudd, skumle lyder og
   monsteret. Nye liminale/skumle effekter skal kobles til skalaen her.
+- **Hendelser bak ryggen** (`world/shifts.js`, ren logikk): `Shifts` husker dører og lys man har
+  passert og velger en endring (`KINDS`: doorWall, lightOut, objectTurn, doorClose) som bare skjer
+  bak spilleren (`behind`) og aldri stenger en inne. `view3d/shifts.js` bygger verdenen på nytt fra
+  en kopi av `walk.level` (Explorer setter `home`, så editorrommet kommer tilbake). Nye typer: legg
+  dem i `KINDS` – subtile, aldri skumle hver for seg.
 - **Monsteret** (Uncanny/Nightmare): `view3d/scary.js` styrer monsteret (`world/monster-ai.js`,
   ren logikk: avstandskart over rutenettet, lukkede dører stenger; `view3d/monster.js` tegner
   det) og lydene (`audio/scary.js`). Det jakter bare når strømmen er borte (`Blackout`).

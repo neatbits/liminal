@@ -8,6 +8,7 @@ import { exitSpots } from '../world/autopilot.js';
 import { Blackout } from './events.js';
 import { Tapes } from './tapes.js';
 import { Scary } from './scary.js';
+import { ShiftPlay } from './shifts.js';
 
 const NEVER = { first: [1e9, 1e9], every: [1e9, 1e9] };
 
@@ -19,6 +20,7 @@ export class Explorer {
     this.tapes = new Tapes();
     viewer.scene.add(this.tapes.group);
     this.scary = new Scary(viewer);
+    this.shifts = new ShiftPlay(this); // rommet endrer seg bak ryggen på en (world/shifts.js)
     this.blackout = this._newBlackout();
     this.depth = 0; // 0 = rommet fra editoren
     this.home = null; // rommet fra editoren mens man er på et generert nivå
@@ -49,6 +51,7 @@ export class Explorer {
     this.found = this.total = 0;
     this.blackout = this._newBlackout();
     this.scary.reset();
+    this.shifts.reset();
     this._placeTapes();
     if (!this._hinted && this._hasExits()) {
       this._hinted = true;
@@ -82,6 +85,7 @@ export class Explorer {
       // Ny stemning: nye tider for strømbruddene, og monsteret forsvinner om det ikke hører hjemme.
       this._moodId = v.settings.mood;
       this.blackout = this._newBlackout();
+      this.shifts.reset();
       if (!this.mood.monster) this.scary.hide();
     }
     const event = this.blackout.update(dt);
@@ -92,6 +96,7 @@ export class Explorer {
     if (v.walk.sound && (event === 'down' || event === 'up')) v.audio.power(event === 'down');
     const monster = this.mood.monster;
     if (monster && !this.busy) this.scary.update(dt, p, this.blackout.phase === 'dark', monster === 'lurk', () => this.noclip());
+    if (!this.busy) this.shifts.update(dt);
     const w = v.walk.walker;
     const got = this.tapes.pickUp(w.x, w.floorY, w.z);
     if (got) {
@@ -147,6 +152,7 @@ export class Explorer {
     v.walk.enter();
     this.blackout = this._newBlackout();
     this.scary.reset();
+    this.shifts.reset();
     this._placeTapes();
     v.hud.title(title ?? `LEVEL ${this.depth}`, title ? `Level ${this.depth} – ${label}` : label);
     await sleep(250);

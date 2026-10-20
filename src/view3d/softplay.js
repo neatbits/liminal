@@ -41,6 +41,11 @@ export class SoftPlay {
     });
   }
 
+  /** Har spilleren flyttet på noe? (Da bygges ikke verdenen på nytt – det ville satt alt tilbake.) */
+  disturbed() {
+    return !!this.phys?.moved();
+  }
+
   update(dt, walker, riding) {
     if (!this.phys) return;
     this.phys.step(dt, riding ? null : { x: walker.x, y: walker.floorY, z: walker.z, vx: walker.vx, vz: walker.vz });

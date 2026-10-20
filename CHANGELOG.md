@@ -7,6 +7,13 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 ## [Ukommet]
 
 ### Lagt til
+- Rommet reagerer på deg (Liminal og sterkere): når du ikke ser etter, endrer det seg litt bak
+  ryggen din – en dør du gikk gjennom er blitt vegg (aldri den eneste veien tilbake), et lys du
+  gikk under har sluknet, en stol har snudd seg mot deg, en dør som stod åpen er lukket. Og av og
+  til, når du stopper etter å ha gått en stund, går noen et par skritt til. Oftere jo sterkere
+  stemningen er (`shifts` i `gen/moods.js`; logikken i `world/shifts.js`, verdenen bygges på nytt
+  fra en kopi i `view3d/shifts.js`). Ikke mens du har dyttet på klosser og stoler, sklir eller er
+  i en uendelig gang.
 - Frø for genererte rom: samme frø og tema gir alltid samme rom. Sidepanelet har et frøfelt med
   «Generate» (fra frøet) og «🎲 Random» (nytt frø), «New room» → «Randomly generated» har et
   frøfelt, og frøet vises etter generering. Frøet lagres med rommet (fil, lenke, angre). Nye

@@ -13,7 +13,8 @@ import { getTheme } from '../core/themes.js';
  * ødelagte / blinker; patches: de døde lysene samles i områder (hele deler av bygget er mørke). wrong: «Make it wrong»-styrke for egne rom (home) og genererte nivåer (gen).
  * anomalies: sjanse for uendelige ganger (0/1), dør tilbake, korridornivå og samme rom igjen.
  * blackout: tider for strømbrudd (null = aldri). eerie: ganges med tiden mellom skumle lyder
- * (lavere = oftere). deep: sjanse for at et basseng i et generert nivå er mørkt og dypt. monster: null, 'lurk' (viser seg, tar deg aldri) eller 'hunt'.
+ * (lavere = oftere). shifts: [min, maks] sekunder mellom endringer bak ryggen på spilleren
+ * (world/shifts.js), eller null. deep: sjanse for at et basseng i et generert nivå er mørkt og dypt. monster: null, 'lurk' (viser seg, tar deg aldri) eller 'hunt'.
  */
 export const MOODS = {
   normal: {
@@ -22,7 +23,7 @@ export const MOODS = {
     fog: 0.8, exposure: 1.05, broken: 0, flicker: 0,
     wrong: { home: null, gen: null },
     anomalies: { loops: 0, backDoor: 0, corridor: 0, again: 0 },
-    blackout: null, eerie: 4, monster: null,
+    blackout: null, eerie: 4, monster: null, shifts: null,
   },
   abandoned: {
     label: 'Abandoned',
@@ -30,7 +31,7 @@ export const MOODS = {
     fog: 1.1, exposure: 0.95, broken: 0.45, flicker: 0.08, patches: true,
     wrong: { home: null, gen: null },
     anomalies: { loops: 0, backDoor: 0, corridor: 0.1, again: 0 },
-    blackout: { first: [150, 300], every: [240, 480], dark: [5, 8] }, eerie: 1.6, monster: null,
+    blackout: { first: [150, 300], every: [240, 480], dark: [5, 8] }, eerie: 1.6, monster: null, shifts: null,
   },
   liminal: {
     label: 'Liminal',
@@ -38,7 +39,7 @@ export const MOODS = {
     fog: 1, exposure: 1, broken: 0.03, flicker: 0.03,
     wrong: { home: null, gen: 'subtle' },
     anomalies: { loops: 1, backDoor: 0.25, corridor: 0.2, again: 0.15 },
-    blackout: { first: [70, 140], every: [120, 260], dark: [6, 11] }, eerie: 1, monster: null,
+    blackout: { first: [70, 140], every: [120, 260], dark: [6, 11] }, eerie: 1, monster: null, shifts: [90, 180],
   },
   uncanny: {
     label: 'Uncanny',
@@ -46,7 +47,7 @@ export const MOODS = {
     fog: 1.4, exposure: 0.9, broken: 0.08, flicker: 0.08,
     wrong: { home: 'subtle', gen: 'wrong' },
     anomalies: { loops: 1, backDoor: 0.35, corridor: 0.25, again: 0.25 },
-    blackout: { first: [40, 80], every: [70, 140], dark: [9, 14] }, eerie: 0.6, monster: 'lurk', deep: 0.15,
+    blackout: { first: [40, 80], every: [70, 140], dark: [9, 14] }, eerie: 0.6, monster: 'lurk', deep: 0.15, shifts: [45, 90],
   },
   nightmare: {
     label: 'Nightmare',
@@ -54,7 +55,7 @@ export const MOODS = {
     fog: 1.9, exposure: 0.8, broken: 0.15, flicker: 0.12,
     wrong: { home: 'wrong', gen: 'very' },
     anomalies: { loops: 1, backDoor: 0.35, corridor: 0.25, again: 0.25 },
-    blackout: { first: [20, 40], every: [45, 90], dark: [12, 18] }, eerie: 0.35, monster: 'hunt', deep: 0.3,
+    blackout: { first: [20, 40], every: [45, 90], dark: [12, 18] }, eerie: 0.35, monster: 'hunt', deep: 0.3, shifts: [25, 55],
   },
 };
 
