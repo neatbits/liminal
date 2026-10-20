@@ -203,7 +203,7 @@ export function objectColliders(level, cx, cz) {
   const cell = [cx, cz, cx + 1, cz + 1];
   for (const o of list(level)) {
     const def = OBJECTS[o.id];
-    if (!def || def.floats || def.soft || Math.abs(o.x - cx) > 3 || Math.abs(o.z - cz) > 3) continue;
+    if (!def || def.floats || def.soft || def.loose || Math.abs(o.x - cx) > 3 || Math.abs(o.z - cz) > 3) continue;
     const p = objectPose(level, o);
     const box = objectBox(p);
     if (overlaps(box, cell, 0)) out.push({ box, bottom: p.y, top: p.y + p.h });

@@ -1,4 +1,5 @@
 // Katalogen over gjenstander (core/objects.js har reglene for hvor de står). Ren data.
+import { BUILT_OBJECTS } from './object-catalog-built.js';
 
 /**
  * Katalogen. size = [bredde, høyde, dybde] i meter slik gjenstanden står i rommet (selve filen
@@ -7,12 +8,15 @@
  * surface = høyden på en flate andre gjenstander kan stå på. screen = området i teksturen
  * [u0, v0, u1, v1] der en skjerm viser sne-støy, glow = hvor sterkt den lyser opp rundt seg
  * (andel av et taklys). soft = myke lekeklosser: kan stables, og i gåmodus har de fysikk (de
- * dyttes, velter og faller ned) i stedet for å stå fast (world/softphysics.js). mount = 'ceiling'
- * (henger under taket) eller 'wall' (henger på veggen bak seg, `lift` m over gulvet). spin = rad/s
+ * dyttes, velter og faller ned) i stedet for å stå fast (world/softphysics.js). loose = lette
+ * gjenstander som også har fysikk i gåmodus (men ikke stables): { mass (kg), com (tyngdepunktets
+ * høyde, m), parts: [[x, y, z, hx, hy, hz], …] } – bokser (midtpunkt og halv størrelse) målt fra
+ * midt under gjenstanden, forsiden mot +z. mount = 'ceiling'
+ * (henger under taket) eller 'wall' (henger på veggen bak seg, `lift` m over gulvet; uten mount
+ * flytter lift gjenstanden opp, eller ned i gulvet med negativ verdi). spin = rad/s
  * (snurrer, f.eks. en takvifte). turn = dreining av modellfilen (radianer) så forsiden vender mot
  * +z. attribution = kreditering som lisensen krever (CC BY): vises med lenker på About-siden.
  * Modellene er fra Poly Haven (CC0) med mindre annet står.
- * Alle modellene er fra Poly Haven (CC0).
  */
 export const OBJECTS = {
   tv: {
@@ -54,6 +58,7 @@ export const OBJECTS = {
     file: 'arcade_machine_2',
     scale: 0.27,
     size: [0.678, 1.845, 0.725],
+    lift: -0.12, // sokkelen nederst ser rar ut: senkes ned i gulvet
     credit: '“Arcade Machine” by Bruno Macena (CC BY 4.0)',
     attribution: {
       title: 'Arcade Machine',
@@ -191,6 +196,21 @@ export const OBJECTS = {
     file: 'simple_plastic_chair',
     scale: 0.75,
     size: [0.609, 0.803, 0.604],
+    // Lett: dyttes, velter og kan havne i bassenget. Bein, sete, rygg og armlener.
+    loose: {
+      mass: 2.5,
+      com: 0.42,
+      parts: [
+        [-0.26, 0.2, -0.22, 0.025, 0.2, 0.025],
+        [0.26, 0.2, -0.22, 0.025, 0.2, 0.025],
+        [-0.26, 0.2, 0.24, 0.025, 0.2, 0.025],
+        [0.26, 0.2, 0.24, 0.025, 0.2, 0.025],
+        [0, 0.42, 0.04, 0.28, 0.025, 0.21],
+        [0, 0.62, -0.24, 0.27, 0.18, 0.03],
+        [-0.29, 0.6, 0.02, 0.02, 0.02, 0.2],
+        [0.29, 0.6, 0.02, 0.02, 0.02, 0.2],
+      ],
+    },
     credit: '“Simple Plastic Chair” by Artem P (CC BY 4.0)',
     attribution: {
       title: 'Simple Plastic Chair',
@@ -218,18 +238,7 @@ export const OBJECTS = {
     },
   },
   duck: { label: 'Rubber duck', file: 'rubber_duck', size: [0.214, 0.286, 0.3], floats: true, credit: 'Rubber Duck Toy – Poly Haven (CC0)' },
-  // Bygget av enkle former (world/props.js), uten modellfil.
-  kiosk: { label: 'Food kiosk', build: 'kiosk', size: [3, 2.6, 1.5], glow: 0.22 },
-  cafe: { label: 'Café table', build: 'cafe', size: [1.7, 0.92, 1.7] },
-  shelf: { label: 'Shop shelf', build: 'shelf', size: [2.1, 1.62, 0.9] },
-  wallshelf: { label: 'Wall shelf', build: 'wallshelf', size: [2, 2, 0.45] },
-  counter: { label: 'Shop counter', build: 'counter', size: [1.86, 1.0, 0.72], surface: 1.0 },
-  // Myke lekeklosser i skumgummi (lekerommet), i lyse farger etter variant (v).
-  softcube: { label: 'Soft cube', build: 'soft', size: [0.6, 0.6, 0.6], soft: true },
-  softblock: { label: 'Soft platform', build: 'soft', size: [1.2, 0.6, 1.2], soft: true },
-  softpillar: { label: 'Soft pillar', build: 'soft', size: [0.5, 1.5, 0.5], soft: true },
-  softbeam: { label: 'Soft beam', build: 'soft', size: [2.4, 0.45, 0.45], soft: true },
-  softslab: { label: 'Soft wall', build: 'soft', size: [1.2, 1.2, 0.4], soft: true },
+  ...BUILT_OBJECTS, // bygget av enkle former (object-catalog-built.js)
 };
 
 export const OBJECT_IDS = Object.keys(OBJECTS);

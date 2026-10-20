@@ -89,3 +89,39 @@ describe('lekerommet – byggverk av klosser', () => {
     expect(soft.some((o) => objectPose(level, o).y > 0.4)).toBe(true); // noe ligger oppå noe
   });
 });
+
+describe('fysikk etter at man har stått stille, og lette plaststoler', () => {
+  // Gåeren som i gåmodus: står stille en stund, går så østover og skyves ut av høye ting.
+  function walkInto(phys, wait, from = 4.5, z = 4.5, seconds = 2) {
+    const w = { x: from, z };
+    for (let t = 0; t < wait + seconds + 1; t += 1 / 60) {
+      const moving = t > wait && t < wait + seconds;
+      if (moving) w.x += 1.5 / 60;
+      phys.step(1 / 60, { x: w.x, y: 0, z: w.z, vx: moving ? 1.5 : 0, vz: 0 });
+      [w.x, w.z] = phys.pushOut(w.x, w.z, 0.28, 0);
+    }
+    return w;
+  }
+
+  it('en stabel kan dyttes også etter at man har stått i ro (spilleren sovner ikke)', () => {
+    const cube = { id: 'softcube', x: 6, z: 4, rot: 0 };
+    const phys = new SoftPhysics(room([cube, { ...cube }, { ...cube }]));
+    walkInto(phys, 3);
+    for (const p of phys.poses()) expect(p.x).toBeGreaterThan(7);
+  });
+
+  it('en plaststol står i ro, dyttes bortover og havner i bassenget', () => {
+    const level = { ...room([{ id: 'plasticchair', x: 6, z: 4, rot: 0 }]), theme: 'pool' };
+    fillTiles(level, rectIndices(level, { x0: 8, z0: 1, x1: 12, z1: 8 }), TILE.WATER);
+    const phys = new SoftPhysics(level);
+    run(phys, 2);
+    const still = phys.poses()[0];
+    expect(still.y).toBeCloseTo(0, 1);
+    expect(still.x).toBeCloseTo(6.5, 1);
+    walkInto(phys, 0.5, 4.5, 4.5, 2.5);
+    run(phys, 2);
+    const p = phys.poses()[0];
+    expect(p.x).toBeGreaterThan(8);
+    expect(p.low).toBeLessThan(-0.5); // nede på bassengbunnen (0,7 m)
+  });
+});

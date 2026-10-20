@@ -1,6 +1,6 @@
-// Myke lekeklosser i gåmodus: laster fysikken (world/softphysics.js, med cannon-es) bare når
-// rommet har klosser, flytter klossenes 3D-grupper etter fysikken og stopper spilleren ved høye
-// klosser. Et dumpt dunk når en kloss lander hardt. Rommet endres ikke; alt er tilbake etterpå.
+// Myke lekeklosser og lette gjenstander (plaststoler) i gåmodus: laster fysikken
+// (world/softphysics.js, med cannon-es) bare når rommet har slike, flytter 3D-gruppene (og
+// skyggene) etter fysikken og stopper spilleren ved høye ting. Et dumpt dunk når en kloss lander hardt. Rommet endres ikke; alt er tilbake etterpå.
 import { resolveCircle } from '../world/collision.js';
 import { OBJECTS } from '../core/objects.js';
 import { bump } from '../audio/effects.js';
@@ -26,7 +26,7 @@ export class SoftPlay {
   reset(attempt = 0) {
     const level = this.level;
     this.phys = null;
-    if (!level?.objects?.some((o) => OBJECTS[o.id]?.soft)) return;
+    if (!level?.objects?.some((o) => OBJECTS[o.id]?.soft || OBJECTS[o.id]?.loose)) return;
     import('../world/softphysics.js').then(({ SoftPhysics }) => {
       if (this.level !== level) return;
       this.phys = new SoftPhysics(level);
@@ -57,6 +57,8 @@ export class SoftPlay {
       if (!item) continue; // ikke bygget ennå
       item.position.set(p.x, p.y, p.z);
       item.quaternion.set(p.q[0], p.q[1], p.q[2], p.q[3]);
+      const shadow = item.userData.shadow;
+      if (shadow) shadow.position.set(p.x, p.low + 0.004, p.z);
     }
   }
 }

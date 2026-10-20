@@ -189,7 +189,8 @@ export function createObjects(level, field, shared) {
     const shadow = new THREE.Mesh(new THREE.PlaneGeometry(pose.w * 1.5, pose.d * 1.5), shadowMat);
     owned.push(shadow.geometry);
     shadow.rotation.x = -Math.PI / 2;
-    shadow.position.set(pose.x, pose.y + 0.004, pose.z);
+    shadow.position.set(pose.x, pose.y - Math.min(0, def.lift ?? 0) + 0.004, pose.z); // på gulvet, også for det som er senket
+    item.userData.shadow = shadow; // følger med når fysikken flytter gjenstanden (view3d/softplay.js)
     group.add(shadow);
   });
   const ready = Promise.allSettled(jobs).then((results) => {

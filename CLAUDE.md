@@ -101,6 +101,8 @@ src/
   får den til å snurre (takvifte). `soft` = lekeklosser: de
   stables på klossene før seg i listen, er ikke faste hindringer, og i gåmodus styres de av
   fysikk (`world/softphysics.js` med cannon-es, lastet dynamisk av `view3d/softplay.js`).
+  `loose` (plaststolen) gir lette gjenstander samme fysikk uten stabling: masse, tyngdepunkt og
+  en form av bokser i katalogen. Fysikkens gulv følger gulvhøydene; spillerkroppen må aldri sove.
 - **Rekkverk** (`core/railings.js`): reglene for hvilke kanter som får vern/håndlist brukes
   både av geometrien (`world/railings.js`) og kollisjonen – endre dem bare der.
 - **Vannsklier** (`core/slides.js`): `level.slides` er en liste med objekter

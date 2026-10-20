@@ -7,6 +7,9 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 ## [Ukommet]
 
 ### Lagt til
+- Plaststolene har fysikk i gåmodus: de dyttes bortover, velter og kan havne i bassenget
+  (`loose` i katalogen: masse, tyngdepunkt og en enkel form av bokser). Fysikken har nå ekte
+  gulvhøyder (bassengbunn, opphøyde gulv), og skyggen følger med når noe flyttes.
 - Blanke fliser: lampene i taket speiler seg i flisgulv og -vegger (Poolrooms og flislagte rom),
   med matte fuger og fliser som ligger litt skjevt, så speilbildet brytes opp flis for flis. Det
   slukner med lampene ved strømbrudd og blinker med dem. Billig: ingen ekstra tegnepass, bare et
@@ -265,6 +268,7 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   skjules når den er tom). Lenken `app/#example=<id>` åpner et eksempel direkte.
 
 ### Endret
+- Arkademaskiner står ikke lenger i lekerommet.
 - Vinduene i Poolrooms har ikke lenger sprosser (store, rene glassflater). Temaer kan slå av
   sprossene med `window: { bars: false }`.
 - Romformatet er versjon 2 med de valgfrie feltene `waterDepth`, `ceilings`, `depths`,
@@ -327,6 +331,9 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   når døren lukkes, i stedet for den syntetiske knirkingen.
 
 ### Fikset
+- Lekeklossene kunne ikke dyttes etter at man hadde stått stille et sekund (spillerens
+  fysikk-kropp «sovnet» og kolliderte ikke lenger med klosser i ro) – særlig stabler stod fast.
+- Arkademaskinen er senket litt ned i gulvet, så den rare sokkelen under den ikke synes.
 - Håndlister på rekkverk stod av og til på skrå: høyden ble lest i naborutens hjørne.
 - Vernet får åpning også der en sklie går diagonalt over et hjørne av plattformen, og der
   rennen (som er bredere enn én rute) passerer tett forbi – rekkverket stod før på tvers
