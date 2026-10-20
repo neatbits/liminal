@@ -7,7 +7,7 @@ import { History } from '../src/core/history.js';
 import { SLIDE, slideProblem, slidePath, addSlide, slidesAt, removeSlidesAt, slideEntry } from '../src/core/slides.js';
 import { railSides } from '../src/core/railings.js';
 import { levelFromJSON, levelToJSON } from '../src/core/serialize.js';
-import { buildSlides } from '../src/world/slides.js';
+import { buildSlides, spanAt } from '../src/world/slides.js';
 import { moveCircle } from '../src/world/collision.js';
 import { extendSlidePath } from '../src/editor/tools.js';
 import { presetById, generateLevel } from '../src/gen/index.js';
@@ -159,5 +159,15 @@ describe('vannsklier', () => {
     expect(x).toBeCloseTo(4.5, 6);
     expect(slideEntry(level, 4.5, 3.5, 2)).toBe(path);
     expect(slideEntry(level, 4.5, 3.5, 0)).toBeNull();
+  });
+});
+
+describe('starten på sklien', () => {
+  it('har høyere sider de første metrene, som slakker av til vanlig renne', () => {
+    expect(spanAt(false, 0)).toBeGreaterThan(spanAt(false, 0.6));
+    expect(spanAt(false, 0.6)).toBeGreaterThan(spanAt(false, 2));
+    expect(spanAt(false, 2)).toBeCloseTo(spanAt(false, 5), 9);
+    // Røret lukker seg likevel helt etter inngangen.
+    expect(spanAt(true, 3)).toBeCloseTo(Math.PI, 6);
   });
 });

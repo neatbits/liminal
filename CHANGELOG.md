@@ -286,6 +286,9 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   skjules når den er tom). Lenken `app/#example=<id>` åpner et eksempel direkte.
 
 ### Endret
+- Starten på vannskliene er en avrundet balje (kanten er like høy rundt hele bakenden, som enden
+  på et badekar) i stedet for en flat endeplate, med høyere sider de første metrene og et håndtak
+  av stål over startpunktet.
 - Abandoned: nesten halvparten av lysene er døde (før 20 %), og de døde lysene ligger samlet i
   områder, så hele deler av bygget er mørke – ikke bare litt dimmet overalt.
 - Fottrinn på teppe er mykere og lavere: et dempet trykk uten hard landing. Flislagte deler av
