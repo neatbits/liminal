@@ -7,6 +7,13 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 ## [Ukommet]
 
 ### Lagt til
+- Variasjon i genererte rom (`gen/variety.js`): takhøyden varierer litt fra nivå til nivå
+  innenfor temaet, noen bassenghaller i Poolrooms får høyt tak (4,8–6,8 m), og bassengene får ulik
+  dybde – grunne plaskebassenger, vanlige, med grunn og dyp ende (bunnen går i trinn) og en sjelden
+  gang et dypt et. I Uncanny og Nightmare er flere bassenger mørke og dype. Eksemplene er som før.
+- Dører og gjenstander i veien for hverandre (`gen/door-space.js`): dørblad som ville slått inn
+  foran en annen åpning snus (eller mister dørbladet), møbleringen holder rutene foran dørene fri,
+  og det som likevel står i veien fjernes – med det som stod oppå.
 - Plaststolene har fysikk i gåmodus: de dyttes bortover, velter og kan havne i bassenget
   (`loose` i katalogen: masse, tyngdepunkt og en enkel form av bokser). Fysikken har nå ekte
   gulvhøyder (bassengbunn, opphøyde gulv), og skyggen følger med når noe flyttes.
@@ -268,6 +275,10 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   skjules når den er tom). Lenken `app/#example=<id>` åpner et eksempel direkte.
 
 ### Endret
+- Abandoned: nesten halvparten av lysene er døde (før 20 %), og de døde lysene ligger samlet i
+  områder, så hele deler av bygget er mørke – ikke bare litt dimmet overalt.
+- Fottrinn på teppe er mykere og lavere: et dempet trykk uten hard landing. Flislagte deler av
+  teppetemaene høres ut som fliser, og butikkene i kjøpesenteret som teppe (`tiles.step`).
 - Arkademaskinen har fått egen grafikk – et oppdiktet spill, «STAR LANES», med neonstriper,
   pikselskrift og solnedgang i toppskiltet – i stedet for originalens League of Legends-grafikk
   (varemerke og kunst tilhører Riot Games). Lages av `scripts/arcade-art.mjs`; endringen står i

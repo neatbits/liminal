@@ -56,6 +56,32 @@ describe('stemningsskalaen', () => {
     expect(n / before).toBeLessThan(0.4);
   });
 
+  it('Abandoned: nesten halvparten av lysene er døde, samlet i mørke områder', () => {
+    const level = generateLevel({ theme: 'backrooms', w: 48, h: 48, seed: 6 });
+    const before = lit(level);
+    const out = moodLevel(level, 'abandoned', mulberry32(3));
+    expect(lit(out) / before).toBeLessThan(0.62);
+    expect(lit(out) / before).toBeGreaterThan(0.35);
+    // Andelen døde lys per område på 12 × 12 m varierer mye: noen deler er nesten mørke.
+    const shares = [];
+    for (let z0 = 0; z0 < 48; z0 += 12) {
+      for (let x0 = 0; x0 < 48; x0 += 12) {
+        let on = 0;
+        let dead = 0;
+        for (let z = z0; z < z0 + 12; z++) {
+          for (let x = x0; x < x0 + 12; x++) {
+            if (level.lights[z * 48 + x] !== LIGHT.ON) continue;
+            if (out.lights[z * 48 + x] === LIGHT.BROKEN) dead++;
+            else on++;
+          }
+        }
+        if (on + dead >= 6) shares.push(dead / (on + dead));
+      }
+    }
+    expect(Math.max(...shares)).toBeGreaterThan(0.65);
+    expect(Math.min(...shares)).toBeLessThan(0.25);
+  });
+
   it('uten avvik er neste nivå alltid et vanlig rom', () => {
     const current = presetById('basement').make();
     for (let s = 1; s <= 30; s++) {

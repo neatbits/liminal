@@ -52,9 +52,10 @@ function env(t, attack, tau) {
 }
 
 const STEP_SHAPES = {
+  // Teppe: et mykt, dempet trykk – ingen hard landing, og lite diskant.
   carpet(t, n, s) {
-    s.lp += 0.04 * (n - s.lp);
-    return s.lp * env(t, 0.008, 0.03) * 2.2 + Math.sin(2 * Math.PI * 80 * t) * env(t, 0.006, 0.03) * 0.5;
+    s.lp += 0.018 * (n - s.lp);
+    return s.lp * env(t, 0.018, 0.045) * 2.4 + Math.sin(2 * Math.PI * 60 * t) * env(t, 0.015, 0.035) * 0.15;
   },
   // Myke sko eller bare føtter på (våte) fliser: et dumpt slag og et lavt «klask» – ingen
   // skarpe klikk eller ringing, som fikk det til å høres ut som stiletthæler.

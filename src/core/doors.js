@@ -82,6 +82,30 @@ export function leafPose(info) {
   };
 }
 
+/** Rutene rett foran åpningen på begge sider (ikke vegger): de må holdes fri for å komme gjennom. */
+export function doorFronts(info) {
+  const out = [];
+  for (const s of [-1, 1]) {
+    const [x, z] = info.pz ? [info.x, info.z + s] : [info.x + s, info.z];
+    out.push([x, z]);
+  }
+  return out;
+}
+
+/** Ruten dørbladet slår inn i når det åpnes, eller null når åpningen ikke har dørblad. */
+export function swingCell(info) {
+  if (!info.state) return null;
+  return info.pz ? [info.x, info.z + info.side] : [info.x + info.side, info.z];
+}
+
+/** Snur slagretningen (bare for dører med rom på begge sider). Returnerer true hvis den ble snudd. */
+export function flipSwing(level, x, z) {
+  const info = doorInfo(level, x, z);
+  if (!info || info.oneSided) return false;
+  level.meta[z * level.w + x] ^= SWING;
+  return true;
+}
+
 /**
  * Kan (x, z) få en dør? En vegg, døråpning eller gulvrute (en åpning i veggen) med vegg i
  * begge ender, og rom på minst én side.

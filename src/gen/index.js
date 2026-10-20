@@ -13,6 +13,8 @@ import { basement } from './basement.js';
 import { playroom } from './playroom.js';
 import { mall, mallLayout } from './mall.js';
 import { school, ward } from './building.js';
+import { levelHeight, poolDepths, tallHalls } from './variety.js';
+import { untangleDoors, clearDoorways } from './door-space.js';
 
 const BY_THEME = {
   backrooms: styles.backrooms,
@@ -30,15 +32,24 @@ const BY_THEME = {
 /**
  * Tilfeldig rom i stilen til temaet. Samme frø gir samme rom. Rommet får noen utganger
  * (dører til ingensteds i ytterveggen) – i gåmodus fører de videre til et nytt nivå – og
- * gjenstander som passer til temaet (gen/furnish.js).
+ * gjenstander som passer til temaet (gen/furnish.js). Med vary varierer takhøyden og
+ * bassengdybdene (gen/variety.js) – eksemplene bruker det ikke, så de er som de alltid har vært.
  */
-export function generateLevel({ theme = 'backrooms', w = 48, h = 48, seed = 1, name } = {}) {
-  const level = createLevel({ theme, w, h, name: name ?? getTheme(theme).label });
+export function generateLevel({ theme = 'backrooms', w = 48, h = 48, seed = 1, name, vary = true } = {}) {
+  const rand = mulberry32(seed ^ 0x4e16); // eget frø: romoppsettet er det samme som uten variasjon
+  const height = vary ? levelHeight(theme, rand) : undefined;
+  const level = createLevel({ theme, w, h, height, name: name ?? getTheme(theme).label });
   (BY_THEME[level.theme] ?? styles.backrooms)(level, mulberry32(seed));
+  if (vary && !getTheme(level.theme).pit) {
+    poolDepths(level, rand);
+    if (level.theme === 'pool') tallHalls(level, rand);
+  }
   level.spawn = autoSpawn(level);
   // Eget frø, så rommene ellers blir som før.
   addExits(level, mulberry32(seed ^ 0x5eed), 3, level.spawn);
+  untangleDoors(level); // dørblad som slår inn i hverandre
   furnish(level, mulberry32(seed ^ 0xf00d));
+  clearDoorways(level); // ingen gjenstander foran døråpningene
   addWindows(level, mulberry32(seed ^ 0x51de));
   return level;
 }
@@ -62,7 +73,7 @@ export function levelFromTemplate(template, { theme, w, h, seed, name }) {
 
 /** Kjøpesenteret starter nede i atriet, med blikket langs atriet mot broen. */
 function makeMall() {
-  const level = generateLevel({ theme: 'mall', w: 56, h: 40, seed: 7, name: 'The Mall' });
+  const level = generateLevel({ theme: 'mall', w: 56, h: 40, seed: 7, name: 'The Mall', vary: false });
   const { atrium } = mallLayout(level.w, level.h);
   level.spawn = { x: atrium.x0 + 10.5, z: (atrium.z0 + atrium.z1) / 2 + 3, a: yawFromDir(1, 0) };
   return level;
@@ -80,44 +91,44 @@ export const PRESETS = [
     id: 'level0',
     name: 'Level 0',
     hint: 'The classic yellow rooms. Damp carpet and endless humming.',
-    make: () => generateLevel({ theme: 'backrooms', w: 56, h: 56, seed: 1007, name: 'Level 0' }),
+    make: () => generateLevel({ theme: 'backrooms', w: 56, h: 56, seed: 1007, name: 'Level 0', vary: false }),
   },
   {
     id: 'pools',
     name: 'The Poolrooms',
     hint: 'White tiles and still water. Sound carries a long way.',
-    make: () => generateLevel({ theme: 'pool', w: 48, h: 48, seed: 21, name: 'The Poolrooms' }),
+    make: () => generateLevel({ theme: 'pool', w: 48, h: 48, seed: 21, name: 'The Poolrooms', vary: false }),
   },
   {
     id: 'office',
     name: 'The Office at 3 AM',
     hint: 'Meeting rooms, corridors and doors left ajar.',
     // Klokka er tre om natta: mørke vinduer.
-    make: () => Object.assign(generateLevel({ theme: 'office', w: 48, h: 40, seed: 5, name: 'The Office at 3 AM' }), { sky: 'night' }),
+    make: () => Object.assign(generateLevel({ theme: 'office', w: 48, h: 40, seed: 5, name: 'The Office at 3 AM', vary: false }), { sky: 'night' }),
   },
   {
     id: 'hotel',
     name: 'The Hotel Corridor',
     hint: 'Long corridors that keep turning. Every door looks the same.',
-    make: () => generateLevel({ theme: 'hotel', w: 46, h: 46, seed: 9, name: 'The Hotel Corridor' }),
+    make: () => generateLevel({ theme: 'hotel', w: 46, h: 46, seed: 9, name: 'The Hotel Corridor', vary: false }),
   },
   {
     id: 'garage',
     name: 'Parking Level P3',
     hint: 'Pillars, concrete and not a single car.',
-    make: () => generateLevel({ theme: 'garage', w: 60, h: 48, seed: 3, name: 'Parking Level P3' }),
+    make: () => generateLevel({ theme: 'garage', w: 60, h: 48, seed: 3, name: 'Parking Level P3', vary: false }),
   },
   {
     id: 'basement',
     name: 'The Basement',
     hint: 'Clean carpet, white doors and warm lights. Nobody is home.',
-    make: () => generateLevel({ theme: 'basement', w: 40, h: 30, seed: 12, name: 'The Basement' }),
+    make: () => generateLevel({ theme: 'basement', w: 40, h: 30, seed: 12, name: 'The Basement', vary: false }),
   },
   {
     id: 'playroom',
     name: 'The Playroom',
     hint: 'Ball pits in red, green, yellow and blue. The slide is still warm.',
-    make: () => generateLevel({ theme: 'playroom', w: 48, h: 40, seed: 4, name: 'The Playroom' }),
+    make: () => generateLevel({ theme: 'playroom', w: 48, h: 40, seed: 4, name: 'The Playroom', vary: false }),
   },
   {
     id: 'mall',
@@ -129,13 +140,13 @@ export const PRESETS = [
     id: 'school',
     name: 'The School',
     hint: 'Lockers, linoleum and classrooms in the late afternoon sun. Nobody is coming back today.',
-    make: () => Object.assign(generateLevel({ theme: 'school', w: 52, h: 40, seed: 6, name: 'The School' }), { sky: 'golden' }),
+    make: () => Object.assign(generateLevel({ theme: 'school', w: 52, h: 40, seed: 6, name: 'The School', vary: false }), { sky: 'golden' }),
   },
   {
     id: 'ward',
     name: 'The Ward',
     hint: 'Closed doors, a pale green corridor and a monitor beeping somewhere.',
-    make: () => Object.assign(generateLevel({ theme: 'ward', w: 48, h: 36, seed: 2, name: 'The Ward' }), { sky: 'dusk' }),
+    make: () => Object.assign(generateLevel({ theme: 'ward', w: 48, h: 36, seed: 2, name: 'The Ward', vary: false }), { sky: 'dusk' }),
   },
   {
     id: 'corridor',

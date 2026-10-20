@@ -1,10 +1,11 @@
 // Gjenstander i genererte rom, valgt etter temaet: skrivebord med stol og PC på kontoret, TV-hjørne
-// med sofa i kjellerstua, ender i bassengene, brusautomater i gangene, arkademaskiner i lekerommet
+// med sofa i kjellerstua, ender i bassengene, brusautomater i gangene, arkademaskiner i butikkene
 // – og bare en og annen forlatt TV, stol eller arkademaskin i de tommeste rommene. Oppsettene
 // ligger i furnish-sets.js. Ren logikk.
 import { TILE, getTile } from '../core/level.js';
 import { placeObject, objectsAt } from '../core/objects.js';
 import { softBuild } from './softplay.js';
+import { doorFrontCells } from './door-space.js';
 import { tryPlace, desk, gaming, foodspot, chairs, arcades, tvrow, table, poolside, tvstand } from './furnish-sets.js';
 
 const DIRS = [
@@ -97,8 +98,11 @@ export function furnish(level, rand, spawn = level.spawn) {
   const plan = PLANS[level.theme];
   if (!plan) return 0;
   const before = level.objects.length;
-  const spots = wallSpots(level, spawn);
-  const open = openSpots(level, spawn);
+  // Rutene rett foran dørene holdes fri (gen/door-space.js rydder resten).
+  const fronts = new Set(doorFrontCells(level).map(([x, z]) => z * level.w + x));
+  const free = ([x, z]) => !fronts.has(z * level.w + x);
+  const spots = wallSpots(level, spawn).filter(free);
+  const open = openSpots(level, spawn).filter(free);
   const floor = level.tiles.filter((t) => t === TILE.FLOOR).length;
   const water = [];
   level.tiles.forEach((t, i) => t === TILE.WATER && water.push([i % level.w, (i / level.w) | 0]));
@@ -106,7 +110,7 @@ export function furnish(level, rand, spawn = level.spawn) {
   const shore = [];
   for (let i = 0; i < level.tiles.length; i++) {
     const [x, z] = [i % level.w, (i / level.w) | 0];
-    if (level.tiles[i] === TILE.FLOOR && DIRS.some(([dx, dz]) => getTile(level, x + dx, z + dz) === TILE.WATER)) shore.push([x, z]);
+    if (level.tiles[i] === TILE.FLOOR && free([x, z]) && DIRS.some(([dx, dz]) => getTile(level, x + dx, z + dz) === TILE.WATER)) shore.push([x, z]);
   }
   for (const item of plan) {
     const n = count(rand, item.water ? water.length : floor, item.every, item.min);

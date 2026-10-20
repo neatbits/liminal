@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { footstepBuffers } from '../src/audio/synth.js';
 import { doorBuffer } from '../src/audio/effects.js';
+import { surfaceFor } from '../src/view3d/walker.js';
+import { getTheme } from '../src/core/themes.js';
+import { TILE } from '../src/core/level.js';
 
 const ctx = {
   sampleRate: 22050,
@@ -43,6 +46,28 @@ describe('fottrinn', () => {
         expect(sharpness(d), surface).toBeLessThan(0.3);
       }
     }
+  });
+});
+
+describe('fottrinn på teppe', () => {
+  it('er mykere enn på fliser og betong: lavere skarphet og langsommere anslag', () => {
+    const avg = (surface, f) => footstepBuffers(ctx, surface).reduce((sum, b) => sum + f(b.getChannelData(0)), 0) / 4;
+    // Hvor tidlig toppen kommer (ms): et mykt trinn bygger seg opp.
+    const peakAt = (d) => {
+      let k = 0;
+      for (let i = 1; i < d.length; i++) if (Math.abs(d[i]) > Math.abs(d[k])) k = i;
+      return (k / 22050) * 1000;
+    };
+    expect(avg('carpet', sharpness)).toBeLessThan(avg('tile', sharpness));
+    expect(avg('carpet', sharpness)).toBeLessThan(avg('concrete', sharpness));
+    expect(avg('carpet', peakAt)).toBeGreaterThan(avg('concrete', peakAt));
+  });
+
+  it('flislagte deler av teppetemaer høres ut som fliser; butikkene i kjøpesenteret som teppe', () => {
+    const backrooms = getTheme('backrooms');
+    expect(surfaceFor(backrooms, TILE.FLOOR)).toBe('carpet');
+    expect(surfaceFor(backrooms, TILE.FLOOR, 1)).toBe('tile');
+    expect(surfaceFor(getTheme('mall'), TILE.FLOOR, 1)).toBe('carpet');
   });
 });
 

@@ -161,8 +161,9 @@ export class AudioEngine {
 
   step(surface) {
     const list = this.steps[surface] ?? this.steps.carpet;
-    // Trinnene skal ligge lavt i lydbildet; fliser i store, ekkoaktige rom (Poolrooms) enda lavere.
-    const gain = (surface === 'tile' ? 0.26 : 0.34) + Math.random() * 0.14;
+    // Trinnene skal ligge lavt i lydbildet; fliser i store, ekkoaktige rom (Poolrooms) enda lavere,
+    // og teppe lavest – det demper.
+    const gain = (surface === 'tile' ? 0.26 : surface === 'carpet' ? 0.17 : 0.34) + Math.random() * (surface === 'carpet' ? 0.07 : 0.14);
     if (list) this._oneShot(list[Math.floor(Math.random() * list.length)], gain, 0.9 + Math.random() * 0.2);
   }
 

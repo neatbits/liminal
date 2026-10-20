@@ -11,8 +11,10 @@ const WALK = 1.55;
 const RUN = 3.1;
 const STEP = 0.72; // meter per fottrinn
 
-export function surfaceFor(theme, tile) {
+/** Underlaget for fottrinn. finish = belegget i ruten: fliser (eller temaets eget belegg, tiles.step). */
+export function surfaceFor(theme, tile, finish = 0) {
   if (tile === TILE.WATER) return theme.pit === 'balls' ? 'balls' : 'water';
+  if (finish) return theme.tiles?.step ?? 'tile';
   return theme.sound.step;
 }
 
@@ -116,7 +118,9 @@ export class Walker {
 
     const before = Math.floor(this.stepPhase);
     this.stepPhase += moved / STEP;
-    return Math.floor(this.stepPhase) !== before ? surfaceFor(theme, here) : null;
+    if (Math.floor(this.stepPhase) === before) return null;
+    const cell = Math.floor(this.z) * level.w + Math.floor(this.x);
+    return surfaceFor(theme, here, level.finish?.[cell] ?? 0);
   }
 
   applyToCamera(camera) {

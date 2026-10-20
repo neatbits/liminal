@@ -3,7 +3,7 @@
 // meter (r, g, b) og bølgestyrke for vannshaderen. `door`: karmfarge (null = ingen karm),
 // dørblad, dørblad for boder (dør med vegg bak, valgfri) og håndtaksfarge. `railing`:
 // farge på håndlist/stolper og spiler. `window: { bars: false }` gir vinduer uten sprosser.
-// Valgfri `tiles` overstyrer flisene i build.js.
+// Valgfri `tiles` overstyrer flisene i build.js (`step`: fottrinnene på belegget, ellers fliser).
 // `pit: 'balls'` fyller bassengene med baller (ballbinge) i stedet for vann. `gloss` på en flate
 // ({ amount, grid = fliser per teksturflate }) gjør flisene blanke (world/gloss.js). De nyeste temaene
 // ligger i themes-more.js.

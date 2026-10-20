@@ -119,6 +119,8 @@ src/
   tilbake når man går ut. `generateLevel` legger inn utganger (`gen/exits.js`), også i
   ytterkanten – kanten er da vegg eller en lukket dør til ingensteds – og gjenstander etter
   temaet (`gen/furnish.js`, `PLANS`). Begge har eget frø, så romoppsettet er uendret.
+  Takhøyde og bassengdybder varieres (`gen/variety.js`, eget frø; `vary: false` for eksemplene),
+  og `gen/door-space.js` rydder dører og gjenstander som er i veien for hverandre.
 - **Vinduer** (`core/windows.js`): en veggrute med `meta & 1` er et vindu – fortsatt vegg for
   kollisjon, lys og dører. `level.sky` (SKIES) gir himmel, dagslys (lyskilder med egen farge,
   `rgb`) og solflekker (`sunPatch`). 3D i `world/windows.js`; surfaces.js lar åpningen stå åpen.
