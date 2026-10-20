@@ -12,6 +12,8 @@
 //   modellen (noder med navn som begynner slik), f.eks. et bord eller et gulv modellen kom med,
 //   og "textureSize": 512 gir mindre teksturer (for store filer). "simplify": 0.15 forenkler
 //   geometrien til ca. 15 % av trekantene (tunge modeller; "simplifyError" = tillatt feil).
+//   "split": { "<navn>": "<nodeprefiks>", … } deler en fil med flere modeller i hver sin
+//   models/<navn>.glb (bare noden som starter med prefikset, og det under den, beholdes).
 // Bare modeller som er nyere enn sin .glb (eller mangler den) bygges; --all bygger alle.
 import { readdirSync, mkdirSync, statSync, existsSync, readFileSync, rmSync } from 'node:fs';
 import { join, extname } from 'node:path';
@@ -43,12 +45,24 @@ for (const name of readdirSync(SRC)) {
     console.warn(`${name}: ingen .gltf/.glb – hoppet over`);
     continue;
   }
-  const out = join(OUT, `${name}.glb`);
-  if (!all && existsSync(out) && statSync(out).mtimeMs > newest(dir)) continue;
-
-  const doc = await io.read(join(dir, file));
   const configFile = join(dir, 'model.json');
   const config = existsSync(configFile) ? JSON.parse(readFileSync(configFile, 'utf8')) : {};
+  for (const [target, keep] of config.split ? Object.entries(config.split) : [[name, null]]) {
+    await build(dir, file, config, target, keep);
+  }
+}
+
+async function build(dir, file, config, name, keep) {
+  const out = join(OUT, `${name}.glb`);
+  if (!all && existsSync(out) && statSync(out).mtimeMs > newest(dir)) return;
+
+  const doc = await io.read(join(dir, file));
+  if (keep) {
+    // Bare den ene modellen: søsknene til noden med prefikset fjernes.
+    const node = doc.getRoot().listNodes().find((n) => n.getName().startsWith(keep));
+    if (!node) throw new Error(`${name}: fant ingen node som starter med «${keep}»`);
+    for (const sib of node.getParentNode()?.listChildren() ?? []) if (sib !== node) sib.dispose();
+  }
   for (const prefix of config.drop ?? []) {
     for (const node of doc.getRoot().listNodes()) if (node.getName().startsWith(prefix)) node.dispose();
   }

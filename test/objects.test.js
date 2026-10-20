@@ -156,7 +156,13 @@ describe('gjenstander på vegg og i tak', () => {
 
 describe('kreditering', () => {
   it('modeller med CC BY / CC BY-SA har full kreditering og lisensfilen sin', async () => {
-    const { existsSync } = await import('node:fs');
+    const { existsSync, readdirSync, readFileSync } = await import('node:fs');
+    // Modeller som er delt ut av en fil med flere (model.json: split) har lisensen i kildemappen.
+    const folder = {};
+    for (const dir of readdirSync('3dmodels')) {
+      const cfg = `3dmodels/${dir}/model.json`;
+      if (existsSync(cfg)) for (const name of Object.keys(JSON.parse(readFileSync(cfg, 'utf8')).split ?? {})) folder[name] = dir;
+    }
     for (const [id, def] of Object.entries(OBJECTS)) {
       if (!def.file) continue;
       expect(def.credit, id).toBeTruthy();
@@ -164,7 +170,7 @@ describe('kreditering', () => {
       const a = def.attribution;
       expect(a, id).toBeTruthy();
       for (const k of ['title', 'source', 'author', 'authorUrl', 'license', 'licenseUrl']) expect(a[k], `${id}.${k}`).toBeTruthy();
-      expect(existsSync(`3dmodels/${def.file}/license.txt`), id).toBe(true);
+      expect(existsSync(`3dmodels/${folder[def.file] ?? def.file}/license.txt`), id).toBe(true);
     }
   });
 });

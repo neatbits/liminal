@@ -22,7 +22,8 @@ roten med `#room=`/`#rom=` sendes videre til `app/`; `app/#example=<id>` åpner 
 - `npm run models` – gjør kildemodellene i `3dmodels/<navn>/` (glTF) om til komprimerte
   `models/<navn>.glb` (bare endrede; `--all` for alle). Forbehandler spec/gloss → metal/rough,
   emissive-teksturer uten fargetekstur, og `model.json` med `drop` (fjern deler), `textureSize` og
-  `simplify` (andel trekanter for tunge modeller). Sjekk alltid
+  `simplify` (andel trekanter for tunge modeller) og `split` (én fil med flere modeller → én .glb
+  per modell; lisensen ligger i kildemappen). Sjekk alltid
   størrelse (`scale`) og retning (`turn`) visuelt – modeller fra Sketchfab har ofte rare enheter.
 
 Publisering (liminalsimulator.com, neatbits.no/liminal/): last opp *innholdet* i `dist/`
@@ -93,7 +94,7 @@ src/
   (size = utstrekning i meter etter `scale`, forsiden mot +z – bruk `turn` om modellen vender
   feil). Bruk bare CC0/CC-BY-modeller (siden har reklame) og før opp kreditering i `credit`;
   CC BY krever i tillegg `attribution` (tittel, kilde, skaper, lisens med lenker – About-siden
-  viser det). Behold lisensfilen i `3dmodels/<navn>/`. Teksturer med andres varemerker eller kunst (logoer, spillfigurer) males
+  viser det); bruk `...ccBy(tittel, skaper, kilde, skaperUrl)` i katalogen. Behold lisensfilen i `3dmodels/<navn>/`. Teksturer med andres varemerker eller kunst (logoer, spillfigurer) males
   om med egen grafikk (som arkademaskinen: `scripts/arcade-art.mjs`), og endringen føres i
   `attribution.changes`. 3D-delen (`world/objects.js`) laster .glb
   asynkront, sentrerer modellen og baker rommets lys per vertex. `surface` (høyde) gjør en

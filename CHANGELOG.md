@@ -7,6 +7,11 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 ## [Ukommet]
 
 ### Lagt til
+- Lekeplass i lekerommet: et lekestativ med krone, sklier og husker («Playground set» av
+  Rasputnik00) og tre hoppeslott fra «Bounce House» av Jeremy E. Grayson – et klassisk hoppeslott,
+  et kombislott med klatrevegg og sklie, og en ca. 10 m lang hinderløype. Alle CC BY 4.0 og
+  kreditert på About-siden, og møblert inn i lekerommet.
+- `npm run models`: `"split"` i `model.json` deler en fil med flere modeller i hver sin .glb.
 - To nye modeller: en solseng (fluktstol med stripet stoff, «deck chair» av MaX3Dd) og en
   plastpalme («Palm Tree Fiberglass» av Bensonnix), begge CC BY 4.0 og kreditert på About-siden.
   Solsengene står to og to langs bassengkanten i Poolrooms (i stedet for plaststolene, av og til),
@@ -292,6 +297,7 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   skjules når den er tom). Lenken `app/#example=<id>` åpner et eksempel direkte.
 
 ### Endret
+- Katalogen bruker `ccBy()` for CC BY-krediteringen (kortere oppføringer, samme innhold).
 - Starten på vannskliene er en avrundet balje (kanten er like høy rundt hele bakenden, som enden
   på et badekar) i stedet for en flat endeplate, med høyere sider de første metrene og et håndtak
   av stål over startpunktet.

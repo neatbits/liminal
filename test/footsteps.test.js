@@ -51,7 +51,11 @@ describe('fottrinn', () => {
 
 describe('fottrinn på teppe', () => {
   it('er mykere enn på fliser og betong: lavere skarphet og langsommere anslag', () => {
-    const avg = (surface, f) => footstepBuffers(ctx, surface).reduce((sum, b) => sum + f(b.getChannelData(0)), 0) / 4;
+    // Snitt over 32 trinn (støyen er tilfeldig, så noen få trinn kan overlappe).
+    const avg = (surface, f) => {
+      const all = Array.from({ length: 8 }, () => footstepBuffers(ctx, surface)).flat();
+      return all.reduce((sum, b) => sum + f(b.getChannelData(0)), 0) / all.length;
+    };
     // Hvor tidlig toppen kommer (ms): et mykt trinn bygger seg opp.
     const peakAt = (d) => {
       let k = 0;

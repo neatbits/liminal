@@ -1,0 +1,11 @@
+Model Information:
+* title:	Bounce House
+* source:	https://sketchfab.com/3d-models/bounce-house-57263bf5a7e44e558ff00248d4c92101
+* author:	Jeremy E. Grayson (https://sketchfab.com/JeremyGrayson)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Bounce House" (https://sketchfab.com/3d-models/bounce-house-57263bf5a7e44e558ff00248d4c92101) by Jeremy E. Grayson (https://sketchfab.com/JeremyGrayson) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
