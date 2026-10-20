@@ -13,7 +13,7 @@ const span = ([lo, hi]) => (Math.abs(hi - lo) < 1e-6 ? metres(lo) : `${+lo.toFix
 export class Sidebar {
   /**
    * @param a handlinger: tool, shape, brush, zoneValue, doorState, rename, theme, size, height,
-   *          waterDepth, bright, fog, fillLights, clearLights, generate, grid, rulers
+   *          waterDepth, bright, fog, fillLights, clearLights, generate(seed | null), grid, rulers
    */
   constructor(root, a) {
     this.a = a;
@@ -63,7 +63,14 @@ export class Sidebar {
         h('button', { type: 'button', class: 'btn', text: 'Fill with lights', onclick: () => a.fillLights() }),
         h('button', { type: 'button', class: 'btn', text: 'Remove all lights', onclick: () => a.clearLights() }),
       ),
-      h('button', { type: 'button', class: 'btn', style: { width: '100%', marginTop: '6px', justifyContent: 'center' }, text: '🎲 Generate random room', onclick: () => a.generate() }),
+      // Generering: frøet bestemmer rommet (samme frø og tema = samme rom). Tomt felt = tilfeldig.
+      h(
+        'div',
+        { class: 'row seed-row' },
+        (this.seed = h('input', { class: 'field', type: 'number', min: 0, step: 1, placeholder: 'Seed', title: 'The same seed and theme always give the same room' })),
+        h('button', { type: 'button', class: 'btn', text: 'Generate', title: 'Generate a room from this seed', onclick: () => a.generate(this.seed.value) }),
+        h('button', { type: 'button', class: 'btn', text: '🎲 Random', title: 'Generate a room from a new random seed', onclick: () => a.generate(null) }),
+      ),
       // «Make it wrong»: mange små endringer som gjør at noe føles galt (gen/wrong.js).
       h(
         'div',
@@ -103,6 +110,7 @@ export class Sidebar {
     this.height.firstChild.value = level.height;
     this.depth.firstChild.value = level.waterDepth;
     this.sky.value = level.sky ?? 'day';
+    if (document.activeElement !== this.seed) this.seed.value = level.seed ?? '';
     this.bright.input.value = level.bright;
     this.bright.out.textContent = `${Math.round(level.bright * 100)} %`;
     this.fog.input.value = level.fog;

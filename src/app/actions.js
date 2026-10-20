@@ -1,7 +1,7 @@
 // Fil-handlinger: nytt rom, eksempler, lagring, deling, import/eksport og generering.
 import { applySnapshot } from '../core/history.js';
 import { cloneLevel } from '../core/level.js';
-import { randomSeed } from '../core/rng.js';
+import { randomSeed, parseSeed } from '../core/rng.js';
 import { encodeLevel, levelFromJSON, levelToJSON } from '../core/serialize.js';
 import { listRooms, loadRoom, saveRoom, deleteRoom } from '../core/storage.js';
 import { generateLevel, levelFromTemplate } from '../gen/index.js';
@@ -27,7 +27,9 @@ export function newRoom(app) {
     theme: app.level.theme,
     onCreate: async (o) => {
       if (!(await confirmReplace(app))) return;
-      app.setLevel(levelFromTemplate(o.template, { ...o, seed: randomSeed(), name: 'New room' }));
+      const seed = parseSeed(o.seed) ?? randomSeed();
+      app.setLevel(levelFromTemplate(o.template, { ...o, seed, name: 'New room' }));
+      if (o.template === 'random') toast(`New random room – seed ${seed}`);
     },
   });
 }
@@ -127,12 +129,13 @@ export function importFile(app) {
   input.click();
 }
 
-/** Genererer et nytt tilfeldig rom i samme tema og størrelse (kan angres). */
-export function generateInto(app) {
+/** Genererer et rom i samme tema og størrelse fra frøet (eller et tilfeldig), kan angres. */
+export function generateInto(app, seed = null) {
   const { theme, w, h } = app.level;
-  const fresh = generateLevel({ theme, w, h, seed: randomSeed() });
+  const s = parseSeed(seed) ?? randomSeed();
+  const fresh = generateLevel({ theme, w, h, seed: s });
   app.editor.checkpoint();
   applySnapshot(app.level, fresh);
   app.mutated();
-  toast('New random room – Ctrl+Z to undo');
+  toast(`Generated from seed ${s} – Ctrl+Z to undo`);
 }

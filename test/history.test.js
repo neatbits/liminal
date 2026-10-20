@@ -69,3 +69,16 @@ describe('historikk', () => {
     expect(level.depths[2 * 8 + 2]).toBe(20);
   });
 });
+
+describe('frøet i angrehistorikken', () => {
+  it('følger med når man angrer en generering', () => {
+    const level = createLevel({ w: 6, h: 6 });
+    level.seed = 12;
+    const history = new History();
+    history.push(level);
+    applySnapshot(level, { ...createLevel({ w: 6, h: 6 }), seed: 99 });
+    expect(level.seed).toBe(99);
+    history.undo(level);
+    expect(level.seed).toBe(12);
+  });
+});

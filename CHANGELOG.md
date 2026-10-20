@@ -7,6 +7,10 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 ## [Ukommet]
 
 ### Lagt til
+- Frø for genererte rom: samme frø og tema gir alltid samme rom. Sidepanelet har et frøfelt med
+  «Generate» (fra frøet) og «🎲 Random» (nytt frø), «New room» → «Randomly generated» har et
+  frøfelt, og frøet vises etter generering. Frøet lagres med rommet (fil, lenke, angre). Nye
+  tilfeldige frø er 1–99999, så de er lette å skrive av og dele.
 - Variasjon i genererte rom (`gen/variety.js`): takhøyden varierer litt fra nivå til nivå
   innenfor temaet, noen bassenghaller i Poolrooms får høyt tak (4,8–6,8 m), og bassengene får ulik
   dybde – grunne plaskebassenger, vanlige, med grunn og dyp ende (bunnen går i trinn) og en sjelden

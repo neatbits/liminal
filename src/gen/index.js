@@ -39,6 +39,7 @@ export function generateLevel({ theme = 'backrooms', w = 48, h = 48, seed = 1, n
   const rand = mulberry32(seed ^ 0x4e16); // eget frø: romoppsettet er det samme som uten variasjon
   const height = vary ? levelHeight(theme, rand) : undefined;
   const level = createLevel({ theme, w, h, height, name: name ?? getTheme(theme).label });
+  level.seed = seed; // vises i sidepanelet, så rommet kan lages igjen
   (BY_THEME[level.theme] ?? styles.backrooms)(level, mulberry32(seed));
   if (vary && !getTheme(level.theme).pit) {
     poolDepths(level, rand);

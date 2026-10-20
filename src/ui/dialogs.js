@@ -24,6 +24,9 @@ export function newRoomDialog({ theme, onCreate }) {
   const wEl = sizeSelect(48);
   const hEl = sizeSelect(48);
   let template = 'hall';
+  // Frø for «Randomly generated» (tomt = tilfeldig); vises bare for den malen.
+  const seedEl = h('input', { class: 'field', type: 'number', min: 0, step: 1, placeholder: 'Random' });
+  const seedRow = h('div', { class: 'row', style: { display: 'none' } }, h('label', { text: 'Seed' }), seedEl);
   const cards = TEMPLATES.map((t) =>
     h(
       'button',
@@ -33,6 +36,7 @@ export function newRoomDialog({ theme, onCreate }) {
         onclick: (e) => {
           template = t.id;
           for (const c of list.children) c.classList.toggle('selected', c === e.currentTarget);
+          seedRow.style.display = template === 'random' ? '' : 'none';
         },
       },
       h('div', { class: 'card-main' }, h('div', { class: 'card-title', text: t.label }), h('div', { class: 'card-sub', text: t.hint })),
@@ -46,13 +50,14 @@ export function newRoomDialog({ theme, onCreate }) {
     h('div', { class: 'row-2' }, h('div', {}, h('label', { text: 'Width' }), wEl), h('div', {}, h('label', { text: 'Depth' }), hEl)),
     h('div', { class: 'side-label', text: 'Start from' }),
     list,
+    seedRow,
   );
   openModal({
     title: 'New room',
     body,
     actions: [
       { label: 'Cancel' },
-      { label: 'Create room', primary: true, onClick: () => onCreate({ theme: themeEl.value, w: +wEl.value, h: +hEl.value, template }) },
+      { label: 'Create room', primary: true, onClick: () => onCreate({ theme: themeEl.value, w: +wEl.value, h: +hEl.value, template, seed: seedEl.value }) },
     ],
   });
 }

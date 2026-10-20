@@ -25,7 +25,7 @@ export function sidebarActions(app) {
     fillLights: () => app.fillLights(),
     makeWrong: (strength) => app.makeWrong(strength),
     clearLights: () => app.clearLights(),
-    generate: () => generateInto(app),
+    generate: (seed) => generateInto(app, seed),
     grid: (on) => app.setHelper('grid', on),
     rulers: (on) => app.setHelper('rulers', on),
   };

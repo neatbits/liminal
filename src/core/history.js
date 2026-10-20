@@ -5,7 +5,7 @@ import { LAYERS } from './level.js';
 // sammenlignes med ===.
 
 export function snapshot(level) {
-  const snap = { w: level.w, h: level.h, spawn: { ...level.spawn }, slides: level.slides, objects: level.objects };
+  const snap = { w: level.w, h: level.h, spawn: { ...level.spawn }, slides: level.slides, objects: level.objects, seed: level.seed };
   for (const key of LAYERS) snap[key] = level[key].slice();
   return snap;
 }
@@ -18,6 +18,7 @@ export function applySnapshot(level, snap) {
   level.slides = snap.slides ?? [];
   level.objects = snap.objects ?? [];
   level.spawn = { ...snap.spawn };
+  level.seed = snap.seed; // frøet rommet ble generert fra (følger med når man angrer)
 }
 
 function sameContent(a, b) {

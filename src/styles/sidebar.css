@@ -222,13 +222,16 @@
   margin: 8px 0 0;
 }
 
-/* «Make it wrong»: styrke og knapp på én linje. */
-.wrong-row {
+/* «Make it wrong» (styrke og knapp) og generering (frø og knapper) på én linje hver. */
+.wrong-row,
+.seed-row {
   display: flex;
   gap: 6px;
   margin-top: 6px;
 }
 
-.wrong-row .field {
+.wrong-row .field,
+.seed-row .field {
   flex: 1;
+  min-width: 0;
 }

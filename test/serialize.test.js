@@ -29,6 +29,14 @@ describe('serialisering', () => {
     expect(Array.from(back.lights)).toEqual(Array.from(level.lights));
   });
 
+  it('frøet rommet ble generert fra følger med i lenker og filer', async () => {
+    const level = generateLevel({ theme: 'office', w: 40, h: 32, seed: 4471 });
+    expect(level.seed).toBe(4471);
+    expect((await decodeLevel(await encodeLevel(level))).seed).toBe(4471);
+    const drawn = createLevel({ w: 10, h: 10 });
+    expect((await decodeLevel(await encodeLevel(drawn))).seed).toBeUndefined();
+  });
+
   it('lager lesbare rader', () => {
     const json = levelToJSON(sample());
     expect(json.rows).toHaveLength(9);

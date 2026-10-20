@@ -107,6 +107,7 @@ export function levelToJSON(level) {
     fog: level.fog,
     bright: level.bright,
     sky: level.sky ?? undefined,
+    seed: level.seed ?? undefined,
     spawn: [round3(s.x), round3(s.z), round3(s.a)],
     rows,
     ...Object.fromEntries(LAYERS.map((layer) => [layer.key, layerToRows(level, layer)])),
@@ -140,6 +141,7 @@ export function levelFromJSON(data) {
   level.fog = clamp(data.fog, 0, 3, 1);
   level.bright = clamp(data.bright, 0.2, 3, 1);
   level.sky = SKIES[data.sky] ? data.sky : null;
+  if (Number.isInteger(data.seed) && data.seed >= 0) level.seed = data.seed;
   for (let z = 0; z < h; z++) {
     const row = String(data.rows[z]);
     if (row.length !== w) throw new Error(`Row ${z + 1} has the wrong length.`);

@@ -20,6 +20,15 @@ export function pick(rand, list) {
   return list[Math.floor(rand() * list.length)];
 }
 
+export const SEED_MAX = 99999;
+
+/** Et tilfeldig frø, 1–99999 (kort nok til å skrive av og dele). */
 export function randomSeed() {
-  return (Math.random() * 2 ** 31) >>> 0;
+  return 1 + Math.floor(Math.random() * SEED_MAX);
+}
+
+/** Et frø fra brukeren (tekst eller tall), eller null når det ikke er et gyldig frø. */
+export function parseSeed(v) {
+  const n = Math.trunc(Number(String(v ?? '').trim()));
+  return String(v ?? '').trim() !== '' && Number.isFinite(n) && n >= 0 && n <= 2 ** 31 ? n : null;
 }
