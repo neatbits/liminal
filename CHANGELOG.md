@@ -7,6 +7,12 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 ## [Ukommet]
 
 ### Lagt til
+- To nye modeller: en solseng (fluktstol med stripet stoff, «deck chair» av MaX3Dd) og en
+  plastpalme («Palm Tree Fiberglass» av Bensonnix), begge CC BY 4.0 og kreditert på About-siden.
+  Solsengene står to og to langs bassengkanten i Poolrooms (i stedet for plaststolene, av og til),
+  og palmene står langs veggene i Poolrooms og i atriet i kjøpesenteret.
+- `npm run models`: `"simplify"` i `model.json` forenkler tunge modeller (palmen: 145 000 → ca.
+  17 000 trekanter, 1 MB → 246 kB).
 - Rommet reagerer på deg (Liminal og sterkere): når du ikke ser etter, endrer det seg litt bak
   ryggen din – en dør du gikk gjennom er blitt vegg (aldri den eneste veien tilbake), et lys du
   gikk under har sluknet, en stol har snudd seg mot deg, en dør som stod åpen er lukket. Og av og

@@ -22,18 +22,18 @@ const DIRS = [
  * 'tvrow' (furnish-sets.js), 'table' (dinersett eller kafébord) og 'softplay' (lekeklosser).
  * open = midt på gulvet (ikke mot en vegg), ceiling = under taket, unna taklysene (takvifter),
  * rooms = ikke på ruter med belegg (korridorer med skap, bad, butikker med teppe), shore = på
- * gulvet langs bassengkanten ('poolside': plaststoler mot vannet), water = i vannet (flytende).
+ * gulvet langs bassengkanten ('poolside': plaststoler eller solsenger mot vannet), water = i vannet (flytende).
  */
 const PLANS = {
   backrooms: [{ set: 'foodspot', every: 2200 }, { id: 'arcade2', every: 3500 }, { id: 'dinerchair', open: true, every: 2500 }, { id: 'plasticchair', open: true, every: 2500 }, { id: 'clock', every: 1400 }, { id: 'tv', every: 1100 }, { id: 'boombox', every: 1600 }, { id: 'soda', every: 3000 }],
   office: [{ set: 'desk', every: 110 }, { id: 'sofa', every: 1600 }, { id: 'soda', every: 1500 }, { id: 'clock', every: 300 }, { id: 'tv', every: 1500 }, { set: 'table', open: true, every: 1500 }],
   basement: [{ set: 'livingroom', every: 1000, min: 1, rooms: true }, { id: 'sofa', every: 1400, rooms: true }, { id: 'fan', ceiling: true, every: 300, rooms: true }, { id: 'clock', every: 500 }, { set: 'tvstand', every: 1600, rooms: true }, { id: 'boombox', every: 900 }, { set: 'desk', every: 700, rooms: true }],
-  pool: [{ id: 'flamingo', water: true, every: 260 }, { set: 'poolside', shore: true, every: 150 }, { id: 'duck', water: true, every: 70 }, { id: 'soda', every: 1500 }, { id: 'boombox', every: 1000 }],
+  pool: [{ id: 'flamingo', water: true, every: 260 }, { set: 'poolside', shore: true, every: 150 }, { id: 'plasticpalm', every: 450 }, { id: 'duck', water: true, every: 70 }, { id: 'soda', every: 1500 }, { id: 'boombox', every: 1000 }],
   playroom: [{ set: 'softplay', open: true, every: 110 }, { id: 'plasticchair', every: 700 }, { set: 'gaming', every: 900 }, { id: 'soda', every: 1200 }, { id: 'clock', every: 600 }, { id: 'duck', water: true, every: 110 }, { id: 'tv', every: 700 }, { id: 'boombox', every: 900 }],
   hotel: [{ id: 'sofa', every: 900 }, { set: 'chairs', every: 1200 }, { id: 'fan', ceiling: true, every: 600 }, { id: 'soda', every: 1500 }, { id: 'clock', every: 700 }, { id: 'cassette', every: 1500 }, { set: 'tvstand', every: 1000 }, { id: 'tv', every: 1400 }, { set: 'desk', every: 1500 }, { set: 'table', open: true, every: 1600 }],
   garage: [{ id: 'plasticchair', open: true, every: 1500 }, { id: 'soda', every: 2000 }, { id: 'boombox', every: 1500 }, { id: 'tv', every: 2200 }],
   // Butikkene (teppe = belegg) innredes av mall-shops.js; her bare gangene og atriet.
-  mall: [{ set: 'foodspot', every: 900, min: 1, rooms: true }, { set: 'table', open: true, every: 250, rooms: true }, { id: 'soda', every: 700, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
+  mall: [{ set: 'foodspot', every: 900, min: 1, rooms: true }, { set: 'table', open: true, every: 250, rooms: true }, { id: 'soda', every: 700, rooms: true }, { id: 'plasticpalm', open: true, every: 500, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
   school: [{ set: 'foodspot', every: 2500, min: 1, rooms: true }, { set: 'table', open: true, every: 600, rooms: true }, { set: 'desk', every: 110, rooms: true }, { id: 'soda', every: 800 }, { id: 'clock', every: 150, rooms: true }, { id: 'tv', every: 700, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
   ward: [{ id: 'sofa', every: 1400, rooms: true }, { set: 'chairs', every: 500, rooms: true }, { set: 'foodspot', every: 3000, rooms: true }, { id: 'soda', every: 900 }, { id: 'clock', every: 220, rooms: true }, { set: 'tvstand', every: 600, rooms: true }, { id: 'tv', every: 400, rooms: true }, { set: 'desk', every: 900, rooms: true }],
 };

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Palm Tree Fiberglass
+* source:	https://sketchfab.com/3d-models/palm-tree-fiberglass-9695d4db80554d20b2751839582cf8a9
+* author:	Bensonnix (https://sketchfab.com/Bensonnix)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Palm Tree Fiberglass" (https://sketchfab.com/3d-models/palm-tree-fiberglass-9695d4db80554d20b2751839582cf8a9) by Bensonnix (https://sketchfab.com/Bensonnix) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

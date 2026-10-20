@@ -240,6 +240,37 @@ export const OBJECTS = {
       licenseUrl: 'http://creativecommons.org/licenses/by/4.0/',
     },
   },
+  deckchair: {
+    label: 'Deck chair',
+    file: 'deck_chair',
+    scale: 1.56, // modellen er for liten: 0,6 m bred
+    turn: -Math.PI / 2, // forsiden mot +z
+    size: [0.601, 0.838, 0.948],
+    credit: '“deck chair” by MaX3Dd (CC BY 4.0)',
+    attribution: {
+      title: 'deck chair',
+      source: 'https://sketchfab.com/3d-models/deck-chair-38de6171cbeb41c5bdc49c07df76ede9',
+      author: 'MaX3Dd',
+      authorUrl: 'https://sketchfab.com/MaX3Dd',
+      license: 'CC BY 4.0',
+      licenseUrl: 'http://creativecommons.org/licenses/by/4.0/',
+    },
+  },
+  plasticpalm: {
+    label: 'Plastic palm',
+    file: 'plastic_palm',
+    scale: 0.67, // 2,4 m høy (modellen er 3,6 m)
+    size: [1.651, 2.407, 1.677],
+    credit: '“Palm Tree Fiberglass” by Bensonnix (CC BY 4.0)',
+    attribution: {
+      title: 'Palm Tree Fiberglass',
+      source: 'https://sketchfab.com/3d-models/palm-tree-fiberglass-9695d4db80554d20b2751839582cf8a9',
+      author: 'Bensonnix',
+      authorUrl: 'https://sketchfab.com/Bensonnix',
+      license: 'CC BY 4.0',
+      licenseUrl: 'http://creativecommons.org/licenses/by/4.0/',
+    },
+  },
   duck: { label: 'Rubber duck', file: 'rubber_duck', size: [0.214, 0.286, 0.3], floats: true, credit: 'Rubber Duck Toy – Poly Haven (CC0)' },
   ...BUILT_OBJECTS, // bygget av enkle former (object-catalog-built.js)
 };

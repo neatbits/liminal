@@ -10,7 +10,8 @@
 //   ikke teksturen på unlit-materialer.
 // - Valgfri 3dmodels/<navn>/model.json: { "drop": ["Plane_BakedTable", …] } fjerner deler av
 //   modellen (noder med navn som begynner slik), f.eks. et bord eller et gulv modellen kom med,
-//   og "textureSize": 512 gir mindre teksturer (for store filer).
+//   og "textureSize": 512 gir mindre teksturer (for store filer). "simplify": 0.15 forenkler
+//   geometrien til ca. 15 % av trekantene (tunge modeller; "simplifyError" = tillatt feil).
 // Bare modeller som er nyere enn sin .glb (eller mangler den) bygges; --all bygger alle.
 import { readdirSync, mkdirSync, statSync, existsSync, readFileSync, rmSync } from 'node:fs';
 import { join, extname } from 'node:path';
@@ -18,7 +19,8 @@ import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
-import { metalRough, prune } from '@gltf-transform/functions';
+import { metalRough, prune, weld, simplify } from '@gltf-transform/functions';
+import { MeshoptSimplifier } from 'meshoptimizer';
 
 const SRC = '3dmodels';
 const OUT = 'models';
@@ -58,6 +60,11 @@ for (const name of readdirSync(SRC)) {
     m.setEmissiveFactor([0, 0, 0]);
   }
   await doc.transform(metalRough(), prune());
+  // Tunge modeller (f.eks. AI-genererte): færre trekanter, med liten synlig feil.
+  if (config.simplify) {
+    await MeshoptSimplifier.ready;
+    await doc.transform(weld(), simplify({ simplifier: MeshoptSimplifier, ratio: config.simplify, error: config.simplifyError ?? 0.004 }));
+  }
   const tmp = join(tmpdir(), `liminal-model-${name}.glb`);
   await io.write(tmp, doc);
 

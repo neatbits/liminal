@@ -126,9 +126,10 @@ function row(level, rand, x, z, ids, front) {
  */
 export function poolside(level, rand, x, z) {
   const rot = FACING.findIndex(([fx, fz]) => getTile(level, x + fx, z + fz) === TILE.WATER);
-  if (rot < 0 || !put(level, 'plasticchair', x, z, rot)) return false;
+  const id = rand() < 0.4 ? 'deckchair' : 'plasticchair'; // solsenger eller plaststoler, to og to
+  if (rot < 0 || !put(level, id, x, z, rot)) return false;
   const [fx, fz] = FACING[rot];
-  if (rand() < 0.6) put(level, 'plasticchair', x - fz, z + fx, rot);
+  if (rand() < 0.6) put(level, id, x - fz, z + fx, rot);
   return true;
 }
 

@@ -21,7 +21,8 @@ roten med `#room=`/`#rom=` sendes videre til `app/`; `app/#example=<id>` åpner 
   `.env.deploy`, se `deploy.example.env`; `--dry-run`, `--clean`, `--env <fil>`)
 - `npm run models` – gjør kildemodellene i `3dmodels/<navn>/` (glTF) om til komprimerte
   `models/<navn>.glb` (bare endrede; `--all` for alle). Forbehandler spec/gloss → metal/rough,
-  emissive-teksturer uten fargetekstur, og `model.json` med `drop` (fjern deler). Sjekk alltid
+  emissive-teksturer uten fargetekstur, og `model.json` med `drop` (fjern deler), `textureSize` og
+  `simplify` (andel trekanter for tunge modeller). Sjekk alltid
   størrelse (`scale`) og retning (`turn`) visuelt – modeller fra Sketchfab har ofte rare enheter.
 
 Publisering (liminalsimulator.com, neatbits.no/liminal/): last opp *innholdet* i `dist/`
