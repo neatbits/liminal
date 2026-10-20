@@ -15,7 +15,8 @@ import { BUILT_OBJECTS } from './object-catalog-built.js';
  * (henger under taket) eller 'wall' (henger på veggen bak seg, `lift` m over gulvet; uten mount
  * flytter lift gjenstanden opp, eller ned i gulvet med negativ verdi). spin = rad/s
  * (snurrer, f.eks. en takvifte). turn = dreining av modellfilen (radianer) så forsiden vender mot
- * +z. attribution = kreditering som lisensen krever (CC BY): vises med lenker på About-siden.
+ * +z. attribution = kreditering som lisensen krever (CC BY): vises med lenker på About-siden
+ * (changes = hva vi har endret, f.eks. byttet grafikk).
  * Modellene er fra Poly Haven (CC0) med mindre annet står.
  */
 export const OBJECTS = {
@@ -59,9 +60,11 @@ export const OBJECTS = {
     scale: 0.27,
     size: [0.678, 1.845, 0.725],
     lift: -0.12, // sokkelen nederst ser rar ut: senkes ned i gulvet
-    credit: '“Arcade Machine” by Bruno Macena (CC BY 4.0)',
+    // Grafikken (sider, skjerm, toppskilt, panel) er byttet ut med egen (scripts/arcade-art.mjs).
+    credit: '“Arcade Machine” by Bruno Macena (CC BY 4.0), with new artwork',
     attribution: {
       title: 'Arcade Machine',
+      changes: 'artwork replaced with our own',
       source: 'https://sketchfab.com/3d-models/arcade-machine-e9f530f79c674880ad48ff23b5cf5ed1',
       author: 'Bruno Macena',
       authorUrl: 'https://sketchfab.com/Macena',

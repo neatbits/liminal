@@ -91,7 +91,9 @@ src/
   (size = utstrekning i meter etter `scale`, forsiden mot +z – bruk `turn` om modellen vender
   feil). Bruk bare CC0/CC-BY-modeller (siden har reklame) og før opp kreditering i `credit`;
   CC BY krever i tillegg `attribution` (tittel, kilde, skaper, lisens med lenker – About-siden
-  viser det). Behold lisensfilen i `3dmodels/<navn>/`. 3D-delen (`world/objects.js`) laster .glb
+  viser det). Behold lisensfilen i `3dmodels/<navn>/`. Teksturer med andres varemerker eller kunst (logoer, spillfigurer) males
+  om med egen grafikk (som arkademaskinen: `scripts/arcade-art.mjs`), og endringen føres i
+  `attribution.changes`. 3D-delen (`world/objects.js`) laster .glb
   asynkront, sentrerer modellen og baker rommets lys per vertex. `surface` (høyde) gjør en
   gjenstand til en flate andre settes oppå; `floats` lar den ligge i vann, og i gåmodus
   dyttes slike rundt (`world/floaters.js` via `view3d/water-play.js`). Med `build` i stedet for

@@ -268,6 +268,10 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   skjules når den er tom). Lenken `app/#example=<id>` åpner et eksempel direkte.
 
 ### Endret
+- Arkademaskinen har fått egen grafikk – et oppdiktet spill, «STAR LANES», med neonstriper,
+  pikselskrift og solnedgang i toppskiltet – i stedet for originalens League of Legends-grafikk
+  (varemerke og kunst tilhører Riot Games). Lages av `scripts/arcade-art.mjs`; endringen står i
+  krediteringen (`attribution.changes`, vises på About-siden).
 - Arkademaskiner står ikke lenger i lekerommet.
 - Vinduene i Poolrooms har ikke lenger sprosser (store, rene glassflater). Temaer kan slå av
   sprossene med `window: { bars: false }`.

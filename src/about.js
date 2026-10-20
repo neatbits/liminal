@@ -18,7 +18,7 @@ for (const o of Object.values(OBJECTS).filter((def) => def.credit)) {
   const a = o.attribution;
   if (a) {
     // «This work is based on "Title" (kilde) by Author licensed under CC BY 4.0»
-    li.append(`${o.label}: based on “`, link(a.title, a.source), '” by ', link(a.author, a.authorUrl), ', licensed under ', link(a.license, a.licenseUrl), '.');
+    li.append(`${o.label}: based on “`, link(a.title, a.source), '” by ', link(a.author, a.authorUrl), ', licensed under ', link(a.license, a.licenseUrl), a.changes ? ` (${a.changes})` : '', '.');
   } else {
     li.textContent = `${o.label}: ${o.credit}`;
   }
