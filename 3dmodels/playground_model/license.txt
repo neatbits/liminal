@@ -1,0 +1,11 @@
+Model Information:
+* title:	Playground set
+* source:	https://sketchfab.com/3d-models/playground-set-04d81b7497634b5f8110a4b99656ae78
+* author:	Rasputnik00 (https://sketchfab.com/Rasputnik00)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Playground set" (https://sketchfab.com/3d-models/playground-set-04d81b7497634b5f8110a4b99656ae78) by Rasputnik00 (https://sketchfab.com/Rasputnik00) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

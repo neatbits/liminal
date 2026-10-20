@@ -37,8 +37,9 @@ function basePose(level, o) {
   let x = o.x + 0.5;
   let z = o.z + 0.5;
   if (getTile(level, o.x - fx, o.z - fz) === TILE.WALL) {
-    // Negativ: dypere enn ruten, skyves fram fra veggen. Veggklokker henger helt inntil.
-    const back = 0.5 - d / 2 - (OBJECTS[o.id].mount === 'wall' ? 0.005 : WALL_GAP);
+    // Negativ: dypere enn ruten, skyves fram fra veggen. Veggklokker henger helt inntil; gap
+    // trekker gjenstanden ut fra veggen (TV-benken, så et dypt TV står med forkanten i flukt).
+    const back = 0.5 - d / 2 - (OBJECTS[o.id].mount === 'wall' ? 0.005 : WALL_GAP + (OBJECTS[o.id].gap ?? 0));
     x -= fx * back;
     z -= fz * back;
   }

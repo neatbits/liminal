@@ -90,5 +90,10 @@ describe('kjellerstua', () => {
     // TV-en står på en TV-benk.
     expect(level.objects.some((o) => o.id === 'tvbench')).toBe(true);
     expect(tp.y).toBeCloseTo(0.6, 2);
+    // … med forkanten i flukt med benkens forkant (benken er trukket ut fra veggen), ikke på vippen.
+    const bench = objectPose(level, level.objects.find((o) => o.id === 'tvbench'));
+    const [tx, tz] = FACING[tp.rot];
+    const front = (p) => tx * p.x + tz * p.z + (tx ? p.w : p.d) / 2;
+    expect(front(tp)).toBeCloseTo(front(bench), 2);
   });
 });

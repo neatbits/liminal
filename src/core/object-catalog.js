@@ -13,7 +13,7 @@ import { BUILT_OBJECTS } from './object-catalog-built.js';
  * høyde, m), parts: [[x, y, z, hx, hy, hz], …] } – bokser (midtpunkt og halv størrelse) målt fra
  * midt under gjenstanden, forsiden mot +z. mount = 'ceiling'
  * (henger under taket) eller 'wall' (henger på veggen bak seg, `lift` m over gulvet; uten mount
- * flytter lift gjenstanden opp, eller ned i gulvet med negativ verdi). spin = rad/s
+ * flytter lift gjenstanden opp, eller ned i gulvet med negativ verdi). gap = avstand fra veggen bak (m). spin = rad/s
  * (snurrer, f.eks. en takvifte). turn = dreining av modellfilen (radianer) så forsiden vender mot
  * +z. attribution = kreditering som lisensen krever (CC BY): vises med lenker på About-siden
  * (changes = hva vi har endret, f.eks. byttet grafikk).
@@ -230,6 +230,7 @@ export const OBJECTS = {
     scale: 0.0254, // modellen er i tommer
     size: [1.8, 0.6, 0.42],
     surface: 0.6, // TV-en står oppå
+    gap: 0.28, // trukket ut fra veggen: det store TV-et (0,7 m dypt) står med forkanten i flukt og baksiden mot veggen
     credit: '“Brunn Design KAALM Lowboard Sand” by Brunn Design (CC BY 4.0)',
     attribution: {
       title: 'Brunn Design KAALM Lowboard Sand',

@@ -366,6 +366,8 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   når døren lukkes, i stedet for den syntetiske knirkingen.
 
 ### Fikset
+- TV-en på TV-benken stakk 28 cm ut over forkanten og så ut til å vippe. Benken står nå litt ut
+  fra veggen (`gap` i katalogen), så TV-en har forkanten i flukt og bildeskjermen henger bak.
 - Lekeklossene kunne ikke dyttes etter at man hadde stått stille et sekund (spillerens
   fysikk-kropp «sovnet» og kolliderte ikke lenger med klosser i ro) – særlig stabler stod fast.
 - Arkademaskinen er senket litt ned i gulvet, så den rare sokkelen under den ikke synes.
