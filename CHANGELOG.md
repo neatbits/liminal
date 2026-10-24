@@ -6,6 +6,36 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ukommet]
 
+## [0.4.0] – 2026-10-24
+
+### Endret
+- Nightmare er mye verre: strømbruddene kommer etter 10–20 s, deretter hvert 25.–50. sekund, og
+  varer 20–35 s (før 20–40 s, 45–90 s og 12–18 s). Tre mørke deler per nivå i stedet for to, tettere
+  tåke, mørkere bilde og flere døde (25 %) og blinkende lys.
+- Monsteret i Nightmare jakter også i de mørke delene av nivået, ikke bare under strømbrudd
+  (`view3d/nightmare.js` `Darkness`: bakt lys i øyehøyde under 0,05, med hysterese til 0,09).
+  Det dukker opp 8–16 ruter unna langs gangveien og løper i 2,9 m/s – raskere enn man går, men
+  løping (3,1 m/s) redder deg fortsatt. Stemningens `chase` i `gen/moods.js` styrer dette.
+- Tatt i Nightmare: ingen noclip videre (det var en belønning). Man våkner i starten av nivået
+  («YOU WOKE UP»), og kassettene man fant der, er spredt på nytt og trekkes fra den lagrede
+  fremgangen (`TapeHunt.lost`). Uncanny er som før.
+- Et brøl i Nightmare 0,6–1,8 s etter at monsteret begynner å jakte (når lyset går, eller i en mørk
+  del): fra den siden det står, svakere og mørkere jo lenger unna – en advarsel om å løpe. Høyst
+  hvert 20. sekund. `roarAt` i `audio/scary.js`, `heardFrom` i `world/monster-ai.js` (deles med pusten).
+- Egne skumle lyder i Nightmare, blandet halvt om halvt med temaets: et skrik langt borte, noe tungt
+  som slepes, tunge skritt som kommer nærmere og stopper, klor mot en vegg og knurring
+  (`audio/eerie-night.js`, stemningens `sounds`, valgt med `pickEerie`).
+
+### Rettet
+- Forsiden: teksten og korridoren i toppen står samlet midt på siden i stedet for at teksten ligger
+  helt til venstre (`justify-content: center`, tekstspalten like bred som ingressen, 600 px).
+
+### Tester
+- `test/nightmare.test.js` (strømbrudd mot Uncanny, jaktens fart og avstand, mørkets hysterese),
+  `test/eerie-night.test.js` (lydene, blandingen, brølets og skrittenes form, retningen) og
+  nettlesersjekken `scripts/check-nightmare.mjs` (brøl når jakten begynner; tatt → tilbake ved start,
+  kassettene spredt igjen).
+
 ## [0.3.0] – 2026-10-24
 
 ### Lagt til

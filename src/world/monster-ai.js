@@ -19,12 +19,23 @@ export const MONSTER = {
 };
 
 const between = (rand, [a, b]) => a + rand() * (b - a);
+
+/** Hvor en lyd fra (x, z) høres for spilleren: pan −1 (venstre) … 1 (høyre) og avstanden i meter. */
+export function heardFrom(x, z, player) {
+  const dx = x - player.x;
+  const dz = z - player.z;
+  const dist = Math.hypot(dx, dz);
+  // Høyre for blikket: (cos yaw, −sin yaw), se Walker.update.
+  return { pan: dist > 1e-6 ? (dx * Math.cos(player.yaw) - dz * Math.sin(player.yaw)) / dist : 0, dist };
+}
+
 export class MonsterAI {
   constructor(level, rand = Math.random) {
     this.level = level;
     this.rand = rand;
     this.state = 'hidden'; // 'hidden' | 'lurk' | 'hunt'
     this.gentle = false; // «no jumpscares»: tar deg aldri
+    this.chase = {}; // stemningens chase (gen/moods.js): speed og near overstyrer MONSTER
     this.x = this.z = this.y = 0;
     this.t = 0;
     this.lurkIn = between(rand, [25, 50]);
@@ -83,7 +94,7 @@ export class MonsterAI {
   }
 
   _hunt(player) {
-    let cells = this._cellsAround(player, MONSTER.HUNT, true);
+    let cells = this._cellsAround(player, this.chase.near ?? MONSTER.HUNT, true);
     if (!cells.length) cells = this._cellsAround(player, [6, Infinity], true);
     if (!cells.length) return false;
     this._place(cells[Math.floor(this.rand() * cells.length)]);
@@ -121,7 +132,7 @@ export class MonsterAI {
     const dx = tx - this.x;
     const dz = tz - this.z;
     const d = Math.hypot(dx, dz);
-    const step = Math.min(d, MONSTER.SPEED * dt);
+    const step = Math.min(d, (this.chase.speed ?? MONSTER.SPEED) * dt);
     if (d > 1e-6) {
       this.x += (dx / d) * step;
       this.z += (dz / d) * step;

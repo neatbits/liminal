@@ -1,9 +1,10 @@
 // Skumle lyder som kommer i rykk og napp: banking, knirk, fjerne skritt, hvisking, surr, spilledåse,
 // metallstønn, en telefon langt unna, gurgling, drønn, heismusikk, høyttalerklokke, skoleklokke og
-// pasientmonitor (de to siste i eerie-more.js). Alt er syntetisert (ingen lydfiler). Hvert tema har sin egen liste (`sound.eerie` i themes.js).
+// pasientmonitor (de to siste i eerie-more.js), og Nightmare-lydene i eerie-night.js. Alt er syntetisert (ingen lydfiler). Hvert tema har sin egen liste (`sound.eerie` i themes.js).
 
 import { rand, make, decay } from './buffers.js';
 import { bell, monitor } from './eerie-more.js';
+import { NIGHT_SOUNDS } from './eerie-night.js';
 
 /** Knirk: «stick-slip» – korte pulser med svevende tonehøyde (dør, gulvbord). */
 function creak(ctx, up = true) {
@@ -170,7 +171,7 @@ function chime(ctx) {
   }, 0.4);
 }
 
-const MAKERS = { creak, knocks, footsteps, whisper, buzz, groan, phone, gurgle, boom, musicbox, muzak, chime, bell, monitor };
+const MAKERS = { creak, knocks, footsteps, whisper, buzz, groan, phone, gurgle, boom, musicbox, muzak, chime, bell, monitor, ...NIGHT_SOUNDS };
 export const EERIE_SOUNDS = Object.keys(MAKERS);
 
 /** Lager en ny variant av lyden (hver gang litt forskjellig). */
@@ -196,4 +197,10 @@ export function playAround(ctx, buf, destination, gain) {
   src.connect(lp).connect(g);
   (pan ? g.connect(pan) : g).connect(destination);
   src.start();
+}
+
+/** Navnet på neste skumle lyd: fra temaets liste, eller (halvparten av gangene) fra stemningens. */
+export function pickEerie(theme, mood = [], r = Math.random) {
+  const list = mood.length && r() < 0.5 ? mood : theme;
+  return list[Math.floor(r() * list.length)];
 }

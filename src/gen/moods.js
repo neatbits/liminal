@@ -17,7 +17,11 @@ import { darkZones } from './darkness.js';
  * (lavere = oftere). shifts: [min, maks] sekunder mellom endringer bak ryggen på spilleren
  * (world/shifts.js), eller null. deep: sjanse for at et basseng i et generert nivå er mørkt og dypt.
  * dark: { chance, zones } – sjansen for at et generert nivå får mørke deler (gen/darkness.js) og hvor
- * mange. monster: null, 'lurk' (viser seg, tar deg aldri) eller 'hunt'.
+ * mange. monster: null, 'lurk' (viser seg, tar deg aldri) eller 'hunt'. chase (bare med 'hunt'):
+ * speed og near (veilengde unna der det dukker opp) for monsteret, inDarkness: det jakter også i
+ * mørke deler uten strømbrudd, caught: 'restart' = tatt betyr tilbake til start (view3d/nightmare.js),
+ * ellers noclip videre, roar: [min, maks] sekunder fra jakten begynner til det brøler (view3d/scary.js).
+ * sounds: stemningens egne skumle lyder (audio/eerie-night.js), blandet med temaets.
  */
 export const MOODS = {
   normal: {
@@ -58,11 +62,13 @@ export const MOODS = {
   nightmare: {
     label: 'Nightmare',
     hint: 'Dark rooms, constant blackouts – and something hunts you in the dark. When the lights go out, run.',
-    fog: 1.9, exposure: 0.8, broken: 0.15, flicker: 0.12,
+    fog: 2.3, exposure: 0.72, broken: 0.25, flicker: 0.15,
     wrong: { home: 'wrong', gen: 'very' },
     anomalies: { loops: 1, backDoor: 0.35, corridor: 0.25, again: 0.25 },
-    blackout: { first: [20, 40], every: [45, 90], dark: [12, 18] }, eerie: 0.35, monster: 'hunt', deep: 0.3, shifts: [25, 55],
-    dark: { chance: 1, zones: 2 },
+    blackout: { first: [10, 20], every: [25, 50], dark: [20, 35] }, eerie: 0.35, monster: 'hunt', deep: 0.3, shifts: [25, 55],
+    dark: { chance: 1, zones: 3 },
+    chase: { speed: 2.9, near: [8, 16], inDarkness: true, caught: 'restart', roar: [0.6, 1.8] }, // bare løping redder deg
+    sounds: ['scream', 'drag', 'stalk', 'scratch', 'growl'],
   },
 };
 

@@ -112,6 +112,7 @@ body.landing {
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: center; /* tekst og korridor samlet midt på, også på brede skjermer */
   gap: clamp(24px, 5vw, 64px);
   overflow: hidden;
   padding: clamp(64px, 12vw, 140px) clamp(16px, 4vw, 48px) clamp(56px, 9vw, 110px);
@@ -143,7 +144,7 @@ body.landing {
   position: relative;
   z-index: 1;
   flex: 1 1 520px;
-  max-width: 680px;
+  max-width: 600px; /* like bred som ingressen, så blokken ikke får tom luft til høyre */
 }
 
 .l-kicker {

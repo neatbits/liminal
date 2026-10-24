@@ -10,6 +10,7 @@ import { Blackout } from './events.js';
 import { Tapes } from './tapes.js';
 import { TapeHunt } from './tape-hunt.js';
 import { WindowGhost } from './window-ghost.js';
+import { Darkness, wakeAtStart } from './nightmare.js';
 import { Scary } from './scary.js';
 import { ShiftPlay } from './shifts.js';
 import { waitWhileWalking } from './walk-session.js';
@@ -22,7 +23,9 @@ export class Explorer {
     this.tapes = new Tapes();
     viewer.scene.add(this.tapes.group);
     this.hunt = new TapeHunt(this); // låste dører til kassettene er funnet, summing, fremgang
-    this.windowGhost = new WindowGhost(viewer); // spøkelset ute i kjellerbyen (Uncanny/Nightmare)
+    this.windowGhost = new WindowGhost(viewer); // spøkelset utenfor vinduene (Uncanny/Nightmare)
+    this.darkness = new Darkness(viewer); // står man i mørket? (Nightmare: der jakter monsteret)
+    this.levelFound = 0; // kassetter funnet før dette nivået (Nightmare: tatt = de herfra er tapt)
     this.scary = new Scary(viewer);
     this.shifts = new ShiftPlay(this); // rommet endrer seg bak ryggen på en (world/shifts.js)
     this.blackout = this._newBlackout();
@@ -106,7 +109,12 @@ export class Explorer {
     this.tapes.setPower(p);
     if (v.walk.sound && (event === 'down' || event === 'up')) v.audio.power(event === 'down');
     const monster = this.mood.monster;
-    if (monster && !this.busy) this.scary.update(dt, p, this.blackout.phase === 'dark', monster === 'lurk', () => this.noclip());
+    if (monster && !this.busy) {
+      const { chase } = this.mood;
+      const dark = this.blackout.phase === 'dark' || (!!chase?.inDarkness && this.darkness.update());
+      const caught = chase?.caught === 'restart' ? () => wakeAtStart(this) : () => this.noclip();
+      this.scary.update(dt, p, dark, monster === 'lurk', caught, chase);
+    }
     if (!this.busy) this.shifts.update(dt);
     if (!this.busy) this.windowGhost.update(dt, this.mood);
     const w = v.walk.walker;
@@ -205,6 +213,7 @@ export class Explorer {
   /** Nye kassetter på nivået; de man ikke fant på forrige nivå, telles ikke lenger. */
   _placeTapes() {
     const v = this.v;
+    this.levelFound = this.found;
     // Ikke i uendelige ganger: der ville kassettene hoppet når man flyttes én periode.
     const loops = v.walk.loops?.loops ?? [];
     const inLoop = (x, z) => loops.some((l) => (l.axis === 'x' ? x >= l.u0 && x <= l.u1 && z >= l.v0 - 3 && z <= l.v1 + 3 : z >= l.u0 && z <= l.u1 && x >= l.v0 - 3 && x <= l.v1 + 3));

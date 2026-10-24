@@ -4,7 +4,7 @@
 import { noiseBuffer, footstepBuffers, buzzBuffer, dripBuffer, thumpBuffer } from './synth.js';
 import { createSpace } from './space.js';
 import { Ambient } from './ambient.js';
-import { eerieBuffer, playAround } from './eerie.js';
+import { eerieBuffer, playAround, pickEerie } from './eerie.js';
 import { slideRush, splash, door, shutter, staticHiss, power, pickup } from './effects.js';
 import { createStepBuses, playStep } from './footsteps.js';
 import { PlacedAudio } from './placed-audio.js';
@@ -233,7 +233,7 @@ export class AudioEngine {
     if (this.eventIn > 0 || quiet < 1) return; // stille periode: ingen små lyder heller
     // Små lyder (drypp/dunk) ofte, skumle lyder av og til – av og til to-tre tett på hverandre.
     if (this.burst > 0 || Math.random() < 0.45) {
-      const name = sound.eerie[Math.floor(Math.random() * sound.eerie.length)];
+      const name = pickEerie(sound.eerie, this.eerieExtra); // eerieExtra: stemningens egne (look.js)
       playAround(this.ctx, eerieBuffer(this.ctx, name), this.graph.stepBus, sound.eerieGain ?? 0.5);
       if (this.burst > 0) this.burst--;
       else if (Math.random() < 0.3) this.burst = 1 + Math.floor(Math.random() * 2);

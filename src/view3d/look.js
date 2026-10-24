@@ -40,4 +40,5 @@ export function applyLook(viewer) {
   });
   viewer.hud.setVhs(walking && settings.vhs);
   viewer.audio.eerieScale = walking ? getMood(settings.mood).eerie : 1;
+  viewer.audio.eerieExtra = (walking && getMood(settings.mood).sounds) || [];
 }

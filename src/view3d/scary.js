@@ -1,8 +1,11 @@
-// Monsteret i de sterkeste stemningene (Uncanny, Nightmare): monsteret (world/monster-ai.js + view3d/monster.js) med hjertebank
-// og pust, og «noclip» til et nytt nivå når det tar deg. Styres av view3d/explore.js.
-import { MonsterAI } from '../world/monster-ai.js';
+// Monsteret i de sterkeste stemningene (Uncanny, Nightmare): monsteret (world/monster-ai.js + view3d/monster.js) med hjertebank,
+// pust og (Nightmare) et brøl når jakten begynner, og «noclip» til et nytt nivå når det tar deg. Styres av view3d/explore.js.
+import { MonsterAI, heardFrom } from '../world/monster-ai.js';
 import { Monster3D } from './monster.js';
-import { heartbeat, breath, caught } from '../audio/scary.js';
+import { heartbeat, breath, caught, roarAt } from '../audio/scary.js';
+
+const ROAR_AGAIN = 20; // s: tidligst neste brøl
+const ROAR_FAR = 30; // m: så langt unna høres brølet svakest og mørkest
 
 export class Scary {
   constructor(viewer) {
@@ -12,6 +15,8 @@ export class Scary {
     this.ai = null;
     this.beatIn = 0;
     this.breathIn = 0;
+    this.roarIn = null;
+    this.roarAgain = 0;
   }
 
   /** Av: monsteret forsvinner. */
@@ -23,19 +28,22 @@ export class Scary {
   /** Nytt nivå (eller nytt rom): monsteret begynner på nytt. */
   reset() {
     this.ai = null;
+    this.roarIn = null;
+    this.roarAgain = 0;
     this.hide();
   }
 
   /**
-   * @param dark lyset er borte (strømbrudd) · gentle: «no jumpscares» (det tar deg aldri) ·
-   *        onCaught() kalles når monsteret tar deg
+   * @param dark lyset er borte (strømbrudd, eller mørke i Nightmare) · gentle: «no jumpscares» (det
+   *        tar deg aldri) · onCaught() kalles når monsteret tar deg · chase: stemningens jakt (moods.js)
    */
-  update(dt, power, dark, gentle, onCaught) {
+  update(dt, power, dark, gentle, onCaught, chase = {}) {
     this.monster.load(); // Prefetch while hidden; first appearance needs no download pause.
     const v = this.v;
     const w = v.walk.walker;
     if (!this.ai || this.ai.level !== v.walk.level) this.ai = new MonsterAI(v.walk.level);
     this.ai.gentle = gentle;
+    this.ai.chase = chase;
     const player = { x: w.x, z: w.z, y: w.floorY, yaw: w.yaw };
     const event = this.ai.update(dt, player, dark);
     this.monster.update(dt, this.ai, player, power);
@@ -45,10 +53,9 @@ export class Scary {
       onCaught();
       return;
     }
+    this._roar(dt, event, chase.roar, player);
     if (!this.ai.visible || !sound) return;
-    const dx = this.ai.x - w.x;
-    const dz = this.ai.z - w.z;
-    const d = Math.hypot(dx, dz);
+    const { pan, dist: d } = heardFrom(this.ai.x, this.ai.z, player);
     // Hjertebank: raskere og sterkere jo nærmere det er.
     this.beatIn -= dt;
     if (this.beatIn <= 0) {
@@ -60,8 +67,20 @@ export class Scary {
     this.breathIn -= dt;
     if (this.ai.state === 'hunt' && d < 14 && this.breathIn <= 0) {
       this.breathIn = 1.3 + Math.random() * 1.2;
-      const pan = (dx * Math.cos(w.yaw) - dz * Math.sin(w.yaw)) / Math.max(d, 1e-6);
       breath(v.audio, pan, 0.15 + 0.75 * (1 - d / 14));
     }
+  }
+
+  /** Nightmare: et brøl like etter at jakten begynner, fra der monsteret er – en advarsel om å løpe. */
+  _roar(dt, event, delay, player) {
+    this.roarAgain -= dt;
+    if (event === 'hunt' && delay && this.roarAgain <= 0) this.roarIn = delay[0] + Math.random() * (delay[1] - delay[0]);
+    if (this.roarIn === null || (this.roarIn -= dt) > 0) return;
+    this.roarIn = null;
+    if (this.ai.state !== 'hunt' || !this.v.walk.sound) return;
+    this.roarAgain = ROAR_AGAIN;
+    const { pan, dist } = heardFrom(this.ai.x, this.ai.z, player);
+    const far = Math.min(1, dist / ROAR_FAR);
+    roarAt(this.v.audio, pan, 1.1 - far * 0.5, far);
   }
 }

@@ -62,6 +62,13 @@ export class TapeHunt {
     this.ex.v.hud.flash(all && depth > 0 ? `📼 ${found} of ${total} – the doors are open` : all ? `📼 Tape ${found} of ${total} – all tapes on this level found` : `📼 Tape ${found} of ${total}`);
   }
 
+  /** Tatt i Nightmare: kassettene fra dette nivået er spredt igjen, så de telles ikke to ganger. */
+  lost(count) {
+    if (count <= 0) return;
+    this.progress.tapes = Math.max(0, this.progress.tapes - count);
+    saveProgress(this.progress);
+  }
+
   /** Summingen fra den nærmeste kassetten, panorert mot den. */
   update() {
     const v = this.ex.v, w = v.walk.walker;

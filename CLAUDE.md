@@ -212,7 +212,10 @@ src/
   dem i `KINDS` – subtile, aldri skumle hver for seg.
 - **Monsteret** (Uncanny/Nightmare): `view3d/scary.js` styrer monsteret (`world/monster-ai.js`,
   ren logikk: avstandskart over rutenettet, lukkede dører stenger; `view3d/monster.js` tegner
-  det) og lydene (`audio/scary.js`). Det jakter bare når strømmen er borte (`Blackout`).
+  det) og lydene (`audio/scary.js`). Det jakter når strømmen er borte (`Blackout`); stemningens
+  `chase` (Nightmare) gir fart/avstand, jakt i mørke deler og «tatt = tilbake til start med
+  kassettene spredt» (`view3d/nightmare.js`) i stedet for noclip, og et brøl fra monsteret når
+  jakten begynner (`chase.roar`). Stemningens egne skumle lyder: `sounds` (`audio/eerie-night.js`).
 - **Gåmodus** jobber på en kopi av rommet (`cloneLevel` i `WalkMode.setWorld`), så dører
   man åpner med E ikke endrer rommet i editoren. Dører med rom på begge sider bygges som
   egne objekter som dreies om hengslet (`world/swing-doors.js`); lyset er bakt i

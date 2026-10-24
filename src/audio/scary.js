@@ -1,5 +1,7 @@
 // Lyder for Scary mode: hjertebank når monsteret er nær, pust og knurring fra monsteret (fra
-// den siden det står), og et brak av videostøy når det tar deg. Funksjonene tar lydmotoren.
+// den siden det står), brølet når jakten begynner (eerie-night.js), og et brak av videostøy når det
+// tar deg. Funksjonene tar lydmotoren.
+import { roar } from './eerie-night.js';
 
 const decay = (t, tau) => (t < 0 ? 0 : Math.exp(-t / tau));
 
@@ -42,20 +44,38 @@ export function heartbeat(engine, gain) {
   engine._oneShot(cache(engine, 'heartSound', heartbeatBuffer), gain, 1);
 }
 
-/** Pust fra monsteret: pan = −1 (venstre) … 1 (høyre), gain etter avstanden. */
-export function breath(engine, pan, gain) {
+/** En lyd fra monsteret: pan = −1 (venstre) … 1 (høyre), lowpass (Hz, 0 = av) demper med avstanden. */
+function playFrom(engine, buffer, pan, gain, { rate = 1, lowpass = 0 } = {}) {
   const { ctx, graph } = engine;
-  if (!ctx || !graph) return;
   const src = ctx.createBufferSource();
-  src.buffer = cache(engine, 'breathSound', breathBuffer);
-  src.playbackRate.value = 0.85 + Math.random() * 0.3;
+  src.buffer = buffer;
+  src.playbackRate.value = rate;
+  let out = src;
+  if (lowpass) {
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = lowpass;
+    out = out.connect(lp);
+  }
   const g = ctx.createGain();
   g.gain.value = gain;
+  out = out.connect(g);
   const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
   if (p) p.pan.value = Math.max(-1, Math.min(1, pan));
-  src.connect(g);
-  (p ? g.connect(p) : g).connect(graph.stepBus);
+  (p ? out.connect(p) : out).connect(graph.stepBus);
   src.start();
+}
+
+/** Pust fra monsteret: fra den siden det står, gain etter avstanden. */
+export function breath(engine, pan, gain) {
+  if (!engine.ctx || !engine.graph) return;
+  playFrom(engine, cache(engine, 'breathSound', breathBuffer), pan, gain, { rate: 0.85 + Math.random() * 0.3 });
+}
+
+/** Brølet når jakten begynner (Nightmare): far 0 … 1 gjør det svakere og mørkere. Ny variant hver gang. */
+export function roarAt(engine, pan, gain, far) {
+  if (!engine.ctx || !engine.graph) return;
+  playFrom(engine, roar(engine.ctx), pan, gain, { rate: 0.92 + Math.random() * 0.16, lowpass: 6000 - far * 4500 });
 }
 
 export function caught(engine) {
