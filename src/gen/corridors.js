@@ -8,12 +8,16 @@ import { rectIndices } from '../core/ops.js';
 import { fillZone, FINISH } from '../core/zones.js';
 import { yawFromDir } from '../core/spawn.js';
 import { fillRect } from './util.js';
+import { scaled } from './sizes.js';
 
 export const CORRIDOR_THEMES = ['hotel', 'office', 'school', 'ward', 'backrooms', 'basement'];
 
-/** En lang gang i temaet. Returnerer nivået (med startpunkt i den ene enden og utgang i den andre). */
-export function corridorLevel(theme, rand, name) {
-  const w = 72 + Math.floor(rand() * 4) * 8;
+/**
+ * En lang gang i temaet. Returnerer nivået (med startpunkt i den ene enden og utgang i den andre).
+ * scale gjør gangen kortere eller lengre (gen/sizes.js).
+ */
+export function corridorLevel(theme, rand, name, scale = 1) {
+  const w = scaled(72 + Math.floor(rand() * 4) * 8, scale, 32);
   const width = 2 + Math.floor(rand() * 2); // 2 eller 3 ruter bred
   const h = width + 6;
   const level = createLevel({ theme, w, h, name });

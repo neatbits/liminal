@@ -101,7 +101,12 @@ describe('dører', () => {
     expect(styled.trim.quadCount).toBeGreaterThan(0);
     expect(styled.leaf.quadCount).toBe(0);
     expect(styled.closet.quadCount).toBe(6);
-    expect(styled.knob.quadCount).toBe(6);
+    // Beslag: vridere med rosett og nøkkelskilt på begge sider, og tre hengsler.
+    expect(styled.knob.quadCount).toBeGreaterThan(100);
+    const kick = buildDoors(level, { frame: '#fff', closet: 'x', kick: true }, null);
+    expect(kick.knob.quadCount).toBe(styled.knob.quadCount + 12); // sparkeplate på begge sider
+    const knob = buildDoors(level, { frame: '#fff', closet: 'x', handle: 'knob' }, null);
+    expect(knob.knob.quadCount).not.toBe(styled.knob.quadCount);
   });
 
   it('man åpner og lukker døren man står foran, men ikke dører til ingensteds', () => {

@@ -67,7 +67,7 @@ const KINDS = {
       const out = [];
       (level.objects ?? []).forEach((o, i) => {
         const def = OBJECTS[o.id];
-        if (!def || def.soft || def.loose || def.mount || def.floats || def.surface) return;
+        if (!def || def.soft || def.loose || def.mount || def.floats || def.surface || def.walk) return;
         const p = objectPose(level, o);
         if (!behind(view, p.x, p.z, 2.5, 10)) return;
         const rot = facingRot(view.x - p.x, view.z - p.z);

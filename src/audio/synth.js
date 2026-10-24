@@ -1,4 +1,5 @@
 // Prosedyrell lyd: lager AudioBuffers for støy, romklang, fottrinn og små hendelser.
+export { footstepBuffers } from './footsteps.js';
 
 function buffer(ctx, seconds, channels = 1) {
   return ctx.createBuffer(channels, Math.max(1, Math.floor(ctx.sampleRate * seconds)), ctx.sampleRate);
@@ -49,68 +50,6 @@ export function impulseResponse(ctx, seconds, brightness = 0.5) {
 
 function env(t, attack, tau) {
   return t < attack ? t / attack : Math.exp(-(t - attack) / tau);
-}
-
-const STEP_SHAPES = {
-  // Teppe: et mykt, dempet trykk – ingen hard landing, og lite diskant.
-  carpet(t, n, s) {
-    s.lp += 0.018 * (n - s.lp);
-    return s.lp * env(t, 0.018, 0.045) * 2.4 + Math.sin(2 * Math.PI * 60 * t) * env(t, 0.015, 0.035) * 0.15;
-  },
-  // Myke sko eller bare føtter på (våte) fliser: et dumpt slag og et lavt «klask» – ingen
-  // skarpe klikk eller ringing, som fikk det til å høres ut som stiletthæler.
-  tile(t, n, s) {
-    s.lp += 0.08 * (n - s.lp);
-    s.lp2 += 0.02 * (n - s.lp2);
-    const slap = (s.lp - s.lp2) * env(t, 0.008, 0.02) * 3;
-    return slap + Math.sin(2 * Math.PI * 105 * t) * env(t, 0.006, 0.03) * 0.5;
-  },
-  concrete(t, n, s) {
-    s.lp += 0.09 * (n - s.lp);
-    s.lp2 += 0.03 * (n - s.lp2);
-    const grit = Math.random() < 0.006 ? (Math.random() - 0.5) * 0.4 * Math.exp(-t / 0.05) : 0;
-    return (s.lp - s.lp2) * env(t, 0.006, 0.022) * 2 + grit + Math.sin(2 * Math.PI * 90 * t) * env(t, 0.005, 0.025) * 0.45;
-  },
-  // Skumgummimatter: et mykt, dypt dunk uten skarpe kanter.
-  foam(t, n, s) {
-    s.lp += 0.035 * (n - s.lp);
-    return s.lp * env(t, 0.006, 0.03) * 3 + Math.sin(2 * Math.PI * 70 * t) * env(t, 0.004, 0.035) * 0.6;
-  },
-  // Plastballer som rasler: tette, korte klikk som dør ut.
-  balls(t, n, s) {
-    const click = Math.random() < 0.02 * Math.exp(-t / 0.12) ? n : 0;
-    s.lp += 0.5 * (click - s.lp);
-    s.lp2 += 0.08 * (s.lp - s.lp2);
-    return (s.lp - s.lp2) * 1.5;
-  },
-  water(t, n, s) {
-    const a = 0.05 + Math.min(1, t / 0.3) * 0.35;
-    s.lp += a * (n - s.lp);
-    let bubble = 0;
-    for (const b of s.bubbles) {
-      const bt = t - b.at;
-      if (bt > 0 && bt < 0.04) bubble += Math.sin(2 * Math.PI * (b.f + bt * 20000) * bt) * (1 - bt / 0.04) * 0.25;
-    }
-    return s.lp * env(t, 0.01, 0.12) * 2 + bubble;
-  },
-};
-
-/** Fire varianter av fottrinn for et underlag. */
-export function footstepBuffers(ctx, surface) {
-  const shape = STEP_SHAPES[surface] ?? STEP_SHAPES.carpet;
-  const seconds = surface === 'water' ? 0.45 : surface === 'balls' ? 0.35 : 0.2;
-  return Array.from({ length: 4 }, () => {
-    const b = buffer(ctx, seconds);
-    const d = b.getChannelData(0);
-    const state = {
-      lp: 0,
-      lp2: 0,
-      bubbles: Array.from({ length: 3 }, () => ({ at: 0.03 + Math.random() * 0.2, f: 400 + Math.random() * 500 })),
-    };
-    for (let i = 0; i < d.length; i++) d[i] = shape(i / ctx.sampleRate, Math.random() * 2 - 1, state);
-    normalize(d, 0.6);
-    return b;
-  });
 }
 
 /** Kort elektrisk knitring når et lysrør blinker. */

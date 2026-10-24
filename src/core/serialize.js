@@ -18,23 +18,25 @@ import { THEMES, DEFAULT_THEME } from './themes.js';
 import { SLIDE, SLIDE_COLORS, DEFAULT_SLIDE_COLOR } from './slides.js';
 import { objectsFromJSON } from './objects.js';
 import { SKIES } from './windows.js';
+import { TINTS } from './tints.js';
 
 export const FORMAT = 'liminal-room';
 const LEGACY_FORMATS = ['liminal-rom']; // første versjon brukte norsk formatnavn
-export const VERSION = 2; // v2: waterDepth, de valgfrie lagene ceilings/depths/floors/finish/meta og slides
+export const VERSION = 3; // v3: sonelag som to heksadesimale tegn per rute (hele Uint8-området)
 const CHAR0 = 48; // '0'. Verdi = tile | light << 3 → tegn '0'..'O'
 
-// Sonelag lagres som rader med ett tegn per rute: '0' = rommets standard, ellers antall
-// steg på 0,1 m over laveste tillatte verdi ('1' = minimum). Lag uten soner utelates.
+// v3 lagrer rå desimeter/metadata som to heksadesimale tegn; 00 = standard.
+// v1/v2 bruker DIGITS: 0 = standard, ellers steg over minimum. Tomme lag utelates.
 const DIGITS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const LAYERS = [
   { key: 'ceilings', min: Math.round(HEIGHT_MIN * 10), max: Math.round(HEIGHT_MAX * 10) },
   { key: 'depths', min: Math.round(DEPTH_MIN * 10), max: Math.round(DEPTH_MAX * 10) },
   // Trapper opp til et dekke kan gå høyere enn hevede gulv (FLOOR_MAX).
   { key: 'floors', min: 1, max: Math.round(DECK_MAX * 10) },
-  { key: 'finish', min: 1, max: 15 }, // gulv-/veggbelegg (1 = fliser)
-  { key: 'meta', min: 1, max: 15 }, // dørblad, trapperetning: tegnet er selve verdien
+  { key: 'finish', min: 1, max: 15 }, // gulv-/veggbelegg (finishes.js; 1 = fliser, 2–5 = butikkbelegg)
+  { key: 'meta', min: 1, max: 15 }, // dørblad, trapperetning + motorretning, søylediameter
   { key: 'decks', min: Math.round(DECK_MIN * 10), max: Math.round(DECK_MAX * 10) },
+  { key: 'corners', min: 1, max: 8 }, // skrå og avrundede hjørner (core/corners.js): tegnet er verdien
 ];
 
 const clamp = (v, lo, hi, fallback) => {
@@ -50,7 +52,7 @@ function layerToRows(level, { key, min, max }) {
     let row = '';
     for (let x = 0; x < level.w; x++) {
       const v = values[z * level.w + x];
-      row += v ? DIGITS[Math.max(min, Math.min(max, v)) - min + 1] : '0';
+      row += (v ? Math.max(min, Math.min(max, v)) : 0).toString(16).padStart(2, '0');
     }
     rows.push(row);
   }
@@ -70,13 +72,20 @@ function slidesFromJSON(level, list) {
   });
 }
 
-function rowsToLayer(level, rows, { key, min, max }) {
+function rowsToLayer(level, rows, { key, min, max }, version) {
   if (rows === undefined || rows === null) return;
   if (!Array.isArray(rows) || rows.length !== level.h) throw new Error('The zones have the wrong number of rows.');
   for (let z = 0; z < level.h; z++) {
     const row = String(rows[z]);
-    if (row.length !== level.w) throw new Error(`Zone row ${z + 1} has the wrong length.`);
+    if (row.length !== level.w * (version >= 3 ? 2 : 1)) throw new Error(`Zone row ${z + 1} has the wrong length.`);
     for (let x = 0; x < level.w; x++) {
+      if (version >= 3) {
+        const hex = row.slice(x * 2, x * 2 + 2);
+        const v = Number.parseInt(hex, 16);
+        if (!/^[0-9a-f]{2}$/i.test(hex) || (v !== 0 && (v < min || v > max))) throw new Error('Invalid zone in the room.');
+        level[key][z * level.w + x] = v;
+        continue;
+      }
       const d = DIGITS.indexOf(row[x]);
       if (d < 0) throw new Error('Invalid zone in the room.');
       level[key][z * level.w + x] = d ? Math.min(max, min + d - 1) : 0;
@@ -107,6 +116,7 @@ export function levelToJSON(level) {
     fog: level.fog,
     bright: level.bright,
     sky: level.sky ?? undefined,
+    tint: level.tint ?? undefined,
     seed: level.seed ?? undefined,
     spawn: [round3(s.x), round3(s.z), round3(s.a)],
     rows,
@@ -124,6 +134,8 @@ function round3(n) {
 export function levelFromJSON(data) {
   if (!data || typeof data !== 'object') throw new Error('The file does not contain a room.');
   if (data.format !== FORMAT && !LEGACY_FORMATS.includes(data.format)) throw new Error('Unknown file format.');
+  const version = data.v ?? 1;
+  if (!Number.isInteger(version) || version < 1 || version > VERSION) throw new Error('Unsupported room version.');
   if (!Array.isArray(data.rows)) throw new Error('The room has no grid.');
   const w = clampSize(data.w);
   const h = clampSize(data.h);
@@ -141,6 +153,7 @@ export function levelFromJSON(data) {
   level.fog = clamp(data.fog, 0, 3, 1);
   level.bright = clamp(data.bright, 0.2, 3, 1);
   level.sky = SKIES[data.sky] ? data.sky : null;
+  level.tint = TINTS[data.tint] && data.tint !== 'theme' ? data.tint : null;
   if (Number.isInteger(data.seed) && data.seed >= 0) level.seed = data.seed;
   for (let z = 0; z < h; z++) {
     const row = String(data.rows[z]);
@@ -154,7 +167,7 @@ export function levelFromJSON(data) {
       level.lights[z * w + x] = light;
     }
   }
-  for (const layer of LAYERS) rowsToLayer(level, data[layer.key], layer);
+  for (const layer of LAYERS) rowsToLayer(level, data[layer.key], layer, version);
   slidesFromJSON(level, data.slides);
   level.objects = objectsFromJSON(level, data.objects);
   const [sx, sz, sa] = Array.isArray(data.spawn) ? data.spawn : [];

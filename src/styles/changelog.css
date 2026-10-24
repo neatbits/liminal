@@ -1,0 +1,33 @@
+#changelog {
+  scroll-margin-top: 100px;
+}
+
+.l-release {
+  margin: 24px 0;
+  padding: 4px 0 4px 20px;
+  border-left: 3px solid var(--l-border);
+}
+
+.l-release h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.l-text .l-release-meta {
+  margin: 0 0 12px;
+  color: var(--l-muted);
+  font-size: 13px;
+}
+
+.l-release ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.l-release-upcoming {
+  padding: 20px;
+  border: 1px solid var(--l-border);
+  border-left: 3px solid var(--l-accent);
+  border-radius: 8px;
+  background: var(--l-card);
+}

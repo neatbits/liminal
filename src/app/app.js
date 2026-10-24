@@ -5,9 +5,9 @@ import { applySnapshot } from '../core/history.js';
 import { autoLights, clearLights } from '../core/ops.js';
 import { makeWrong, changeMarkers } from '../gen/wrong.js';
 import { getTheme } from '../core/themes.js';
-import { loadSettings, saveSettings, saveDraft } from '../core/storage.js';
+import { loadSettings, saveSettings } from '../core/storage.js';
 import { Editor } from '../editor/editor.js';
-import { Viewer } from '../view3d/viewer.js';
+import { createViewer } from '../view3d/create-viewer.js';
 import { Sidebar } from '../ui/sidebar.js';
 import { setupLayout } from '../ui/layout.js';
 import { buildMenus } from '../ui/menus.js';
@@ -17,12 +17,14 @@ import { menuConfig } from './menu-config.js';
 import { bindShortcuts } from './shortcuts.js';
 import { hoverText, toolText, renderBadge } from './status.js';
 import { sidebarActions, bindButtons } from './wiring.js';
+import { DraftSaver } from './draft.js';
 
 export class App {
   constructor() {
     this.settings = loadSettings();
     this.level = null;
     this.dirty = false;
+    this.drafts = new DraftSaver(() => this.level, () => toast('Could not autosave – export your room to keep a copy.', { error: true, ms: 6000 }));
     this.editor = new Editor($('#editor-canvas'), {
       onChange: (kind) => this.changed(kind),
       onHover: (cell) => ($('#hover-info').textContent = hoverText(this.level, cell)),
@@ -30,9 +32,12 @@ export class App {
     });
     this.editor.grid = this.settings.grid;
     this.editor.rulers = this.settings.rulers;
-    this.viewer = new Viewer($('#viewport3d'), {
+    this.viewer = createViewer($('#viewport3d'), {
       settings: this.settings,
-      onModeChange: (mode) => $('[data-view="walk"]').classList.toggle('active', mode === 'walk'),
+      onModeChange: (mode) => {
+        $('#btn-walk-top').classList.toggle('active', mode === 'walk');
+        $('#view-settings').hidden = mode === 'walk'; // gåmodus har egne knapper i HUD-en
+      },
       onSettingsChange: () => saveSettings(this.settings),
     });
     this.sidebar = new Sidebar($('#sidebar'), sidebarActions(this));
@@ -63,7 +68,8 @@ export class App {
   changed(kind = 'commit') {
     this.dirty = true;
     this._refreshUI();
-    this._schedule3D(kind === 'live' ? 160 : 30, kind === 'live');
+    // Store rom venter til penselen hviler; små rom får fortsatt løpende 3D-forhåndsvisning.
+    this._schedule3D(kind === 'live' ? 160 : 30, kind === 'live' && this.level.w * this.level.h < 4096);
     this._saveDraftSoon();
   }
 
@@ -109,6 +115,11 @@ export class App {
     this._syncTool();
   }
 
+  setEscalatorDown(down) {
+    this.editor.escalatorDown = down;
+    this._syncTool();
+  }
+
   setSlideColor(color) {
     this.editor.setSlideColor(color);
     this._syncTool();
@@ -116,6 +127,11 @@ export class App {
 
   setObjectId(id) {
     this.editor.setObjectId(id);
+    this._syncTool();
+  }
+
+  setCornerKind(kind) {
+    this.editor.setCornerKind(kind);
     this._syncTool();
   }
 
@@ -180,13 +196,6 @@ export class App {
     toast(`${changes.length} small things are now wrong. Can you find them? (Ctrl+Z undoes)`, { ms: 5000 });
   }
 
-  toggleWaterReflections() {
-    this.settings.waterReflections = !this.settings.waterReflections;
-    saveSettings(this.settings);
-    this.viewer.updateSettings({});
-    toast(`Water reflections ${this.settings.waterReflections ? 'on' : 'off'}`);
-  }
-
   setHelper(key, on) {
     this.settings[key] = on;
     this.editor[key] = on;
@@ -195,12 +204,11 @@ export class App {
     this.editor.invalidate();
   }
 
-  /** Gå i rommet – i 3D-panelet, eller i fullskjerm. */
-  walk(fullscreen) {
+  /** Går i rommet i fullskjerm (Esc tilbake). drift: drømmegange (view3d/drift.js). */
+  walk({ drift = false } = {}) {
     if (this.layout.layout === '2d') this.layout.set('split');
     if (this._pending3D) this._rebuild();
-    if (fullscreen) this.viewer.toggleFullscreen();
-    else this.viewer.enterWalk();
+    if (this.viewer.walkFullscreen() && drift) this.viewer.walk.drift.set(true);
   }
 
   _schedule3D(ms, throttle) {
@@ -213,12 +221,11 @@ export class App {
     clearTimeout(this._pending3D);
     this._pending3D = null;
     const s = this.viewer.setLevel(this.level);
-    $('#status-build').textContent = `3D built in ${s.ms} ms · ${s.vertices.toLocaleString('en-US')} vertices · ${s.lights} lights`;
+    $('#status-build').textContent = s ? `3D built in ${s.ms} ms · ${s.vertices.toLocaleString('en-US')} vertices · ${s.lights} lights` : '3D unavailable · 2D editor ready';
   }
 
   _saveDraftSoon() {
-    clearTimeout(this._draftTimer);
-    this._draftTimer = setTimeout(() => saveDraft(this.level), 600);
+    this.drafts.schedule();
   }
 
   _syncTool() {

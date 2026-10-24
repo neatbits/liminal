@@ -4,6 +4,7 @@ import { History } from '../core/history.js';
 import { getTheme } from '../core/themes.js';
 import { ZONES, zoneLabels } from '../core/zones.js';
 import { DOOR } from '../core/doors.js';
+import { CORNER } from '../core/corners.js';
 import { stairCells } from '../core/stairs.js';
 import { DEFAULT_SLIDE_COLOR } from '../core/slides.js';
 import { OBJECT_IDS } from '../core/objects.js';
@@ -26,9 +27,12 @@ export class Editor {
     this.tool = toolById('floor');
     this.shape = 'brush';
     this.brush = 1;
+    this.pillarDiameter = .5;
     this.zone = { ceiling: 4, depth: 1.5, floor: 1.2, finish: 1, deck: 4 }; // høyden soneverktøyene maler (m)
     this.doorState = DOOR.CLOSED; // dørene dørverktøyet setter inn
+    this.cornerKind = CORNER.ANGLED; // skrått eller avrundet (hjørneverktøyet)
     this.slideTube = false; // nye sklier: åpen renne eller lukket rør …
+    this.escalatorDown = false;
     this.slideColor = DEFAULT_SLIDE_COLOR; // … og fargen (SLIDE_COLORS)
     this.objectId = OBJECT_IDS[0]; // gjenstanden objektverktøyet setter inn
     this.grid = true;
@@ -61,10 +65,13 @@ export class Editor {
   /** Aktivt verktøy; sone- og dørverktøy får høyden/dørtilstanden de skal bruke som `value`. */
   get activeTool() {
     const t = this.tool;
+    if (t.id === 'pillar') return { ...t, diameter: this.pillarDiameter };
     if (t.kind === 'zone') return { ...t, value: this.zone[t.layer] };
     if (t.kind === 'door') return { ...t, value: this.doorState };
+    if (t.kind === 'corner') return { ...t, value: this.cornerKind };
     if (t.kind === 'object') return { ...t, value: this.objectId };
     if (t.kind === 'slide') return { ...t, value: this.slideTube };
+    if (t.escalator) return { ...t, down: this.escalatorDown };
     return t;
   }
 
@@ -102,6 +109,10 @@ export class Editor {
 
   setObjectId(id) {
     this.objectId = id;
+  }
+
+  setCornerKind(kind) {
+    this.cornerKind = kind;
   }
 
   undo() {
@@ -185,7 +196,7 @@ export class Editor {
       zones: this._zones,
       hover: this.stroke?.type === 'pan' ? null : this.hover,
       preview: this.stroke?.type === 'rect' ? normRect(...this.stroke.a, ...this.stroke.b) : null,
-      stairs: this.stroke?.type === 'stairs' ? { ...stairCells(this.stroke.a, this.stroke.b, this.brush), erase: this.stroke.erase } : null,
+      stairs: this.stroke?.type === 'stairs' ? { ...stairCells(this.stroke.a, this.stroke.b, this.brush), erase: this.stroke.erase, down: this.stroke.escalator && this.stroke.down } : null,
       slide: this.stroke?.type === 'slide' && !this.stroke.erase ? { points: this.stroke.points, tube: this.slideTube, color: this.slideColor } : null,
       tool: this.activeTool,
       brush: this.brush,

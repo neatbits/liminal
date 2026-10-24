@@ -11,9 +11,9 @@ const ids = (level) => new Set(level.objects.map((o) => o.id));
 describe('gjenstander i genererte rom', () => {
   it('hvert tema får bare gjenstander som hører hjemme der', () => {
     for (const theme of THEME_IDS) {
-      const desk = ['desk', 'desk2', 'officechair', 'laptop', 'pc', 'tv', 'boombox', 'cassette', 'console'];
-      const sets = { desk, tvrow: ['tv'], table: ['cafe', 'dinerset'], foodspot: ['kiosk', 'cafe', 'dinerset'], chairs: ['dinerchair'], arcades: ['arcade2'], poolside: ['plasticchair', 'deckchair'], gaming: ['tv', 'tvbench', 'console', 'gamepad'], livingroom: ['tv', 'tvbench', 'console', 'gamepad', 'sofa'], tvstand: ['tv', 'tvbench'], softplay: ['softcube', 'softblock', 'softpillar', 'softbeam', 'softslab'] };
-      const allowed = new Set(PLANS[theme].flatMap((p) => sets[p.set] ?? [p.id]).concat(theme === 'mall' ? SHOP_ITEMS : []));
+      const desk = ['table', 'moderndesk', 'mug', 'desklamp', 'desk', 'desk2', 'officechair', 'laptop', 'pc', 'retropcdesktop', 'retropctower', 'retropccompact', 'retropcterminal', 'tv', 'boombox', 'cassette', 'walkman', 'vhsplayer', 'console'];
+      const sets = { halfwalls: ['halfwall'], desk, patient: ['hospitalbed', 'medicalscreen', 'medicaltrolley'], tvrow: ['tv'], table: ['cafe', 'dinerset'], foodspot: ['kiosk', 'cafe', 'dinerset'], chairs: ['dinerchair', 'waitingchairs'], arcades: ['arcade2'], poolside: ['plasticchair', 'deckchair'], gaming: ['tv', 'tvbench', 'console', 'gamepad'], livingroom: ['tv', 'tvbench', 'console', 'gamepad', 'sofa'], tvstand: ['tv', 'tvbench'], softplay: Object.keys(OBJECTS).filter(id => OBJECTS[id].soft), diving: ['divingboard'] };
+      const allowed = new Set(PLANS[theme].flatMap((p) => p.set === 'playballs' ? ['playball'] : sets[p.set] ?? [p.id]).concat(theme === 'mall' ? SHOP_ITEMS : []));
       for (const seed of [1, 2]) {
         for (const id of ids(generateLevel({ theme, w: 44, h: 38, seed }))) expect(allowed.has(id), `${theme}: ${id}`).toBe(true);
       }
@@ -34,7 +34,8 @@ describe('gjenstander i genererte rom', () => {
       const level = generateLevel({ theme, w: 44, h: 38, seed: 3 });
       for (const o of level.objects) {
         const tile = level.tiles[o.z * level.w + o.x];
-        expect(tile, `${theme}: ${o.id}`).toBe(OBJECTS[o.id].floats ? TILE.WATER : TILE.FLOOR);
+        if (OBJECTS[o.id].pit) expect([TILE.FLOOR, TILE.WATER]).toContain(tile);
+        else expect(tile, `${theme}: ${o.id}`).toBe(OBJECTS[o.id].floats ? TILE.WATER : TILE.FLOOR);
         const b = objectBox(objectPose(level, o));
         for (const [x, z] of [[b[0] + 0.03, b[1] + 0.03], [b[2] - 0.03, b[3] - 0.03]]) {
           expect(level.tiles[Math.floor(z) * level.w + Math.floor(x)]).not.toBe(TILE.WALL);
@@ -59,7 +60,7 @@ describe('gatekjøkken', () => {
     const { objectPose, objectBox } = await import('../src/core/objects.js');
     const level = generateLevel({ theme: 'mall', w: 56, h: 40, seed: 7 });
     const kiosks = level.objects.filter((o) => o.id === 'kiosk');
-    const cafes = level.objects.filter((o) => o.id === 'cafe');
+    const cafes = level.objects.filter((o) => ['cafe', 'dinerset'].includes(o.id) && !level.finish[o.z * level.w + o.x]);
     expect(kiosks.length).toBeGreaterThan(0);
     expect(cafes.length).toBeGreaterThan(1);
     // Kiosken står med ryggen inntil veggen: bakkanten ligger på en rutegrense mot vegg.

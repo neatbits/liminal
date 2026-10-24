@@ -1,0 +1,11 @@
+Model Information:
+* title:	Plant
+* source:	https://sketchfab.com/3d-models/plant-f2a62c8d4352430cab9892e8b11de423
+* author:	Tansi Zhang (https://sketchfab.com/gameshiba)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Plant" (https://sketchfab.com/3d-models/plant-f2a62c8d4352430cab9892e8b11de423) by Tansi Zhang (https://sketchfab.com/gameshiba) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

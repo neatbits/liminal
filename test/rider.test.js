@@ -48,7 +48,7 @@ describe('skliing', () => {
     const l = level();
     const rider = new Rider();
     rider.start(slidePath(l, l.slides[0]));
-    for (let i = 0; i < 30; i++) rider.update(1 / 60, still);
+    for (let i = 0; i < 600 && rider.s < rider.path.launch + 0.5; i++) rider.update(1 / 60, still);
     const cam = camera();
     rider.applyToCamera(cam);
     const p = rider.sample(rider.s);

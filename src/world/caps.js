@@ -4,6 +4,8 @@
 // en loddrett flate, så ingen hull vises ovenfra. Ren logikk – ingen three.js.
 import { TILE, getTile, inBounds } from '../core/level.js';
 import { ceilingAt } from '../core/heights.js';
+import { cornerShape } from '../core/corners.js';
+import { cornerCap } from './corners.js';
 
 // Sidene til en rute, sett innenfra. Normalen peker inn i ruten, (ux, uz) er «høyre».
 export const SIDES = [
@@ -28,6 +30,13 @@ export function capHeight(level, x, z) {
 /** Legger veggtopper (og sprang mellom ulike høyder) i out.caps / out.mass. */
 export function addCaps(level, out) {
   const { w, h } = level;
+  // Veggkilene i formede gulvruter får topp i takhøyden.
+  for (let z = 0; z < h; z++) {
+    for (let x = 0; x < w; x++) {
+      const shape = level.tiles[z * w + x] === TILE.FLOOR ? cornerShape(level, x, z) : null;
+      if (shape) cornerCap(out.caps, shape, shape.cy);
+    }
+  }
   const top = new Float64Array(w * h);
   const touches = new Uint8Array(w * h);
   for (let z = 0; z < h; z++) {
@@ -45,7 +54,9 @@ export function addCaps(level, out) {
       if (level.tiles[i] !== TILE.WALL) continue;
       const y = top[i];
       const mesh = touches[i] ? out.caps : out.mass;
-      mesh.quad([x, y, z, 0, 0], [x, y, z + 1, 0, 1], [x + 1, y, z + 1, 1, 1], [x + 1, y, z, 1, 0], UP);
+      const shape = cornerShape(level, x, z); // åpnet hjørne: toppen bare over den massive delen
+      if (shape) cornerCap(mesh, shape, y);
+      else mesh.quad([x, y, z, 0, 0], [x, y, z + 1, 0, 1], [x + 1, y, z + 1, 1, 1], [x + 1, y, z, 1, 0], UP);
       for (const s of SIDES) {
         const nx = x + s.dx;
         const nz = z + s.dz;

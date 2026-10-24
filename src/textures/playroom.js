@@ -14,6 +14,13 @@ export function foamMat(rand) {
     for (let i = 0; i < 4; i++) {
       ctx.fillStyle = MAT[(i + 2 * j) % 4];
       ctx.fillRect(i * T, j * T, T, T);
+      const bevel = ctx.createLinearGradient(i * T, j * T, (i + 1) * T, (j + 1) * T);
+      bevel.addColorStop(0, 'rgba(255,255,245,0.12)');
+      bevel.addColorStop(0.12, 'rgba(255,255,245,0)');
+      bevel.addColorStop(0.88, 'rgba(10,15,25,0)');
+      bevel.addColorStop(1, 'rgba(10,15,25,0.15)');
+      ctx.fillStyle = bevel;
+      ctx.fillRect(i * T + 2, j * T + 2, T - 4, T - 4);
     }
   }
   // Tennene: små firkanter fra hver matte inn i naboen langs skjøtene.
@@ -47,6 +54,18 @@ export function playWall(rand) {
   const { canvas, ctx } = makeCanvas(S);
   ctx.fillStyle = '#efe9de';
   ctx.fillRect(0, 0, S, S);
+  // Faded clouds and a sun above the padded wall band; a quiet, empty indoor playground.
+  ctx.fillStyle = '#e6cd87';
+  ctx.beginPath();
+  ctx.ellipse(S * 0.26, S * 0.24, S * 0.0375, S * 0.075, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#dae1df';
+  for (const [x, y] of [[0.58, 0.24], [0.84, 0.43]]) {
+    ctx.beginPath();
+    ctx.ellipse(S * x, S * y, S * 0.085, S * 0.035, 0, 0, Math.PI * 2);
+    ctx.ellipse(S * (x - 0.025), S * (y - 0.025), S * 0.035, S * 0.045, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
   const n = fbm(S, 32, 2, rand);
   pixelPass(ctx, S, (x, y, i, d) => shade(d, i, 0.97 + (n[y * S + x] - 0.5) * 0.05));
   return canvas;
@@ -60,6 +79,13 @@ export function playStripe(rand) {
   for (let k = 0; k < 4; k++) {
     ctx.fillStyle = colors[k];
     ctx.fillRect((k * S) / 4, 0, S / 4, S);
+    const pad = ctx.createLinearGradient(k * S / 4, 0, (k + 1) * S / 4, 0);
+    pad.addColorStop(0, 'rgba(12,20,30,0.22)');
+    pad.addColorStop(0.12, 'rgba(255,255,255,0.1)');
+    pad.addColorStop(0.8, 'rgba(0,0,0,0)');
+    pad.addColorStop(1, 'rgba(12,20,30,0.2)');
+    ctx.fillStyle = pad;
+    ctx.fillRect(k * S / 4, 0, S / 4, S);
   }
   const n = fbm(S, 16, 2, rand);
   pixelPass(ctx, S, (x, y, i, d) => shade(d, i, 0.95 + (n[y * S + x] - 0.5) * 0.08));

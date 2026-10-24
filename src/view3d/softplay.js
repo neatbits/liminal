@@ -1,6 +1,6 @@
 // Myke lekeklosser og lette gjenstander (plaststoler) i gåmodus: laster fysikken
 // (world/softphysics.js, med cannon-es) bare når rommet har slike, flytter 3D-gruppene (og
-// skyggene) etter fysikken og stopper spilleren ved høye ting. Et dumpt dunk når en kloss lander hardt. Rommet endres ikke; alt er tilbake etterpå.
+// skyggene) etter fysikken og stopper spilleren ved høye ting. Gummiklosser har dempet støtlyd. Rommet endres ikke; alt er tilbake etterpå.
 import { resolveCircle } from '../world/collision.js';
 import { OBJECTS } from '../core/objects.js';
 import { bump } from '../audio/effects.js';
@@ -30,9 +30,10 @@ export class SoftPlay {
     import('../world/softphysics.js').then(({ SoftPhysics }) => {
       if (this.level !== level) return;
       this.phys = new SoftPhysics(level);
-      this.phys.onImpact = (strength) => {
-        if (this.walk.sound) bump(this.walk.audio, strength);
+      this.phys.onImpact = (strength, _x, _z, material) => {
+        if (this.walk.sound) bump(this.walk.audio, strength, material);
       };
+      this.phys.onSplash = (x, z, strength) => this.onSplash?.(x, z, strength);
       this._apply();
     }).catch((e) => {
       // Prøv igjen et par ganger (f.eks. mens dev-serveren bunter avhengigheter); ellers står klossene stille.

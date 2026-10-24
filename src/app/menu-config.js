@@ -1,8 +1,10 @@
 // Innholdet i toppmenyene.
 import { newRoom, openExamples, openMine, save, share, exportFile, importFile, generateInto } from './actions.js';
 import { helpDialog } from '../ui/dialogs.js';
+import { openSettings } from './view-settings.js';
 import { openModal } from '../ui/modal.js';
 import { h } from '../ui/dom.js';
+import { feedbackDialog } from '../ui/feedback.js';
 
 function about() {
   openModal({
@@ -15,6 +17,8 @@ function about() {
         text: 'All textures, lights and sounds are generated procedurally in the browser. Rooms are stored locally on your device and can be shared as a link.',
       }),
       h('p', {}, h('a', { href: '../about/', target: '_blank', rel: 'noopener', text: 'Privacy, credits and licences →' })),
+      h('p', {}, h('a', { href: '../about/#changelog', target: '_blank', rel: 'noopener', text: "What's new →" })),
+      h('p', {}, 'Questions or ideas? ', h('a', { href: 'mailto:hello@liminalsimulator.com', text: 'hello@liminalsimulator.com' })),
     ),
     actions: [{ label: 'Close', primary: true }],
   });
@@ -58,15 +62,17 @@ export function menuConfig(app) {
         { label: 'Fit plan', shortcut: '0', action: () => app.editor.fit() },
         { label: 'Toggle grid', action: () => app.setHelper('grid', !app.settings.grid) },
         { label: 'Toggle rulers', action: () => app.setHelper('rulers', !app.settings.rulers) },
-        { label: 'Toggle water reflections', action: () => app.toggleWaterReflections() },
+        { label: 'Settings … (graphics, controls)', action: () => openSettings(app) },
         '-',
-        { label: 'Walk the room', action: () => app.walk(false) },
-        { label: 'Walk the room in fullscreen', action: () => app.walk(true) },
+        { label: 'Walk the room', action: () => app.walk() },
+        { label: 'Dream walk (drift)', action: () => app.walk({ drift: true }) },
+        { label: 'Music on/off', action: () => app.viewer.toggle('music') },
       ],
     },
     {
       label: 'Help',
       items: [
+        { label: 'Suggestions & feedback …', action: () => feedbackDialog({ endpoint: '../api/feedback.php', page: 'simulator' }) },
         { label: 'Keyboard shortcuts', shortcut: '?', action: () => helpDialog() },
         { label: 'About Liminal', action: about },
       ],

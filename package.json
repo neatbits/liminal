@@ -1,7 +1,7 @@
 {
   "name": "liminal",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Liminal-simulator: tegn liminale rom i 2D, se dem i 3D og gå i dem.",
   "scripts": {
@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:browser": "node scripts/check-browser.mjs",
+    "test:feedback": "node scripts/check-feedback.mjs",
     "models": "node scripts/models.mjs",
     "deploy": "node scripts/deploy.mjs"
   },

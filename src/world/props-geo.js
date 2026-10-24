@@ -17,11 +17,14 @@ export function cylinder(r, h, x, y, z, seg = 16) {
   return g;
 }
 
-/** Slår sammen geometriene for hver del: [{ geometry, color, map, unlit }]. */
+/**
+ * Slår sammen geometriene for hver del: [{ geometry, color, map, unlit, overhang }]. overhang: delen
+ * stikker utenfor fotavtrykket (kioskens markise) og teller ikke når gjenstanden sentreres.
+ */
 export function parts(groups) {
-  return groups.map(({ geoms, color, map = null, unlit = false }) => {
+  return groups.map(({ geoms, color, map = null, unlit = false, overhang = false }) => {
     const geometry = mergeGeometries(geoms.map((g) => g.toNonIndexed()));
     for (const g of geoms) g.dispose();
-    return { geometry, map, arm: null, color: new THREE.Color(color), alphaTest: 0, side: THREE.FrontSide, unlit };
+    return { geometry, map, arm: null, color: new THREE.Color(color), alphaTest: 0, side: THREE.FrontSide, unlit, overhang };
   });
 }

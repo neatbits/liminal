@@ -1,0 +1,7 @@
+{
+  "instance": false,
+  "morphSamples": 16,
+  "simplify": 0.35,
+  "simplifyError": 0.003,
+  "textureSize": 256
+}

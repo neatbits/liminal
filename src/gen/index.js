@@ -1,12 +1,12 @@
 // Inngang til generatorene: tilfeldige rom, maler for «Nytt rom» og ferdige eksempler.
 import { createLevel, TILE } from '../core/level.js';
 import { autoLights } from '../core/ops.js';
-import { mulberry32 } from '../core/rng.js';
+import { mulberry32, randomSeed } from '../core/rng.js';
 import { autoSpawn, yawFromDir } from '../core/spawn.js';
 import { getTheme } from '../core/themes.js';
 import { fillInterior } from './util.js';
 import { addExits } from './exits.js';
-import { furnish } from './furnish.js';
+import { furnish, furnishStructure } from './furnish.js';
 import { addWindows } from './windows.js';
 import * as styles from './styles.js';
 import { basement } from './basement.js';
@@ -15,6 +15,7 @@ import { mall, mallLayout } from './mall.js';
 import { school, ward } from './building.js';
 import { levelHeight, poolDepths, tallHalls } from './variety.js';
 import { untangleDoors, clearDoorways } from './door-space.js';
+import { shapeCorners } from './corners.js';
 
 const BY_THEME = {
   backrooms: styles.backrooms,
@@ -35,12 +36,13 @@ const BY_THEME = {
  * gjenstander som passer til temaet (gen/furnish.js). Med vary varierer takhøyden og
  * bassengdybdene (gen/variety.js) – eksemplene bruker det ikke, så de er som de alltid har vært.
  */
-export function generateLevel({ theme = 'backrooms', w = 48, h = 48, seed = 1, name, vary = true } = {}) {
+export function generateLevel({ theme = 'backrooms', w = 48, h = 48, seed = 1, name, vary = true, layout } = {}) {
   const rand = mulberry32(seed ^ 0x4e16); // eget frø: romoppsettet er det samme som uten variasjon
   const height = vary ? levelHeight(theme, rand) : undefined;
   const level = createLevel({ theme, w, h, height, name: name ?? getTheme(theme).label });
   level.seed = seed; // vises i sidepanelet, så rommet kan lages igjen
-  (BY_THEME[level.theme] ?? styles.backrooms)(level, mulberry32(seed));
+  (BY_THEME[level.theme] ?? styles.backrooms)(level, mulberry32(seed),{layout:layout??(vary?undefined:'gallery')});
+  furnishStructure(level, mulberry32(seed ^ 0x1a1f));
   if (vary && !getTheme(level.theme).pit) {
     poolDepths(level, rand);
     if (level.theme === 'pool') tallHalls(level, rand);
@@ -49,9 +51,10 @@ export function generateLevel({ theme = 'backrooms', w = 48, h = 48, seed = 1, n
   // Eget frø, så rommene ellers blir som før.
   addExits(level, mulberry32(seed ^ 0x5eed), 3, level.spawn);
   untangleDoors(level); // dørblad som slår inn i hverandre
-  furnish(level, mulberry32(seed ^ 0xf00d));
+  furnish(level, mulberry32(seed ^ 0xf00d), level.spawn, { deepEnds: vary });
   clearDoorways(level); // ingen gjenstander foran døråpningene
   addWindows(level, mulberry32(seed ^ 0x51de));
+  if (vary) shapeCorners(level, mulberry32(seed ^ 0xc0e2)); // skrå og avrundede hjørner (ikke i eksemplene)
   return level;
 }
 
@@ -73,8 +76,8 @@ export function levelFromTemplate(template, { theme, w, h, seed, name }) {
 }
 
 /** Kjøpesenteret starter nede i atriet, med blikket langs atriet mot broen. */
-function makeMall() {
-  const level = generateLevel({ theme: 'mall', w: 56, h: 40, seed: 7, name: 'The Mall', vary: false });
+function makeMall({ seed = randomSeed(), layout = 'auto' } = {}) {
+  const level = generateLevel({ theme: 'mall', w: 56, h: 40, seed, layout, name: 'The Mall', vary: false });
   const { atrium } = mallLayout(level.w, level.h);
   level.spawn = { x: atrium.x0 + 10.5, z: (atrium.z0 + atrium.z1) / 2 + 3, a: yawFromDir(1, 0) };
   return level;
@@ -91,7 +94,7 @@ export const PRESETS = [
   {
     id: 'level0',
     name: 'Level 0',
-    hint: 'The classic yellow rooms. Damp carpet and endless humming.',
+    hint: 'The classic yellow rooms. Soft carpet and endless humming.',
     make: () => generateLevel({ theme: 'backrooms', w: 56, h: 56, seed: 1007, name: 'Level 0', vary: false }),
   },
   {
@@ -134,7 +137,7 @@ export const PRESETS = [
   {
     id: 'mall',
     name: 'The Mall',
-    hint: 'Two floors of shops around an empty atrium. Go upstairs and look down.',
+    hint: 'Two floors of quiet shops. Explore changing galleries, cross courts and recessed storefronts.',
     make: makeMall,
   },
   {
@@ -158,5 +161,10 @@ export const PRESETS = [
 ];
 
 export function presetById(id) {
-  return PRESETS.find((p) => p.id === id) ?? null;
+  const preset = PRESETS.find((p) => p.id === id);
+  if (preset) return preset;
+  // Gamle direktelenker virker fortsatt, men variantene har ikke egne eksempelkort.
+  const layout = id === 'mall-cross-court' ? 'cross-court' : id === 'mall-terraces' ? 'terraces' : null;
+  return layout ? { id, make: () => generateLevel({ theme: 'mall', w: 64, h: 44, seed: 7,
+    vary: false, layout, name: `The Mall – ${layout === 'terraces' ? 'Terraces' : 'Cross Court'}` }) } : null;
 }

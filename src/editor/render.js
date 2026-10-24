@@ -10,6 +10,8 @@ import { drawStairs, drawStairsPreview } from './render-stairs.js';
 import { drawSlides } from './render-slides.js';
 import { drawObjects, drawHighlights } from './render-objects.js';
 import { drawWindow } from './render-windows.js';
+import { drawCorners } from './render-corners.js';
+import { pillarInfo } from '../core/pillars.js';
 
 export const RULER_TOP = 22;
 export const RULER_LEFT = 30;
@@ -99,8 +101,10 @@ function drawDetails(ctx, view, level, r) {
       const t = level.tiles[z * level.w + x];
       const [sx, sy] = view.toScreen(x, z);
       if (t === TILE.PILLAR) {
+        const p = pillarInfo(level, x, z), [px, py] = view.toScreen(p.x, p.z), r = p.radius * s;
         ctx.fillStyle = C.pillar;
-        ctx.fillRect(sx + s * 0.25, sy + s * 0.25, s * 0.5, s * 0.5);
+        if (p.round) { ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill(); }
+        else ctx.fillRect(px - r, py - r, r * 2, r * 2);
       } else if (t === TILE.DOOR) {
         drawDoor(ctx, view, level, x, z);
       } else if (t === TILE.STAIRS) {
@@ -158,6 +162,12 @@ function drawPreview(ctx, view, s) {
     return;
   }
   if (!hover) return;
+  if (tool.id === 'pillar' && !erase && s.brush === 1) {
+    const [x, y] = view.toScreen(Math.floor(hover[0]) + .5, Math.floor(hover[1]) + .5), r = tool.diameter * view.scale / 2;
+    if (s.level.theme === 'pool') { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke(); }
+    else ctx.strokeRect(x - r, y - r, 2 * r, 2 * r);
+    return;
+  }
   if (tool.kind === 'spawn') return drawSpawn(ctx, view, { x: Math.floor(hover[0]) + 0.5, z: Math.floor(hover[1]) + 0.5, a: s.level.spawn.a }, 0.35);
   const size = (tool.kind === 'light' && !erase) || tool.kind === 'door' || tool.kind === 'slide' ? 1 : brush;
   const off = Math.floor((size - 1) / 2);
@@ -189,6 +199,7 @@ export function drawPlan(ctx, s) {
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(s.image, ox, oy, W, H);
   const r = visibleRange(view, level, width, height);
+  drawCorners(ctx, view, level, r); // skrå og avrundede hjørner oppå bakgrunnsbildet
   if (s.grid && view.scale >= 5) drawGrid(ctx, view, level, r);
   if (view.scale >= 10) drawTileGrid(ctx, view, level, r);
   if (view.scale >= 6) drawZoneEdges(ctx, view, level, r);

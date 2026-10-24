@@ -1,0 +1,11 @@
+Model Information:
+* title:	Diving Board
+* source:	https://sketchfab.com/3d-models/diving-board-581cc7f80f4f44a7a0f535b4df44d93b
+* author:	danielisthebosss (https://sketchfab.com/danielisthebosss)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Diving Board" (https://sketchfab.com/3d-models/diving-board-581cc7f80f4f44a7a0f535b4df44d93b) by danielisthebosss (https://sketchfab.com/danielisthebosss) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

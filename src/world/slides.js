@@ -1,19 +1,16 @@
 // Vannsklier i 3D: åpen renne (U-profil) eller lukket rør langs banen fra slidePath, med
 // krenging i svingene og støtteben ned til gulv eller bassengbunn. Starten er en avrundet balje
 // med høyere sider og et håndtak av stål over, som på ekte vannsklier.
-// Røret er åpent de første metrene (inngangen) og lukker seg så. Lyset bakes per hjørne
+// Røret er åpent ved inngangen; taket begynner med en hel bue uten en spiss i toppen. Lyset bakes per hjørne
 // med rundingens egen normal, så rennen ser glatt ut. Ren logikk – MeshData med bakt lys
 // (sklien kaster ikke skygge).
 import { SLIDE, SLIDE_COLORS, slidePath } from '../core/slides.js';
 import { MeshData, faceQuad } from './mesher.js';
-import { orientedBox } from './doors.js';
+import { orientedBox } from './mesher.js';
+import { buildShell, WALL, SEGMENTS, TUBE_START } from './slide-shell.js';
 
-const WALL = 0.05; // godstykkelse
 const OPEN = (105 * Math.PI) / 180; // rennens åpning: ±105° fra bunnen
-const SEGMENTS = 22;
 const LEG = 0.08;
-const TUBE_FROM = SLIDE.ENTRY - 0.3; // røret lukker seg mellom TUBE_FROM og ENTRY + 0.3
-const TUBE_TO = SLIDE.ENTRY + 0.3;
 const START_SPAN = (122 * Math.PI) / 180; // høyere sider ved starten …
 const START_LEN = 1.3; // … som slakker av til vanlig renne over så mange meter
 const BOWL = 7; // ringer i baljen bak starten
@@ -38,47 +35,12 @@ export function frameAt(p) {
   return { side, up, centre: add([p.x, p.y, p.z], up, SLIDE.RADIUS) };
 }
 
-/** Retningen ut fra senteret ved vinkel a (0 = rett ned mot bunnen). */
-const outward = (f, a) => norm(add(f.side.map((v) => v * Math.sin(a)), f.up, -Math.cos(a)));
-const ring = (f, a, r) => add(f.centre, outward(f, a), r);
-
 const smooth = (f) => f * f * (3 - 2 * f);
 
-/** Hvor langt rundt profilet går ved buelengden s: høyere ved starten, renne, eller rør etter inngangen. */
+/** Profilens konvolutt: høyere sider ved starten, renne, eller lukket rør etter inngangen. */
 export function spanAt(tube, s) {
   const start = s < START_LEN ? OPEN + (START_SPAN - OPEN) * smooth(1 - s / START_LEN) : OPEN;
-  if (!tube || s <= TUBE_FROM) return start;
-  const f = Math.min(1, (s - TUBE_FROM) / (TUBE_TO - TUBE_FROM));
-  return Math.max(start, OPEN + (Math.PI - OPEN) * smooth(f));
-}
-
-function shell(out, frames, spans) {
-  const R = SLIDE.RADIUS;
-  const angle = (i, j) => -spans[i] + (2 * spans[i] * j) / SEGMENTS;
-  for (let i = 0; i < frames.length - 1; i++) {
-    for (let j = 0; j < SEGMENTS; j++) {
-      const c = [
-        [i, j],
-        [i, j + 1],
-        [i + 1, j + 1],
-        [i + 1, j],
-      ];
-      const dirs = c.map(([fi, fj]) => outward(frames[fi], angle(fi, fj)));
-      const pts = (r) => c.map(([fi, fj]) => ring(frames[fi], angle(fi, fj), r));
-      const mid = norm(dirs.reduce((a, d) => add(a, d), [0, 0, 0]));
-      faceQuad(out.slideIn, pts(R), mid.map((v) => -v), undefined, dirs.map((d) => d.map((v) => -v)));
-      faceQuad(out.slideOut, pts(R + WALL), mid, undefined, dirs);
-    }
-    // Kanten øverst der rennen er åpen: fra innsiden til utsiden langs begge sider.
-    if (spans[i] < Math.PI - 1e-3) {
-      for (const sign of [-1, 1]) {
-        const [a0, a1] = [sign * spans[i], sign * spans[i + 1]];
-        const [f0, f1] = [frames[i], frames[i + 1]];
-        const q = [ring(f0, a0, R), ring(f0, a0, R + WALL), ring(f1, a1, R + WALL), ring(f1, a1, R)];
-        faceQuad(out.slideOut, q, norm(add(f0.up, f0.side, sign * 0.3)));
-      }
-    }
-  }
+  return tube && s >= TUBE_START ? Math.PI : start;
 }
 
 /**
@@ -144,10 +106,11 @@ export function buildSlides(level, field) {
     if (path.problem) continue;
     const frames = path.samples.map(frameAt);
     const mesh = { slideIn: out[`slideIn_${path.color}`], slideOut: out[`slideOut_${path.color}`] };
-    shell(
+    buildShell(
       mesh,
       frames,
-      path.samples.map((p) => spanAt(path.tube, p.s)),
+      path.samples.map((p) => spanAt(false, p.s)),
+      path.tube ? path.samples.findIndex((p) => p.s >= TUBE_START) : -1,
     );
     const span0 = spanAt(path.tube, 0);
     bowl(mesh, frames[0], path.samples[0].t, span0);

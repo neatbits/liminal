@@ -7,9 +7,15 @@ import { closedDoorFaces } from '../core/doors.js';
 import { glowSources } from '../core/objects.js';
 import { windows, skyOf } from '../core/windows.js';
 import { hexToLinear } from './color.js';
+import { openPoint } from '../core/corners.js';
+import { lightGrid, lightSampleKey, windowNeighbours } from './light-grid.js';
+import { mallRoof } from '../core/mall-roof.js';
+import { pillarContains } from '../core/pillars.js';
+import { halfWalls, halfWallOccludes } from '../core/half-walls.js';
 
 export const FLICKER_GROUPS = 4;
 export const LIGHT_DROP = 0.15; // lyskilden sitter litt under taket
+export const HANG = 8; // i høyere rom henger lampene i en ledning, så høyt over gulvet under
 const EPS = 1e-3;
 const LIP = 0.15; // slingringsmonn mot gulvet, så kanten over vannflaten ikke skygger vannet
 const NUDGE = 1e-4;
@@ -25,16 +31,22 @@ export function flickerGroup(x, z) {
  */
 export function collectLights(level) {
   const out = [];
+  const roof = mallRoof(level);
   for (let z = 0; z < level.h; z++) {
     for (let x = 0; x < level.w; x++) {
       const i = z * level.w + x;
       const state = level.lights[i];
-      if (state === LIGHT.NONE || !canHaveLight(level.tiles[i])) continue;
+      if (state === LIGHT.NONE || !canHaveLight(level.tiles[i]) || pillarContains(level, x + .5, z + .5)) continue;
       const group = flickerGroup(x, z);
       const d = deckAt(level, x, z);
-      for (const ceil of d ? [d - SLAB, ceilingAt(level, x, z)] : [ceilingAt(level, x, z)]) {
-        out.push({ cx: x, cz: z, x: x + 0.5, z: z + 0.5, y: ceil - LIGHT_DROP, ceil, state, group });
-      }
+      // Med dekke: én armatur under dekket og én under taket over det. top = der armaturen sitter
+      // (under taket, eller i enden av en ledning i høye rom), ceil = taket.
+      const floors = d ? [floorAt(level, x, z), d] : [floorAt(level, x, z)];
+      (d ? [d - SLAB, ceilingAt(level, x, z)] : [ceilingAt(level, x, z)]).forEach((ceil, k) => {
+        if(roof?.mask[i] && (!d||k===1))return;
+        const top = Math.min(ceil, floors[k] + HANG);
+        out.push({ cx: x, cz: z, x: x + 0.5, z: z + 0.5, y: top - LIGHT_DROP, top, ceil, state, group });
+      });
     }
   }
   for (const g of glowSources(level)) {
@@ -43,11 +55,16 @@ export function collectLights(level) {
   }
   const sky = skyOf(level);
   const rgb = hexToLinear(sky.light);
+  if (roof) for (let z = roof.z0 + 1; z < roof.z1; z += 3) for (let x = roof.x0 + 1; x < roof.x1; x += 4) {
+    if(!roof.mask[z*level.w+x])continue;
+    out.push({ cx: x, cz: z, x: x + .5, z: z + .5, y: roof.base - .18, ceil: roof.base, state: LIGHT.ON, group: 0, object: true, power: sky.power * .9, rgb });
+  }
   // Vinduer som sitter tett deler på dagslyset (ellers summeres de, og med taklyset blir det
   // hvitt): hvert vindu får styrken delt på hvor mange vinduer som er innen 3 m.
   const wins = windows(level);
-  for (const win of wins) {
-    const near = wins.filter((o) => Math.hypot(o.x - win.x, o.z - win.z) <= 3).length;
+  const neighbours = windowNeighbours(level, wins);
+  for (const [i, win] of wins.entries()) {
+    const near = neighbours[i];
     const [nx, nz] = win.n;
     const x = win.x + 0.5 + nx * 0.9;
     const z = win.z + 0.5 + nz * 0.9;
@@ -76,7 +93,7 @@ export function cellHeights(level) {
     slab[i] = wall ? 0 : deckAt(level, x, z);
     if (slab[i]) decks = true;
   }
-  return { floor, ceil, slab: decks ? slab : null, faces: closedDoorFaces(level) };
+  return { floor, ceil, slab: decks ? slab : null, faces: closedDoorFaces(level), halfWalls: halfWalls(level) };
 }
 
 const fits = (heights, i, y) => y <= heights.ceil[i] + EPS && y >= heights.floor[i] - LIP;
@@ -95,6 +112,7 @@ function throughSlab(heights, i, ya, yb) {
  * lukket dør.
  */
 export function lineOfSight(level, x0, z0, x1, z1, heights = null, y0 = 0, y1 = 0) {
+  if (halfWallOccludes(heights?.halfWalls ?? halfWalls(level), x0, y0, z0, x1, y1, z1)) return false;
   const { w, h, tiles } = level;
   let cx = Math.floor(x0);
   let cz = Math.floor(z0);
@@ -182,36 +200,17 @@ export function createLightField(level, theme, lights = collectLights(level)) {
   const k = 1 / (p.falloff * p.falloff);
   const R = p.radius;
   const R2 = R * R;
-  const B = 4;
-  const bw = Math.ceil(level.w / B);
-  const bh = Math.ceil(level.h / B);
-  const buckets = Array.from({ length: bw * bh }, () => []);
-  for (const l of lights) {
-    if (l.state === LIGHT.BROKEN) continue;
-    buckets[Math.floor(l.cz / B) * bw + Math.floor(l.cx / B)].push(l);
-  }
+  const near = lightGrid(level, lights);
   const heights = cellHeights(level);
-
-  function near(x, z, r) {
-    const out = [];
-    const bx0 = Math.max(0, Math.floor((x - r) / B));
-    const bx1 = Math.min(bw - 1, Math.floor((x + r) / B));
-    const bz0 = Math.max(0, Math.floor((z - r) / B));
-    const bz1 = Math.min(bh - 1, Math.floor((z + r) / B));
-    for (let bz = bz0; bz <= bz1; bz++) {
-      for (let bx = bx0; bx <= bx1; bx++) for (const l of buckets[bz * bw + bx]) out.push(l);
-    }
-    return out;
-  }
 
   const cache = new Map();
   function sample(x, y, z, nx, ny, nz) {
-    const key = `${x},${y},${z},${nx},${ny},${nz}`;
+    const key = lightSampleKey(x, y, z, nx, ny, nz);
     const hit = cache.get(key);
     if (hit) return hit;
     const out = [ambient[0], ambient[1], ambient[2], 0, 0, 0, 0];
     const day = [0, 0, 0]; // dagslys fra vinduer, lagt til til slutt
-    const [sx, sz] = settle(level, heights, x + nx * 0.02, z + nz * 0.02, y);
+    const [sx, sz] = openPoint(level, ...settle(level, heights, x + nx * 0.02, z + nz * 0.02, y));
     for (const l of near(sx, sz, R)) {
       const dx = l.x - sx;
       const dy = l.y - y;

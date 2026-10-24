@@ -2,7 +2,7 @@
 // Teksturnøkler peker til painters i src/textures/. `water`: farge, absorpsjon per
 // meter (r, g, b) og bølgestyrke for vannshaderen. `door`: karmfarge (null = ingen karm),
 // dørblad, dørblad for boder (dør med vegg bak, valgfri) og håndtaksfarge. `railing`:
-// farge på håndlist/stolper og spiler. `window: { bars: false }` gir vinduer uten sprosser.
+// farge på håndlist/stolper og spiler. Vinduer er uten sprosser med mindre `window.bars === true`.
 // Valgfri `tiles` overstyrer flisene i build.js (`step`: fottrinnene på belegget, ellers fliser).
 // `pit: 'balls'` fyller bassengene med baller (ballbinge) i stedet for vann. `gloss` på en flate
 // ({ amount, grid = fliser per teksturflate }) gjør flisene blanke (world/gloss.js). De nyeste temaene
@@ -13,12 +13,12 @@ export const THEMES = {
   backrooms: {
     id: 'backrooms',
     label: 'Level 0 – yellow rooms',
-    description: 'Damp carpet, yellow wallpaper and fluorescent lights humming forever.',
+    description: 'Soft carpet, muted yellow wallpaper and fluorescent lights humming forever.',
     surfaces: {
       wall: { tex: 'wallpaperYellow', size: [1.6, 1.6] },
       base: { h: 0.09, color: '#7d6a3e' },
       floor: { tex: 'carpetDamp', size: [2, 2] },
-      ceiling: { tex: 'ceilingTiles', size: [1.2, 1.2] },
+      ceiling: { tex: 'levelZeroCeiling', size: [1.2, 1.2] },
       basin: { tex: 'carpetDamp', size: [2, 2] },
     },
     defaultHeight: 2.7,
@@ -41,22 +41,22 @@ export const THEMES = {
     label: 'The Poolrooms',
     description: 'White tiles, still water and light that seems to come from everywhere.',
     surfaces: {
-      wall: { tex: 'poolTiles', size: [1, 1], gloss: { amount: 1, grid: 8 } },
+      wall: { tex: 'poolTiles', size: [1, 1], gloss: { amount: 0.6, grid: 8 } },
       base: null,
-      floor: { tex: 'poolTiles', size: [1, 1], gloss: { amount: 1.6, grid: 8 } },
+      floor: { tex: 'poolTiles', size: [1, 1], gloss: { amount: 0.85, grid: 8 } },
       ceiling: { tex: 'poolTiles', size: [1, 1] },
       basin: { tex: 'poolTilesBlue', size: [1, 1] },
     },
     defaultHeight: 3.4,
     lightSpacing: 4,
     light: { color: '#f2ffff', intensity: 0.8, falloff: 3.2, radius: 10, ambient: '#8a9a9c' },
-    fixture: { shape: 'panel', size: [0.5, 0.04, 0.5], color: '#f4ffff', glow: 3.6, frame: '#d4dcdc' },
+    fixture: { shape: 'panel', size: [0.5, 0.04, 0.5], color: '#f4ffff', glow: 2.7, frame: '#d4dcdc' },
     door: { frame: null, leaf: 'doorFlatWhite', knob: '#c9ced2' },
     railing: { rail: '#c8cdd1', bars: '#c8cdd1' },
-    window: { bars: false }, // store, rene glassflater uten sprosser
+    window: { bars: false, merge: true, flush: true, inset: 0.025, depth: 0.1, sill: 0.45, head: 3, frame: '#d8e4e5' },
     fog: { color: '#a9c6ca', density: 0.035 },
-    exposure: 1.2,
-    bloom: 0.7,
+    exposure: 1.1,
+    bloom: 0.32,
     water: { tint: '#3a9fb2', absorb: [0.9, 0.32, 0.22], wave: 0.5 },
     sound: { hum: 0.015, buzz: 0.08, room: 0.025, drips: true, reverb: 0.55, reverbTime: 4, step: 'tile',
       eerie: ['gurgle', 'whisper', 'footsteps', 'boom', 'gurgle'] },
@@ -65,7 +65,7 @@ export const THEMES = {
 
   office: {
     id: 'office',
-    label: 'The Office at Night',
+    label: 'The Office',
     description: 'Grey carpet, ceiling tiles, and nobody has been here for a long time.',
     surfaces: {
       wall: { tex: 'officeWall', size: [2, 2] },
@@ -78,7 +78,7 @@ export const THEMES = {
     lightSpacing: 3,
     light: { color: '#e6efff', intensity: 0.55, falloff: 2.4, radius: 8, ambient: '#24282d' },
     fixture: { shape: 'panel', size: [1.2, 0.04, 0.6], color: '#f0f5ff', glow: 3.2, frame: '#a3a8ae' },
-    door: { frame: '#8e9297', leaf: 'doorVeneer', knob: '#c9ced2' },
+    door: { frame: '#8e9297', leaf: 'doorVeneer', knob: '#c9ced2', kick: true },
     railing: { rail: '#8e9297', bars: '#8e9297' },
     fog: { color: '#15191d', density: 0.07 },
     exposure: 1.05,
@@ -105,7 +105,7 @@ export const THEMES = {
     lightSpacing: 4,
     light: { color: '#dcf2cc', intensity: 0.7, falloff: 2.8, radius: 10, ambient: '#20241f' },
     fixture: { shape: 'tube', size: [1.3, 0.07, 0.12], color: '#e6ffd9', glow: 4, frame: '#55594f', drop: 0.1 },
-    door: { frame: '#4f544b', leaf: 'doorSteel', knob: '#9aa09a' },
+    door: { frame: '#4f544b', leaf: 'doorSteel', knob: '#9aa09a', kick: true },
     railing: { rail: '#c19a2e', bars: '#6b6f66' },
     fog: { color: '#1b201b', density: 0.045 },
     exposure: 1.0,
@@ -132,8 +132,9 @@ export const THEMES = {
     lightSpacing: 4,
     light: { color: '#ffd4a3', intensity: 0.6, falloff: 2.2, radius: 8, ambient: '#2c2321' },
     fixture: { shape: 'disc', size: [0.44, 0.06, 0.44], color: '#ffe4ba', glow: 3, frame: null },
-    door: { frame: '#3d2615', leaf: 'doorPanelWood', knob: '#c9a45a' },
+    door: { frame: '#3d2615', leaf: 'doorPanelWood', knob: '#c9a45a', handle: 'knob' },
     railing: { rail: '#3d2615', bars: '#2b1a10' },
+    window: { bars: true }, // tradisjonelle vinduer i hotellkorridoren
     fog: { color: '#1e140e', density: 0.07 },
     exposure: 1.05,
     bloom: 0.6,

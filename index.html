@@ -30,6 +30,7 @@
       <nav class="l-nav">
         <a href="#examples">Examples</a>
         <a href="#how">How it works</a>
+        <button type="button" class="l-feedback-link" data-feedback>Suggestions</button>
         <a class="l-btn l-btn-small" href="app/">Open the simulator</a>
       </nav>
     </header>
@@ -40,7 +41,7 @@
         <h1>Liminal Simulator</h1>
         <p class="l-lead">
           Draw empty rooms on a grid, watch them appear in 3D, and walk through them.
-          Damp carpet, still water, a ball pit nobody has used in years. The lights keep humming.
+          Yellow rooms, still water, a ball pit nobody has used in years. The lights keep humming.
         </p>
         <div class="l-cta">
           <a class="l-btn" href="app/">▶ Open the simulator</a>
@@ -99,9 +100,11 @@
     </section>
 
     <footer class="l-foot">
-      <span>Liminal Simulator</span>
-      <span>Made with three.js · Rooms are saved in your browser only · <a href="about/">About &amp; credits</a></span>
+      <span>Liminal Simulator · <a href="mailto:hello@liminalsimulator.com">hello@liminalsimulator.com</a></span>
+      <span>Made with three.js · Rooms are saved in your browser only · <a href="about/#changelog">What's new</a> · <a href="about/">About &amp; credits</a></span>
     </footer>
+
+    <div id="modal-root"></div>
 
     <script type="module" src="/src/landing.js"></script>
   </body>

@@ -2,6 +2,8 @@
 // og veilengden fra en rute til alle andre (avstandskart). Ren logikk.
 import { TILE, getTile } from '../core/level.js';
 import { DOOR, doorInfo } from '../core/doors.js';
+import { pillarContains } from '../core/pillars.js';
+import { halfWallContains } from '../core/half-walls.js';
 
 export const NEIGHBOURS = [
   [1, 0],
@@ -18,6 +20,8 @@ export const NEIGHBOURS = [
 export function passable(level, x, z, noWater = false) {
   const t = getTile(level, x, z);
   if (t === TILE.WALL || t === TILE.PILLAR || (noWater && t === TILE.WATER)) return false;
+  if (pillarContains(level, x + .5, z + .5, .3)) return false;
+  if (halfWallContains(level, x + .5, z + .5, .3)) return false;
   if (t === TILE.DOOR) return doorInfo(level, x, z)?.state !== DOOR.CLOSED;
   return true;
 }

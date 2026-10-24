@@ -42,7 +42,7 @@ describe('generatorer', () => {
 
   it('alle eksempler kan lages', () => {
     for (const p of PRESETS) {
-      const level = p.make();
+      const level = p.make({ seed: 7, layout: 'gallery' });
       expect(level.name).toBe(p.name);
       expect(labelRegions(level).sizes).toHaveLength(1);
     }

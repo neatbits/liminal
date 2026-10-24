@@ -1,6 +1,7 @@
-// Venstre sidepanel: verktøy, rommets egenskaper, atmosfære, nøkkeltall og tegnehjelp.
+// Venstre sidepanel: verktøy, rommets egenskaper, lys og stemning, generering, nøkkeltall og tegnehjelp.
 import { THEMES, THEME_IDS, getTheme } from '../core/themes.js';
 import { SKIES } from '../core/windows.js';
+import { TINTS } from '../core/tints.js';
 import { STRENGTHS } from '../gen/wrong.js';
 import { MIN_SIZE, MAX_SIZE, HEIGHT_MIN, HEIGHT_MAX, DEPTH_MIN, DEPTH_MAX } from '../core/level.js';
 import { h } from './dom.js';
@@ -47,22 +48,31 @@ export class Sidebar {
         h('div', {}, h('label', { text: 'Water depth' }), this.depth),
       ),
       h('p', { class: 'side-hint', text: 'Use the Ceiling and Depth tools to give parts of the room their own height or depth.' }),
-      h('div', { class: 'row' }, h('label', { text: 'Window light' }), this.sky),
     );
 
     this.bright = range('Brightness', 0.3, 2, 0.05, (v) => a.bright(v));
     this.fog = range('Fog', 0, 2.5, 0.05, (v) => a.fog(v));
+    // Lysfargen (core/tints.js) – kan overstyres av velgeren over 3D-panelet.
+    this.tint = h('select', { class: 'field', onchange: (e) => a.tint(e.target.value) }, Object.entries(TINTS).map(([id, t]) => h('option', { value: id, text: t.label })));
     const atmosphere = section(
-      'Atmosphere',
+      'Light & atmosphere',
       true,
       this.bright.row,
       this.fog.row,
+      h('div', { class: 'row' }, h('label', { text: 'Light colour' }), this.tint),
+      h('div', { class: 'row' }, h('label', { text: 'Window light' }), this.sky),
       h(
         'div',
         { class: 'side-actions' },
         h('button', { type: 'button', class: 'btn', text: 'Fill with lights', onclick: () => a.fillLights() }),
         h('button', { type: 'button', class: 'btn', text: 'Remove all lights', onclick: () => a.clearLights() }),
       ),
+    );
+
+    const generate = section(
+      'Generate',
+      true,
+      h('p', { class: 'side-hint', text: 'Replaces the room with a new one in the same theme and size. Ctrl+Z undoes it.' }),
       // Generering: frøet bestemmer rommet (samme frø og tema = samme rom). Tomt felt = tilfeldig.
       h(
         'div',
@@ -81,7 +91,7 @@ export class Sidebar {
     );
 
     this.stats = h('dl', { class: 'stats' });
-    const keys = section('Key figures', true, this.stats);
+    const keys = section('Key figures', false, this.stats);
 
     this.gridToggle = h('input', { type: 'checkbox', class: 'switch', onchange: (e) => a.grid(e.target.checked) });
     this.rulerToggle = h('input', { type: 'checkbox', class: 'switch', onchange: (e) => a.rulers(e.target.checked) });
@@ -92,7 +102,7 @@ export class Sidebar {
       h('label', { class: 'row-toggle' }, h('span', { text: 'Rulers' }), this.rulerToggle),
       h('p', { class: 'side-hint', text: '1 cell = 1 × 1 metre. Hold Space and drag to pan; the wheel zooms.' }),
     );
-    root.append(this.tools.el, room, atmosphere, keys, helpers);
+    root.append(this.tools.el, room, atmosphere, generate, keys, helpers);
   }
 
   /** @param s editorens verktøytilstand (se ToolPanel.sync) */
@@ -110,6 +120,7 @@ export class Sidebar {
     this.height.firstChild.value = level.height;
     this.depth.firstChild.value = level.waterDepth;
     this.sky.value = level.sky ?? 'day';
+    this.tint.value = level.tint ?? 'theme';
     if (document.activeElement !== this.seed) this.seed.value = level.seed ?? '';
     this.bright.input.value = level.bright;
     this.bright.out.textContent = `${Math.round(level.bright * 100)} %`;

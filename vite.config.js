@@ -10,7 +10,11 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 900,
     // Tre sider: forsiden (index.html), simulatoren (app/) og About & credits (about/).
-    rollupOptions: { input: { main: 'index.html', app: 'app/index.html', about: 'about/index.html' } },
+    rolldownOptions: {
+      input: { main: 'index.html', app: 'app/index.html', about: 'about/index.html' },
+      // Biblioteket kan bufres mellom endringer i appen; unngå én stor app-pakke.
+      output: { codeSplitting: { groups: [{ name: 'three', test: /node_modules[\\/]three[\\/]/ }] } },
+    },
   },
   test: {
     environment: 'node',

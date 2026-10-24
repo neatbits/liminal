@@ -1,0 +1,128 @@
+/* Verktøyene i sidepanelet: gruppert (Build, Openings, …) med en liten overskrift over hver. */
+.tool-group + .tool-group {
+  margin-top: 8px;
+}
+
+.tool-group-label {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+
+.tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 2px 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  font-size: 11px;
+  position: relative;
+}
+
+.tool:hover {
+  border-color: var(--border-strong);
+}
+
+.tool.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.tool kbd {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 9px;
+}
+
+.swatch {
+  width: 22px;
+  height: 16px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+/* Objektvelgeren (objektverktøyet): søk, grupper med ikon, og info om den valgte gjenstanden. */
+.object-picker {
+  display: grid;
+  gap: 7px;
+}
+
+.object-list {
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.object-group + .object-group {
+  margin-top: 8px;
+}
+
+.object-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.object-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  font-size: 11px;
+  text-align: left;
+}
+
+.object-item:hover {
+  border-color: var(--border-strong);
+}
+
+.object-item.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.object-icon {
+  flex: none;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.object-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.object-info {
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 11px;
+  line-height: 1.4;
+}

@@ -5,7 +5,10 @@ const BACK = ['KeyS', 'ArrowDown'];
 const LEFT = ['KeyA', 'ArrowLeft'];
 const RIGHT = ['KeyD', 'ArrowRight'];
 const RUN = ['ShiftLeft', 'ShiftRight'];
-const MOVE_KEYS = new Set([...FORWARD, ...BACK, ...LEFT, ...RIGHT]);
+const MOVE_KEYS = new Set([...FORWARD, ...BACK, ...LEFT, ...RIGHT, 'Space']); // mellomrom: hopp (og ikke «klikk» på en knapp)
+const STICK = 56; // px fra midten av joysticken til full fart
+const DEAD = 0.12; // dødsone i joysticken (andel av STICK)
+const TOUCH_LOOK = 3.5; // sveip gir mer dreining enn mus: én skjermbredde ≈ en halv runde
 
 function typingTarget(e) {
   const t = e.target;
@@ -16,6 +19,7 @@ export class WalkInput {
   constructor(element) {
     this.element = element;
     this.keys = new Set();
+    this.buttons = new Set(); // held on-screen controls, independent of physical keys
     this.lookX = 0;
     this.lookY = 0;
     this.touchMove = { x: 0, y: 0 };
@@ -27,17 +31,21 @@ export class WalkInput {
   }
 
   get forward() {
-    const k = (list) => list.some((c) => this.keys.has(c));
+    const k = (list) => list.some((c) => this.keys.has(c) || this.buttons.has(c));
     return (k(FORWARD) ? 1 : 0) - (k(BACK) ? 1 : 0) - this.touchMove.y;
   }
 
   get strafe() {
-    const k = (list) => list.some((c) => this.keys.has(c));
+    const k = (list) => list.some((c) => this.keys.has(c) || this.buttons.has(c));
     return (k(RIGHT) ? 1 : 0) - (k(LEFT) ? 1 : 0) + this.touchMove.x;
   }
 
   get running() {
-    return RUN.some((c) => this.keys.has(c));
+    return RUN.some((c) => this.keys.has(c) || this.buttons.has(c));
+  }
+
+  get jumping() {
+    return this.keys.has('Space') || this.buttons.has('Space');
   }
 
   /** Henter og nullstiller akkumulert musebevegelse. */
@@ -50,9 +58,12 @@ export class WalkInput {
 
   reset() {
     this.keys.clear();
+    this.buttons.clear();
+    this.onReset?.();
     this.lookX = this.lookY = 0;
     this.touchMove = { x: 0, y: 0 };
     this._touches.clear();
+    this._drag = null;
   }
 
   _bind() {
@@ -91,33 +102,51 @@ export class WalkInput {
     el.addEventListener('touchcancel', (e) => this._touch(e, 'end'));
   }
 
-  /** Venstre halvdel styrer gange, høyre halvdel styrer blikket. */
+  /** Venstre halvdel er en analog joystick der tommelen settes ned, høyre halvdel styrer blikket. */
   _touch(e, phase) {
     if (!this.enabled) return;
     const rect = this.element.getBoundingClientRect();
     for (const t of e.changedTouches) {
       if (phase === 'start') {
         const role = t.clientX - rect.left < rect.width / 2 ? 'move' : 'look';
-        this._touches.set(t.identifier, { role, x0: t.clientX, y0: t.clientY, x: t.clientX, y: t.clientY });
+        const s = { role, x0: t.clientX, y0: t.clientY, x: t.clientX, y: t.clientY };
+        this._touches.set(t.identifier, s);
+        if (role === 'move') this.onStick?.(s);
       } else if (phase === 'move') {
         const s = this._touches.get(t.identifier);
         if (!s) continue;
         if (s.role === 'look') {
-          this.lookX += (t.clientX - s.x) * 1.5;
-          this.lookY += (t.clientY - s.y) * 1.5;
-        } else {
-          const clamp = (v) => Math.max(-1, Math.min(1, v / 60));
-          this.touchMove = { x: clamp(t.clientX - s.x0), y: clamp(t.clientY - s.y0) };
-        }
+          this.lookX += (t.clientX - s.x) * TOUCH_LOOK;
+          this.lookY += (t.clientY - s.y) * TOUCH_LOOK;
+        } else this._stick(s, t.clientX, t.clientY);
         s.x = t.clientX;
         s.y = t.clientY;
       } else {
         const s = this._touches.get(t.identifier);
-        if (s?.role === 'move') this.touchMove = { x: 0, y: 0 };
+        if (s?.role === 'move') {
+          this.touchMove = { x: 0, y: 0 };
+          this.onStick?.(null);
+        }
         this._touches.delete(t.identifier);
       }
     }
     if (phase !== 'end') e.preventDefault();
+  }
+
+  /** Analog styrke med dødsone; drar tommelen forbi kanten, følger midten etter. */
+  _stick(s, x, y) {
+    let dx = x - s.x0, dy = y - s.y0;
+    const len = Math.hypot(dx, dy);
+    if (len > STICK) {
+      s.x0 = x - (dx / len) * STICK;
+      s.y0 = y - (dy / len) * STICK;
+      dx = x - s.x0;
+      dy = y - s.y0;
+    }
+    const m = Math.min(1, len / STICK);
+    const k = m < DEAD ? 0 : (m - DEAD) / (1 - DEAD) / (Math.hypot(dx, dy) || 1);
+    this.touchMove = { x: dx * k, y: dy * k };
+    this.onStick?.({ x0: s.x0, y0: s.y0, x, y });
   }
 
   dispose() {

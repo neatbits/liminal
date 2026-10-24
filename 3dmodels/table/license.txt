@@ -1,0 +1,11 @@
+Model Information:
+* title:	Office Table
+* source:	https://sketchfab.com/3d-models/office-table-2e298de5176540f8bdf5633842604806
+* author:	Konstantin Koretskyi (https://sketchfab.com/cgnoobmaster)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Office Table" (https://sketchfab.com/3d-models/office-table-2e298de5176540f8bdf5633842604806) by Konstantin Koretskyi (https://sketchfab.com/cgnoobmaster) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

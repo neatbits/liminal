@@ -20,6 +20,7 @@
       <a class="brand" href="../"><span class="brand-mark"></span>Liminal</a>
       <nav class="l-nav">
         <a href="../">Home</a>
+        <button type="button" class="l-feedback-link" data-feedback>Suggestions</button>
         <a class="l-btn l-btn-small" href="../app/">Open the simulator</a>
       </nav>
     </header>
@@ -32,6 +33,33 @@
         your browser. Textures, lighting and sounds are generated in the browser as you build.
       </p>
 
+      <section id="changelog" aria-labelledby="changelog-title">
+        <h2 id="changelog-title">What's new</h2>
+        <p>The big additions to Liminal. Small fixes and behind-the-scenes changes stay in the project log.</p>
+
+        <article class="l-release" aria-labelledby="release-0-2">
+          <h3 id="release-0-2">Pools, malls and phones</h3>
+          <p class="l-release-meta"><time datetime="2026-10-24">24 October 2026</time> · v0.2.0</p>
+          <ul>
+            <li>New room shapes: rounded corners, round columns, tall halls, raised floors and walkable mezzanines.</li>
+            <li>Diving boards, jumping, water ripples and bouncing play balls.</li>
+            <li>Moods, endless exploration, dream walks, a floating ghost and background music.</li>
+            <li>A livelier Mall with shops, fountains, escalators and skylights, plus new furniture everywhere.</li>
+            <li>A phone player with a thumb joystick and swipe to look, plus graphics settings for slower devices.</li>
+          </ul>
+        </article>
+
+        <article class="l-release" aria-labelledby="release-first">
+          <h3 id="release-first">First release</h3>
+          <p class="l-release-meta"><time datetime="2026-10-17">17 October 2026</time> · v0.1.0</p>
+          <ul>
+            <li>Draw rooms in 2D, see them take shape in 3D and walk through them in first person.</li>
+            <li>Five themes, generated rooms and ready-made examples, with procedural lighting and sound.</li>
+            <li>Save rooms in your browser, import or export files, and share a whole room with a link.</li>
+          </ul>
+        </article>
+      </section>
+
       <h2>Your rooms and your privacy</h2>
       <ul>
         <li>Rooms you make are saved <b>only in your own browser</b> on your device. Nothing is uploaded, and there are no accounts.</li>
@@ -39,6 +67,7 @@
         <li>Photos you take in photo mode are saved straight to your device.</li>
         <li>The site uses no tracking cookies. Fonts are loaded from Google Fonts, so your browser contacts Google to fetch them.</li>
         <li>If advertising or analytics are added later, this page will be updated to describe them.</li>
+        <li>If you send feedback, your message and optional reply address are emailed to hello@liminalsimulator.com. Your room is not sent. A temporary hash of your IP address and submission times are used to limit spam; entries older than one hour are removed when the next message is accepted.</li>
       </ul>
 
       <h2>Mood</h2>
@@ -60,18 +89,20 @@
         <li><a href="https://threejs.org/" rel="noopener">three.js</a> – 3D rendering (MIT licence).</li>
         <li><a href="https://github.com/pmndrs/cannon-es" rel="noopener">cannon-es</a> – physics for the soft play blocks (MIT licence).</li>
         <li><a href="https://fonts.google.com/specimen/VT323" rel="noopener">VT323</a> by Peter Hull – the VHS font (SIL Open Font Licence).</li>
-        <li>Everything else – textures, lights and sounds – is generated procedurally in the browser.</li>
+        <li>Music: original tracks made with <a href="https://www.mureka.ai/" rel="noopener">Mureka</a>.</li>
+        <li>Everything else – textures, lights and sound effects – is generated procedurally in the browser.</li>
       </ul>
 
-      <!-- Kontakt: legg inn en e-postadresse her når den er bestemt, f.eks.
       <h2>Contact</h2>
-      <p>Questions, bugs or ideas? Write to <a href="mailto:…">…</a>.</p> -->
+      <p>Questions, bugs or ideas? Use <button type="button" class="l-feedback-link" data-feedback>Suggestions</button> or write to <a href="mailto:hello@liminalsimulator.com">hello@liminalsimulator.com</a>.</p>
     </main>
 
     <footer class="l-foot">
       <span>Liminal Simulator</span>
       <span><a href="../">Home</a> · <a href="../app/">Open the simulator</a></span>
     </footer>
+
+    <div id="modal-root"></div>
 
     <script type="module" src="/src/about.js"></script>
   </body>

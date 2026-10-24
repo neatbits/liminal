@@ -3,15 +3,22 @@
 import './styles/base.css';
 import './styles/layout.css';
 import './styles/sidebar.css';
+import './styles/tools.css';
 import './styles/panes.css';
 import './styles/hud.css';
 import './styles/hud-fx.css';
+import './styles/hud-pause.css';
 import './styles/overlays.css';
+import './styles/mobile-player.css';
 import { decodeLevel } from './core/serialize.js';
 import { loadDraft } from './core/storage.js';
 import { presetById } from './gen/index.js';
 import { App } from './app/app.js';
+import { MobilePlayer } from './app/mobile-player.js';
+import { phoneLayout } from './core/phone.js';
 import { toast } from './ui/toast.js';
+import { newRoom } from './app/actions.js';
+import { bindFeedback } from './ui/feedback.js';
 
 // #room=… (nå) og #rom=… (lenker fra første, norske versjon).
 const SHARE_HASH = /^#(?:room|rom)=(.+)$/;
@@ -38,11 +45,17 @@ function presetFromHash() {
 }
 
 async function start() {
-  const app = new App();
-  window.liminal = app; // nyttig for feilsøking i konsollen
   const shared = await levelFromHash();
-  app.setLevel(shared ?? presetFromHash() ?? loadDraft() ?? presetById('level0').make());
+  const preset = shared ? null : presetFromHash();
+  const phone = phoneLayout({ coarse: matchMedia('(pointer: coarse)').matches,
+    width: document.documentElement.clientWidth, height: innerHeight });
+  const app = phone ? new MobilePlayer({ initial: shared ?? preset ?? loadDraft() }) : new App();
+  window.liminal = app; // nyttig for feilsøking i konsollen
+  bindFeedback({ endpoint: '../api/feedback.php', page: 'simulator' });
+  if(phone)return;
+  app.setLevel(shared ?? preset ?? loadDraft() ?? presetById('level0').make());
   if (shared) toast(`Shared room: “${shared.name}”. Press “Walk the room” to explore.`, { ms: 5000 });
+  if (!shared && !preset) newRoom(app, { startup: true });
 }
 
 start();

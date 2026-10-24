@@ -31,6 +31,7 @@ export class Scary {
    *        onCaught() kalles når monsteret tar deg
    */
   update(dt, power, dark, gentle, onCaught) {
+    this.monster.load(); // Prefetch while hidden; first appearance needs no download pause.
     const v = this.v;
     const w = v.walk.walker;
     if (!this.ai || this.ai.level !== v.walk.level) this.ai = new MonsterAI(v.walk.level);

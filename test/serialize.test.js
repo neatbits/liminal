@@ -81,13 +81,12 @@ describe('serialisering', () => {
     await expect(decodeLevel('ikke-en-gyldig-kode')).rejects.toThrow('broken');
   });
 });
-
 describe('serialisering av soner', () => {
   function zoned() {
     const level = sample();
     level.waterDepth = 1.4;
     level.ceilings[3 * 10 + 2] = 22; // laveste lovlige takhøyde
-    level.ceilings[3 * 10 + 5] = 80; // høyeste
+    level.ceilings[3 * 10 + 5] = 80;
     level.depths[3 * 10 + 4] = 30;
     return level;
   }
@@ -95,7 +94,7 @@ describe('serialisering av soner', () => {
   it('tar med vanndybde og sonelag fram og tilbake', () => {
     const level = zoned();
     const json = levelToJSON(level);
-    expect(json.ceilings[3]).toBe('001' + '00' + DIGIT(59) + '0000');
+    expect(json.ceilings[3]).toBe('00001600005000000000');
     const back = levelFromJSON(JSON.parse(JSON.stringify(json)));
     expect(back.waterDepth).toBe(1.4);
     expect(Array.from(back.ceilings)).toEqual(Array.from(level.ceilings));
@@ -119,7 +118,7 @@ describe('serialisering av soner', () => {
 
   it('avviser ødelagte sonelag', () => {
     const json = levelToJSON(zoned());
-    json.ceilings[0] = '!'.repeat(10);
+    json.ceilings[0] = '!'.repeat(20);
     expect(() => levelFromJSON(json)).toThrow('Invalid zone');
     const short = levelToJSON(zoned());
     short.depths[1] = '0';
@@ -137,7 +136,3 @@ describe('serialisering av soner', () => {
     expect(Array.from(back.depths)).toEqual(Array.from(level.depths));
   });
 });
-
-function DIGIT(n) {
-  return '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'[n];
-}

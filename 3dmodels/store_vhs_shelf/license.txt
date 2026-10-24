@@ -1,0 +1,11 @@
+Model Information:
+* title:	VHS shelf
+* source:	https://sketchfab.com/3d-models/vhs-shelf-4ac998896ed044deb1038d89f7841012
+* author:	m3org (https://sketchfab.com/m3org)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "VHS shelf" (https://sketchfab.com/3d-models/vhs-shelf-4ac998896ed044deb1038d89f7841012) by m3org (https://sketchfab.com/m3org) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

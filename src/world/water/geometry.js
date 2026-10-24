@@ -1,21 +1,24 @@
 // Vannflaten som rene data. Posisjonene ligger i et lokalt XY-plan (normal +Z), slik
 // three.js' Reflector/Refractor forventer – meshet roteres -90° om X og løftes til vannhøyden.
 // Lokal (x, y) = verden (x, -z).
-import { TILE, getTile, WATER_SURFACE } from '../../core/level.js';
+import { WATER_SURFACE } from '../../core/level.js';
 import { floorAt } from '../../core/heights.js';
+import { waterCell } from '../../core/pillar-water.js';
+import { pillarContains } from '../../core/pillars.js';
 
 const SUBDIVIDE = 2;
 const UNLIT = [1, 1, 1, 0, 0, 0, 0];
 
 /** 1 når alle ruter rundt punktet er vann, ellers 0 (demper forvrengning ved kanten). */
 export function waterEdge(level, x, z) {
+  if (pillarContains(level, x, z, .2)) return 0;
   for (const [ox, oz] of [
     [-0.25, -0.25],
     [0.25, -0.25],
     [-0.25, 0.25],
     [0.25, 0.25],
   ]) {
-    if (getTile(level, Math.floor(x + ox), Math.floor(z + oz)) !== TILE.WATER) return 0;
+    if (!waterCell(level, Math.floor(x + ox), Math.floor(z + oz))) return 0;
   }
   return 1;
 }
@@ -38,7 +41,7 @@ export function buildWaterData(level, field = null) {
   };
   for (let cz = 0; cz < level.h; cz++) {
     for (let cx = 0; cx < level.w; cx++) {
-      if (getTile(level, cx, cz) !== TILE.WATER) continue;
+      if (!waterCell(level, cx, cz)) continue;
       column = WATER_SURFACE - floorAt(level, cx, cz);
       for (let j = 0; j < SUBDIVIDE; j++) {
         for (let i = 0; i < SUBDIVIDE; i++) {

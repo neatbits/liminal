@@ -1,7 +1,7 @@
 // Teksturregister: lager canvas-teksturer ved behov og bufrer dem.
 import * as THREE from 'three';
 import { mulberry32 } from '../core/rng.js';
-import { wallpaperYellow, carpetDamp, ceilingTiles } from './yellow.js';
+import { wallpaperYellow, carpetDamp, ceilingTiles, levelZeroCeiling } from './yellow.js';
 import { poolTiles, poolTilesBlue, officeWall, officeCarpet, tileWallWhite, tileFloorGrey } from './tiles.js';
 import { concreteWall, concreteFloor, garagePaint } from './concrete.js';
 import { hotelCarpet, hotelWallpaper, hotelWood, plaster } from './hotel.js';
@@ -9,12 +9,26 @@ import { carpetClean, paintBeige } from './basement.js';
 import { doorPanel, doorLouver, doorFlat } from './doors.js';
 import { foamMat, playWall, playStripe, ballBed } from './playroom.js';
 import { mallFloor, mallWall, mallStone, mallCeiling, shopCarpet } from './mall.js';
-import { schoolFloor, blockWall, lockers, wardFloor, wardMint } from './school.js';
+import { schoolFloor, blockWall, schoolPaint, lockers, wardFloor, wardMint } from './school.js';
+import { mallSigns, playSigns, schoolSigns } from './signs.js';
+import { mallMosaic, fountainStone } from './fountains.js';
+import { shopSigns } from './shop-signs.js';
+import { arcadeCarpet, arcadeWall, arcadePanel } from './arcade-room.js';
+import { retailFloor, electronicsFloor, electronicsWall, cafeFloor, cafeTiles } from './retail-room.js';
 
 const PAINTERS = {
+  arcadeCarpet, arcadeWall, arcadePanel,
+  retailFloor, electronicsFloor, electronicsWall, cafeFloor, cafeTiles,
+  shopSigns,
+  mallMosaic,
+  fountainStone,
+  mallSigns,
+  playSigns,
+  schoolSigns,
   wallpaperYellow,
   carpetDamp,
   ceilingTiles,
+  levelZeroCeiling,
   poolTiles,
   poolTilesBlue,
   officeWall,
@@ -41,6 +55,7 @@ const PAINTERS = {
   shopCarpet,
   schoolFloor,
   blockWall,
+  schoolPaint,
   lockers,
   wardFloor,
   wardMint,

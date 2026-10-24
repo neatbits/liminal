@@ -3,6 +3,8 @@
 import { TILE, getTile, WATER_DEPTH, DEPTH_MIN, DEPTH_MAX } from '../core/level.js';
 import { depthAt, deckAt } from '../core/heights.js';
 import { getTheme } from '../core/themes.js';
+import { waterCell } from '../core/pillar-water.js';
+import { FINISHES } from '../core/finishes.js';
 
 const WALL = [90, 93, 98];
 const MASS = [230, 227, 220]; // massiv vegg (uten åpne naboer) tegnes lyst, som papir
@@ -60,13 +62,14 @@ export function planImage(level) {
           for (let dx = -1; dx <= 1; dx++) if (getTile(level, x + dx, z + dz) !== TILE.WALL) touches = true;
         }
         c = touches ? WALL : MASS;
-      } else if (t === TILE.WATER) {
+      } else if (waterCell(level, x, z)) {
         // Ballbinger vises som konfetti i ballfargene, vann blir mørkere jo dypere det er.
         const pit = theme.pitColors;
         c = pit ? mix(rgb(pit[(x * 7 + z * 13) % pit.length]), SHALLOW, 0.35) : waterColor(water, depthAt(level, x, z));
       } else {
         const dm = level.ceilings[i];
-        const base = level.finish[i] ? mix(floor, TILED, 0.6) : floor;
+        const finish = FINISHES[level.finish[i]];
+        const base = finish?.plan ? mix(floor, rgb(finish.plan), 0.6) : level.finish[i] ? mix(floor, TILED, 0.6) : floor;
         c = raisedColor(dm ? floorColor(base, dm / 10, level.height) : base, level.floors[i] / 10);
         if (deckAt(level, x, z)) c = mix(c, DECK, 0.22);
       }

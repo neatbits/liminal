@@ -4,6 +4,7 @@
 // kommer inn, og solflekkene på gulvet. Ren logikk.
 import { TILE, getTile, inBounds } from './level.js';
 import { topFloorAt, ceilingAt } from './heights.js';
+import { getTheme } from './themes.js';
 
 export const SILL = 0.9;
 export const HEAD = 2.2;
@@ -47,14 +48,33 @@ export function canHoldWindow(level, x, z) {
  * Vinduet i (x, z): { x, z, n: [dx, dz] inn i rommet, floor, sill, head } – sill/head er
  * høyder i meter (åpningen krymper under lave tak), eller null.
  */
-export function windowInfo(level, x, z) {
+function basicWindow(level, x, z) {
   if (!inBounds(level, x, z) || level.tiles[z * level.w + x] !== TILE.WALL || !(level.meta[z * level.w + x] & WINDOW)) return null;
   const n = openSide(level, x, z);
   if (!n) return null;
   const floor = topFloorAt(level, x + n[0], z + n[1]);
-  const head = Math.min(floor + HEAD, ceilingAt(level, x + n[0], z + n[1]) - 0.25);
-  if (head - (floor + SILL) < 0.4) return null;
-  return { x, z, n, floor, sill: floor + SILL, head };
+  const style = getTheme(level.theme).window;
+  const sill = floor + (style?.sill ?? SILL);
+  const head = Math.min(floor + (style?.head ?? HEAD), ceilingAt(level, x + n[0], z + n[1]) - 0.25);
+  if (head - sill < 0.4) return null;
+  return { x, z, n, floor, sill, head };
+}
+
+/** Bare vinduer med samme retning og åpning kan dele glassflate. */
+export function sameWindow(a, b) {
+  return !!a && !!b && a.n[0] === b.n[0] && a.n[1] === b.n[1]
+    && Math.abs(a.sill - b.sill) < 1e-6 && Math.abs(a.head - b.head) < 1e-6
+    && Math.abs(a.floor - b.floor) < 1e-6;
+}
+
+export function windowInfo(level, x, z) {
+  const win = basicWindow(level, x, z);
+  if (!win) return null;
+  const style = getTheme(level.theme).window;
+  const inset = style?.inset ?? FRAME / 2;
+  const [ux, uz] = [-win.n[1], win.n[0]];
+  const joined = (sign) => style?.merge && sameWindow(win, basicWindow(level, x + ux * sign, z + uz * sign));
+  return { ...win, left: joined(-1) ? 0 : inset, right: joined(1) ? 0 : inset };
 }
 
 /** Alle vinduene i rommet. */
@@ -101,18 +121,21 @@ export function sunPatch(level, win, sun) {
     const [cx, cz] = [Math.floor(x), Math.floor(z)];
     return getTile(level, cx, cz) === TILE.FLOOR && Math.abs(topFloorAt(level, cx, cz) - win.floor) < 0.05;
   };
-  const a = 0.5 - FRAME;
-  for (let top = win.head - win.floor; top > SILL + 0.25; top -= 0.2) {
+  const margin = getTheme(level.theme).window?.inset ?? FRAME;
+  const a = (win.width ?? 1) / 2 - margin;
+  const low = win.sill - win.floor;
+  const across = Math.max(4, Math.ceil(2 * a / 0.2));
+  for (let top = win.head - win.floor; top > low + 0.25; top -= 0.2) {
     const at = (s, h) => [face[0] + ux * s + dir[0] * h * reach, face[1] + uz * s + dir[1] * h * reach];
-    const pts = [at(-a, SILL), at(a, SILL), at(a, top), at(-a, top)];
+    const pts = [at(-a, low), at(a, low), at(a, top), at(-a, top)];
     // Hele flekken må ligge på åpent gulv: et rutenett av punkter hvert ~20 cm, så den aldri går
     // gjennom en innervegg og inn i rommet ved siden av (ikke bare hjørnene og midten).
-    const n = Math.ceil(((top - SILL) * reach) / 0.2) + 1;
+    const n = Math.ceil(((top - low) * reach) / 0.2) + 1;
     let ok = true;
-    for (let i = 0; i <= 4 && ok; i++) {
-      for (let j = 0; j <= n && ok; j++) ok = open(...at(-a + (2 * a * i) / 4, SILL + ((top - SILL) * j) / n));
+    for (let i = 0; i <= across && ok; i++) {
+      for (let j = 0; j <= n && ok; j++) ok = open(...at(-a + (2 * a * i) / across, low + ((top - low) * j) / n));
     }
-    if (ok) return { points: pts, top: (top - SILL) / (win.head - win.sill) };
+    if (ok) return { points: pts, top: (top - low) / (win.head - win.sill) };
   }
   return null;
 }

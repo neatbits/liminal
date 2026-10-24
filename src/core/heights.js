@@ -7,6 +7,8 @@
 // opp til taket. floorAt/topFloorAt/ceilingAt gjelder hele søylen (nederste gulv, øverste
 // tak); groundAt/headAt tar høyden man står i (y) og gir gulvet/taket i den etasjen.
 import { TILE, DOOR_HEIGHT, getTile, inBounds } from './level.js';
+import { fountainRimAt } from './fountains.js';
+import { submergedPillar, pillarPoolDepth } from './pillar-water.js';
 
 export const HEADROOM = DOOR_HEIGHT;
 export const SLAB = 0.3; // tykkelsen på dekkeplaten
@@ -23,6 +25,7 @@ export const STAIR_DIRS = [
 
 /** Bassengdybden i ruten (fra gulvkanten til bunnen), også for ruter som ikke er vann. */
 export function depthAt(level, x, z) {
+  if (submergedPillar(level, x, z)) return pillarPoolDepth(level, x, z);
   const dm = inBounds(level, x, z) ? level.depths[z * level.w + x] : 0;
   return dm ? dm / 10 : level.waterDepth;
 }
@@ -67,7 +70,7 @@ export function stairSpan(level, x, z) {
 /** Gulvhøyden i ruten: bassengbunnen for vann, bunnen av trappen, ellers gulvsonen. */
 export function floorAt(level, x, z) {
   const t = getTile(level, x, z);
-  if (t === TILE.WATER) return -depthAt(level, x, z);
+  if (t === TILE.WATER || submergedPillar(level, x, z)) return -depthAt(level, x, z);
   if (t === TILE.STAIRS) return stairSpan(level, x, z).bottom;
   return zoneFloor(level, x, z);
 }
@@ -75,7 +78,7 @@ export function floorAt(level, x, z) {
 /** Høyeste gulv i ruten (toppen av en trapp, vannkanten for basseng). */
 export function topFloorAt(level, x, z) {
   const t = getTile(level, x, z);
-  if (t === TILE.WATER) return 0;
+  if (t === TILE.WATER || submergedPillar(level, x, z)) return 0;
   if (t === TILE.STAIRS) return stairSpan(level, x, z).top;
   return zoneFloor(level, x, z);
 }
@@ -105,6 +108,8 @@ export function headAt(level, x, z, y) {
 export function groundAt(level, x, z, y = null) {
   const cx = Math.floor(x);
   const cz = Math.floor(z);
+  const rim = fountainRimAt(level, x, z);
+  if (rim !== null) return rim;
   if (y !== null) {
     const d = deckAt(level, cx, cz);
     if (d && y >= d - DECK_SNAP) return d;

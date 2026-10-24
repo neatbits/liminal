@@ -107,6 +107,12 @@
   right: 22px;
 }
 
+.vhs-speed {
+  position: absolute;
+  bottom: 50px;
+  left: 22px;
+}
+
 
 /* Plask når man lander etter en sklietur: et blågrønt glimt som forsvinner. */
 .hud > .hud-splash {
@@ -146,7 +152,7 @@
 }
 
 /* Drømmegange: gålinjen er nesten borte til man holder musen over den. */
-.hud.drifting .hud-walkbar {
+.hud.drifting:not(.paused) .hud-walkbar {
   opacity: 0.25;
   transition: opacity 0.6s;
 }

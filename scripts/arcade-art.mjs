@@ -1,109 +1,66 @@
-// Egen grafikk til arkademaskinen (3dmodels/arcade_machine_2): et oppdiktet spill, «STAR LANES»,
-// i stedet for originalens League of Legends-grafikk (varemerke og kunst tilhører Riot Games).
-// Maler nye ParteFrontal_baseColor.png (sidekunst, skjerm, toppskilt) og Caixa_baseColor.png
-// (kontrollpanelet) i de samme feltene i teksturen som originalen brukte. Feltene er speilet
-// loddrett i teksturen (slik modellens UV-er er lagt), så hvert felt tegnes rett vei og snus.
-// Kjør: node scripts/arcade-art.mjs, deretter npm run models.
+// Build ten original UV-compatible artwork pairs. Run: node scripts/arcade-art.mjs.
+// The GLB geometry is shared; runtime loads only the variants used in the room.
 import sharp from 'sharp';
+import { mkdirSync } from 'node:fs';
+import { ARCADE_VARIANTS } from '../src/core/arcades.js';
+import { pixelText, stars, svg } from './arcade-pixel.mjs';
+import { gameScene } from './arcade-scenes.mjs';
 
-const DIR = '3dmodels/arcade_machine_2/textures';
-const S = 1024;
+const OUT='src/assets/arcade';
+mkdirSync(OUT,{recursive:true});
+const coin=await sharp('3dmodels/arcade_machine_2/textures/ParteFrontal_baseColor.png')
+  .extract({left:20,top:100,width:60,height:140}).png().toBuffer();
+const black={create:{width:1024,height:1024,channels:3,background:'#05060a'}};
 
-// 5 × 7 pikselskrift for bokstavene vi bruker.
-const GLYPHS = {
-  A: '01110 10001 10001 11111 10001 10001 10001', C: '01110 10001 10000 10000 10000 10001 01110',
-  E: '11111 10000 10000 11110 10000 10000 11111', H: '10001 10001 10001 11111 10001 10001 10001',
-  I: '01110 00100 00100 00100 00100 00100 01110', L: '10000 10000 10000 10000 10000 10000 11111',
-  N: '10001 11001 10101 10011 10001 10001 10001', O: '01110 10001 10001 10001 10001 10001 01110',
-  P: '11110 10001 10001 11110 10000 10000 10000', R: '11110 10001 10001 11110 10100 10010 10001',
-  S: '01111 10000 10000 01110 00001 00001 11110', T: '11111 00100 00100 00100 00100 00100 00100',
-  Y: '10001 10001 01010 00100 00100 00100 00100', 0: '01110 10011 10101 10101 11001 10001 01110',
-  1: '00100 01100 00100 00100 00100 00100 01110', 2: '01110 10001 00001 00110 01000 10000 11111',
-  5: '11111 10000 11110 00001 00001 10001 01110', '-': '00000 00000 00000 11111 00000 00000 00000',
-  ' ': '00000 00000 00000 00000 00000 00000 00000',
-};
-
-/** Tekst i pikselskrift som SVG-rektangler, sentrert om cx. */
-function pixelText(text, cx, y, px, fill) {
-  const w = text.length * 6 * px - px;
-  let out = '';
-  [...text].forEach((ch, k) => {
-    const rows = GLYPHS[ch].split(' ');
-    rows.forEach((row, j) => {
-      [...row].forEach((bit, i) => {
-        if (bit === '1') out += `<rect x="${cx - w / 2 + (k * 6 + i) * px}" y="${y + j * px}" width="${px}" height="${px}" fill="${fill}"/>`;
-      });
-    });
-  });
-  return out;
+function side(game,w,h,v) {
+  const [a,b,c]=game.colors;
+  let art=`<rect width="${w}" height="${h}" fill="${game.background}"/>${stars(w,h,55,v+31)}`;
+  for(let k=0;k<4;k++) {
+    const y=h*.35+k*34;
+    art+=`<path d="M0 ${y}L${w} ${y-w*(v%2?.4:.6)}" stroke="${[a,b,c][k%3]}" stroke-width="${12+v%3*5}"/>`;
+  }
+  art+=`<g transform="translate(${w*.04} ${h*.33}) scale(${w/490})">${gameScene(game)}</g>`;
+  return art+pixelText(game.name,w/2,h*.8,Math.floor(w/(game.name.length*7)),a);
 }
 
-/** Stjerner med fast frø (samme bilde hver gang). */
-function stars(w, h, n, seed = 1) {
-  let s = seed;
-  const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-  let out = '';
-  for (let k = 0; k < n; k++) out += `<rect x="${(r() * w) | 0}" y="${(r() * h) | 0}" width="${r() < 0.15 ? 3 : 2}" height="${r() < 0.15 ? 3 : 2}" fill="#fff" opacity="${(0.4 + r() * 0.6).toFixed(2)}"/>`;
-  return out;
+function screen(game,w,h,v) {
+  const [a,b,c]=game.colors;
+  const px=Math.min(6,Math.floor((w-20)/(game.name.length*6)));
+  return `<rect width="${w}" height="${h}" fill="${game.background}"/>${stars(w,h,45,v+7)}
+    ${pixelText(game.name,w/2+2,25,px,b)}${pixelText(game.name,w/2,23,px,c)}
+    ${pixelText('HI 012500',w/2,82,3,a)}${gameScene(game)}
+    ${pixelText('INSERT COIN',w/2,h-57,4,a)}${pixelText('1 OR 2 PLAYERS',w/2,h-25,3,c)}`;
 }
 
-const svg = (w, h, body) => Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">${body}</svg>`);
-
-/** Retro skråstriper i neon over en mørk overgang (sidene og panelet). */
-function stripes(w, h, seed) {
-  const cols = ['#ff3d9a', '#ffb547', '#3de0ff'];
-  let out = `<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0b3d"/><stop offset="1" stop-color="#05030f"/></linearGradient></defs><rect width="${w}" height="${h}" fill="url(#g)"/>${stars(w, h, 70, seed)}`;
-  cols.forEach((c, k) => {
-    const o = h * 0.35 + k * 34;
-    out += `<polygon points="0,${o} ${w},${o - w * 0.6} ${w},${o - w * 0.6 + 22} 0,${o + 22}" fill="${c}"/>`;
-  });
-  return out;
+function marquee(game,w,h,v) {
+  const [a,b,c]=game.colors;
+  const px=Math.min(8,Math.floor((w-40)/(game.name.length*6)));
+  let art=`<rect width="${w}" height="${h}" fill="${game.background}"/>${stars(w,h,45,v+3)}
+    <circle cx="${w*.5}" cy="${h*.7}" r="${h*.33}" fill="${b}" opacity=".6"/>`;
+  for(let i=0;i<6;i++) art+=`<path d="M0 ${110+i*12}H${w}" stroke="${a}" stroke-width="2"/>`;
+  return art+pixelText(game.name,w/2+3,28,px,b)+pixelText(game.name,w/2,25,px,c);
 }
 
-function screen(w, h) {
-  const ship = '00100 01110 01110 11111 11011 10001'.split(' ');
-  let s = '';
-  ship.forEach((row, j) => [...row].forEach((b, i) => {
-    if (b === '1') s += `<rect x="${w / 2 - 15 + i * 6}" y="${h * 0.5 + j * 6}" width="6" height="6" fill="#7dffb0"/>`;
-  }));
-  return `<rect width="${w}" height="${h}" fill="#070a24"/>${stars(w, h, 90, 7)}
-    ${pixelText('STAR LANES', w / 2 + 3, 43, 7, '#7a1d4f')}${pixelText('STAR LANES', w / 2, 40, 7, '#ffd23f')}
-    ${pixelText('HI 012500', w / 2, 112, 3, '#9fd8ff')}${s}
-    ${pixelText('INSERT COIN', w / 2, h - 78, 4, '#ff5fae')}
-    ${pixelText('1 OR 2 PLAYERS', w / 2, h - 40, 3, '#c9c9ff')}`;
+function panel(game,w,h,v) {
+  const [a,b,c]=game.colors;
+  let art=side(game,w,h,v);
+  for(let i=0;i<3;i++) art+=`<circle cx="${w*.6+i*65}" cy="${h*.5}" r="26" fill="none" stroke="${[a,b,c][i]}" stroke-width="5"/>`;
+  return art+pixelText('START',w*.78,h*.8,5,c);
 }
 
-function marquee(w, h) {
-  let grid = '';
-  for (let k = 0; k <= 12; k++) grid += `<line x1="${w / 2 + (k - 6) * 30}" y1="${h * 0.62}" x2="${w / 2 + (k - 6) * 140}" y2="${h}" stroke="#ff3d9a" stroke-width="2" opacity="0.7"/>`;
-  for (let k = 0; k < 5; k++) grid += `<line x1="0" y1="${h * 0.62 + k * k * 4 + k * 6}" x2="${w}" y2="${h * 0.62 + k * k * 4 + k * 6}" stroke="#ff3d9a" stroke-width="2" opacity="0.7"/>`;
-  return `<defs><linearGradient id="m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12062e"/><stop offset="0.55" stop-color="#5a1366"/><stop offset="0.62" stop-color="#ff7a3d"/><stop offset="0.63" stop-color="#14051f"/><stop offset="1" stop-color="#14051f"/></linearGradient></defs>
-    <rect width="${w}" height="${h}" fill="url(#m)"/>${stars(w, h * 0.5, 40, 3)}<circle cx="${w / 2}" cy="${h * 0.62}" r="${h * 0.22}" fill="#ffb547" opacity="0.85"/>${grid}
-    ${pixelText('STAR LANES', w / 2 + 4, 18, 8, '#3a0b3f')}${pixelText('STAR LANES', w / 2, 14, 8, '#3de0ff')}`;
+async function region(x,y,w,h,body) {
+  return {input:await sharp(svg(w,h,body)).flip().png().toBuffer(),left:x,top:y};
 }
 
-/** Tegner et felt rett vei, snur det loddrett og legger det inn på plass. */
-async function region(x, y, w, h, body) {
-  return { input: await sharp(svg(w, h, body)).flip().png().toBuffer(), left: x, top: y };
+for(const [v,game] of ARCADE_VARIANTS.entries()) {
+  const prefix=String(v).padStart(2,'0');
+  await sharp(black).composite([
+    {input:coin,left:20,top:100},
+    await region(0,292,550,552,side(game,550,552,v)),
+    await region(553,308,446,312,screen(game,446,312,v)),
+    await region(430,724,592,182,marquee(game,592,182,v)),
+  ]).webp({quality:90}).toFile(`${OUT}/${prefix}-front.webp`);
+  await sharp(black).composite([await region(198,526,826,376,panel(game,826,376,v))])
+    .webp({quality:90}).toFile(`${OUT}/${prefix}-panel.webp`);
+  console.log(`${prefix}: ${game.name}`);
 }
-
-const front = sharp(`${DIR}/ParteFrontal_baseColor.png`);
-const black = { create: { width: S, height: S, channels: 3, background: '#000' } };
-// Myntlampen (det blå feltet øverst til venstre) tas vare på; resten males på nytt.
-const coin = await front.clone().extract({ left: 20, top: 100, width: 60, height: 140 }).toBuffer();
-const frontOut = await sharp(black)
-  .composite([
-    { input: coin, left: 20, top: 100 },
-    await region(0, 292, 550, 552, stripes(550, 552, 11)),
-    await region(553, 308, 446, 312, screen(446, 312)),
-    await region(430, 724, 592, 182, marquee(592, 182)),
-  ])
-  .png()
-  .toBuffer();
-const panelOut = await sharp(black)
-  .composite([await region(198, 526, 826, 376, stripes(826, 376, 23))])
-  .png()
-  .toBuffer();
-await sharp(frontOut).toFile(`${DIR}/ParteFrontal_baseColor.png`);
-await sharp(panelOut).toFile(`${DIR}/Caixa_baseColor.png`);
-console.log('Arcade art painted.');

@@ -1,14 +1,23 @@
 // Genererer alle flater i rommet som MeshData: gulv, trapper, tak, vegger, basseng, søyler,
 // dekker og veggtopper (for oversiktsvisningen). Vegger og søyler bygges per etasje der ruten
 // har dekke (se decks.js). Ren logikk – ingen three.js.
-import { TILE, getTile, PILLAR_SIZE } from '../core/level.js';
+import { TILE, getTile } from '../core/level.js';
+import { buildPillar } from './pillars.js';
+import { waterCell } from '../core/pillar-water.js';
 import { floorAt, topFloorAt, ceilingAt, edgeHeight } from '../core/heights.js';
 import { MeshData } from './mesher.js';
 import { SIDES, addCaps } from './caps.js';
 import { buildSteps, surfaceHeight, stepBreaks } from './stairs.js';
+import { isEscalator } from '../core/escalators.js';
 import { FINISH } from '../core/zones.js';
 import { openSpans, clipSpans, buildDeck } from './decks.js';
-import { windowInfo, FRAME } from '../core/windows.js';
+import { windowInfo } from '../core/windows.js';
+import { cornerShape, sideOpened } from '../core/corners.js';
+import { buildCorner } from './corners.js';
+import { wallTextureMap } from './wall-textures.js';
+import { mallRoof } from '../core/mall-roof.js';
+import { isShopfront, shopfrontNormal } from '../core/shopfronts.js';
+import { SHOP_INTERIORS, shopInteriorMap } from '../core/shop-interiors.js';
 
 const UP = [0, 1, 0];
 const DOWN = [0, -1, 0];
@@ -57,21 +66,6 @@ function horizontal(mesh, cx, cz, y, S, facingUp, closes, step, gain = 1) {
   }
 }
 
-function pillar(mesh, cx, cz, y0, y1) {
-  const h = PILLAR_SIZE / 2;
-  const mx = cx + 0.5;
-  const mz = cz + 0.5;
-  const faces = [
-    { n: [0, 0, -1], L: [mx + h, mz - h], R: [mx - h, mz - h], u: (x, z) => -x },
-    { n: [0, 0, 1], L: [mx - h, mz + h], R: [mx + h, mz + h], u: (x) => x },
-    { n: [-1, 0, 0], L: [mx - h, mz - h], R: [mx - h, mz + h], u: (x, z) => z },
-    { n: [1, 0, 0], L: [mx + h, mz + h], R: [mx + h, mz - h], u: (x, z) => -z },
-  ];
-  for (const f of faces) {
-    mesh.wall(f.L[0], f.L[1], f.R[0], f.R[1], f.n, f.u(...f.L), f.u(...f.R), y0, y1, [1, 1], undefined, y0);
-  }
-}
-
 /**
  * Sider der denne ruten står høyere enn naboen (hevet gulv, trappevanger): loddrette flater
  * fra naboens overflate opp til vår, vendt mot naboen. Kanten deles der trinn skifter høyde.
@@ -104,7 +98,12 @@ function cliffs(mesh, level, cx, cz, s, L, R) {
  *          Selve vannflaten bygges i world/water/.
  */
 export function buildSurfaces(level, field, { subdivide } = {}) {
+  const roof = mallRoof(level);
+  const shops = shopInteriorMap(level);
+  const wallUV = wallTextureMap(level);
   const out = {
+    ...Object.fromEntries(SHOP_INTERIORS.flatMap((_, style) =>
+      ['Floor', 'Wall', 'Ceiling'].map(surface => [`shop${surface}_${style}`, new MeshData(field)]))),
     floor: new MeshData(field),
     ceiling: new MeshData(field),
     wall: new MeshData(field),
@@ -122,49 +121,61 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
   for (let cz = 0; cz < level.h; cz++) {
     for (let cx = 0; cx < level.w; cx++) {
       const t = getTile(level, cx, cz);
-      if (t === TILE.WALL) continue;
+      // Skrå/avrundet hjørne (core/corners.js): veggruten er åpnet mot hjørnet, gulvruten får en kile.
+      const shape = t === TILE.WALL || t === TILE.FLOOR ? cornerShape(level, cx, cz) : null;
+      if (t === TILE.WALL) {
+        if (shape) buildCorner(shape, { floor: out.floor, ceiling: out.ceiling, wall: out.wall }, [{ lo: shape.fy, hi: shape.cy, base: shape.fy }], wallUV);
+        continue;
+      }
       const fy = floorAt(level, cx, cz);
       const cy = ceilingAt(level, cx, cz);
-      const vBase = t === TILE.WATER ? 0 : fy; // gulvlisten står på bassengkanten
+      const wet = waterCell(level, cx, cz);
+      const vBase = wet ? 0 : fy; // gulvlisten står på bassengkanten
       // Flislagte ruter (bad o.l.) får egne gulv- og veggflater med flismaterialene.
       const tiled = t !== TILE.WATER && level.finish[cz * level.w + cx] === FINISH.TILES;
-      const floorMesh = tiled ? out.tileFloor : out.floor;
-      const wallMesh = tiled ? out.tileWall : out.wall;
-      if (t === TILE.WATER) {
+      const style = shops[cz * level.w + cx] - 1;
+      const floorMesh = style>=0 ? out[`shopFloor_${style}`] : tiled ? out.tileFloor : out.floor;
+      const wallMesh = style>=0 ? out[`shopWall_${style}`] : tiled ? out.tileWall : out.wall;
+      const ceilingMesh = style>=0 ? out[`shopCeiling_${style}`] : out.ceiling;
+      if (wet) {
         // Bunnen mørkner mot bassengkanten og mot trinn opp til grunnere vann.
         horizontal(out.basin, cx, cz, fy, S, true, (x, z) => floorAt(level, x, z) > fy + STEP, 0.1);
       } else if (t === TILE.STAIRS) {
-        buildSteps(floorMesh, level, cx, cz);
-      } else {
+        if (!isEscalator(level, cx, cz)) buildSteps(floorMesh, level, cx, cz);
+      } else if (!shape) {
         const closes = (x, z) => isWall(x, z) || topFloorAt(level, x, z) > fy + 0.01;
         horizontal(floorMesh, cx, cz, fy, S, true, closes, 0.12);
       }
       // Taket får mindre direkte lys – ellers blir det overeksponert rundt armaturene.
       const lower = (x, z) => isWall(x, z) || ceilingAt(level, x, z) < cy - STEP;
-      horizontal(out.ceiling, cx, cz, cy, S, false, lower, 0.1, CEILING_GAIN);
+      if (!shape && !roof?.mask[cz*level.w+cx]) horizontal(ceilingMesh, cx, cz, cy, S, false, lower, 0.1, CEILING_GAIN);
       const spans = openSpans(level, cx, cz, vBase);
-      if (t === TILE.PILLAR) for (const sp of spans) pillar(wallMesh, cx, cz, sp.lo, sp.hi);
-      buildDeck(level, cx, cz, { floorMesh, ceiling: out.ceiling, wallMesh }, SIDES, S, CEILING_GAIN);
+      if (shape) buildCorner(shape, { floor: floorMesh, ceiling: ceilingMesh, wall: wallMesh }, spans, wallUV);
+      if (t === TILE.PILLAR) for (const sp of spans) buildPillar(wallMesh, level, cx, cz, sp.lo, sp.hi, sp.base);
+      buildDeck(level, cx, cz, { floorMesh, ceiling: ceilingMesh, wallMesh }, SIDES, S, CEILING_GAIN);
 
       for (const s of SIDES) {
         const nx = cx + s.dx;
         const nz = cz + s.dz;
         const L = [cx + s.L[0], cz + s.L[1]];
         const R = [cx + s.R[0], cz + s.R[1]];
-        const uL = L[0] * s.ux + L[1] * s.uz;
-        const uR = uL + 1;
+        const originalU = L[0] * s.ux + L[1] * s.uz;
+        const [uL, uR] = wallUV(L, R) ?? [originalU, originalU + 1];
         if (isWall(nx, nz)) {
+          if (isShopfront(level, nx, nz) && shopfrontNormal(level, nx, nz)) continue;
+          // Siden ligger i veggkilen, eller naboveggen er åpnet mot oss: ingen vegg her.
+          if (sideOpened(shape, s.dx, s.dz) || sideOpened(cornerShape(level, nx, nz), -s.dx, -s.dz)) continue;
           const left = isWall(cx - s.ux, cz - s.uz) ? 0.8 : 1;
           const right = isWall(cx + s.ux, cz + s.uz) ? 0.8 : 1;
           const win = windowInfo(level, nx, nz);
           if (win && win.n[0] === -s.dx && win.n[1] === -s.dz) {
             // Vindu: vegg under og over åpningen, og smale stykker på sidene av den (karmen).
-            const f = FRAME / 2;
             const at = (t) => [L[0] + (R[0] - L[0]) * t, L[1] + (R[1] - L[1]) * t];
             for (const sp of [...clipSpans(spans, -Infinity, win.sill), ...clipSpans(spans, win.head, Infinity)]) {
               wallMesh.wall(L[0], L[1], R[0], R[1], s.n, uL, uR, sp.lo, sp.hi, [left, right], undefined, sp.base);
             }
-            for (const [t0, t1] of [[0, f], [1 - f, 1]]) {
+            // Window-basis går motsatt vei av veggstripens L→R. Ingen stolper mellom delte glassruter.
+            for (const [t0, t1] of [[0, win.right], [1 - win.left, 1]].filter(([a, b]) => b - a > 1e-6)) {
               const [A, B] = [at(t0), at(t1)];
               for (const sp of clipSpans(spans, win.sill, win.head)) wallMesh.wall(A[0], A[1], B[0], B[1], s.n, uL + t0, uL + t1, sp.lo, sp.hi, [1, 1], { bottom: false, top: false }, sp.base);
             }
@@ -181,11 +192,11 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
           }
         }
         // Bassengkant: fra vår bunn opp til naboens bunn, eller til kanten (0) mot gulv.
-        if (t === TILE.WATER) {
-          const nfy = getTile(level, nx, nz) === TILE.WATER ? floorAt(level, nx, nz) : Math.min(0, edgeHeight(level, nx, nz, -s.dx, -s.dz));
+        if (wet) {
+          const nfy = waterCell(level, nx, nz) ? floorAt(level, nx, nz) : Math.min(0, edgeHeight(level, nx, nz, -s.dx, -s.dz));
           if (nfy > fy + STEP) out.basin.wall(L[0], L[1], R[0], R[1], s.n, uL, uR, fy, nfy, [1, 1], { bottom: true, top: false });
         }
-        cliffs(wallMesh, level, cx, cz, s, L, R);
+        if (!isEscalator(level, cx, cz)) cliffs(wallMesh, level, cx, cz, s, L, R);
       }
     }
   }

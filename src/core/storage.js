@@ -1,6 +1,7 @@
-// Lokal lagring i nettleseren. Alt er pakket i try/catch: privat modus eller full
-// lagring skal aldri knekke appen.
+// Lokal lagring i nettleseren. Blokkert, full eller ødelagt lagring gir false/null;
+// en ødelagt romliste skal aldri overskrives med en tom liste.
 import { levelFromJSON, levelToJSON } from './serialize.js';
+import { waveStrength } from './water.js';
 
 const ROOMS_KEY = 'liminal.rooms.v1';
 const DRAFT_KEY = 'liminal.draft.v1';
@@ -25,7 +26,9 @@ function readJSON(key, fallback) {
 
 function writeJSON(key, value) {
   try {
-    store()?.setItem(key, JSON.stringify(value));
+    const storage = store();
+    if (!storage) return false;
+    storage.setItem(key, JSON.stringify(value));
     return true;
   } catch {
     return false;
@@ -36,41 +39,65 @@ function newId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
+function readRooms() {
+  const raw = store()?.getItem(ROOMS_KEY);
+  const rooms = raw == null ? [] : JSON.parse(raw);
+  if (!Array.isArray(rooms)) throw new Error('Invalid saved room list.');
+  return rooms;
+}
+
 /** Liste over lagrede rom, nyeste først: [{ id, name, theme, w, h, updated }] */
 export function listRooms() {
-  const rooms = readJSON(ROOMS_KEY, []);
-  if (!Array.isArray(rooms)) return [];
-  return rooms
-    .filter((r) => r && r.id && r.data)
-    .map(({ id, data, updated }) => ({ id, name: data.name, theme: data.theme, w: data.w, h: data.h, updated }))
-    .sort((a, b) => b.updated - a.updated);
+  try {
+    return readRooms()
+      .filter((r) => r && typeof r.id === 'string' && r.data && typeof r.data === 'object')
+      .map(({ id, data, updated }) => ({ id, name: data.name, theme: data.theme, w: data.w, h: data.h, updated }))
+      .sort((a, b) => b.updated - a.updated);
+  } catch {
+    return [];
+  }
 }
 
 /** Lagrer rommet. Gir rommet en id første gang. Returnerer false ved feil. */
 export function saveRoom(level) {
-  if (!level.id) level.id = newId();
-  const rooms = readJSON(ROOMS_KEY, []).filter((r) => r && r.id !== level.id);
-  rooms.push({ id: level.id, updated: Date.now(), data: levelToJSON(level) });
-  return writeJSON(ROOMS_KEY, rooms);
+  try {
+    const id = level.id || newId();
+    const rooms = readRooms().filter((r) => r?.id !== id);
+    rooms.push({ id, updated: Date.now(), data: levelToJSON(level) });
+    if (!writeJSON(ROOMS_KEY, rooms)) return false;
+    level.id = id;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function loadRoom(id) {
-  const entry = readJSON(ROOMS_KEY, []).find((r) => r && r.id === id);
-  if (!entry) return null;
-  const level = levelFromJSON(entry.data);
-  level.id = id;
-  return level;
+  try {
+    const entry = readRooms().find((r) => r?.id === id);
+    if (!entry) return null;
+    const level = levelFromJSON(entry.data);
+    level.id = id;
+    return level;
+  } catch {
+    return null;
+  }
 }
 
 export function deleteRoom(id) {
-  return writeJSON(
-    ROOMS_KEY,
-    readJSON(ROOMS_KEY, []).filter((r) => r && r.id !== id),
-  );
+  try {
+    return writeJSON(ROOMS_KEY, readRooms().filter((r) => r?.id !== id));
+  } catch {
+    return false;
+  }
 }
 
 export function saveDraft(level) {
-  return writeJSON(DRAFT_KEY, { id: level.id, data: levelToJSON(level) });
+  try {
+    return writeJSON(DRAFT_KEY, { id: level.id, data: levelToJSON(level) });
+  } catch {
+    return false;
+  }
 }
 
 export function loadDraft() {
@@ -88,12 +115,21 @@ export function loadDraft() {
 export const DEFAULT_SETTINGS = Object.freeze({
   vhs: false,
   mood: 'liminal', // stemningen i gåmodus (gen/moods.js): normal … nightmare
+  light: 'room', // lysfargen i visningen (core/tints.js): 'room' = rommets, ellers overstyrt
+  levelSize: 'medium', // størrelsen på de uendelige nivåene (gen/sizes.js): small … huge
   grain: true,
   sound: true,
+  music: false, // musikken (audio/music.js)
   volume: 0.8,
   sensitivity: 1,
   fov: 75,
   waterReflections: true,
+  waterDetail: false, // detaljert vann: speiling i full oppløsning og flere småbølger (tyngre)
+  waterWaves: 1, // bakgrunnsbølger: 0 = stille, 1 = temaets styrke, 2 = dobbelt; plaskringer er uavhengige
+  fullscreenAspect: 'screen', // format i fullskjerm (view3d/display.js): screen, 16:9, 21:9, 16:10
+  renderScale: 1, // oppløsning: 1, 0.75 eller 0.5
+  effects: 'full', // 'reduced' = uten bloom og kantutjevning
+  fpsCap: 0, // bildefrekvens: 0 = ubegrenset, 60 eller 30
   grid: true,
   rulers: true,
 });
@@ -101,6 +137,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
 export function loadSettings() {
   const s = readJSON(SETTINGS_KEY, {});
   const out = { ...DEFAULT_SETTINGS, ...(s && typeof s === 'object' ? s : {}) };
+  out.waterWaves = waveStrength(out.waterWaves);
   // Fra før stemningsskalaen: Scary mode → Nightmare, Scary · mild → Uncanny.
   if (s?.mood === undefined && s?.scary) out.mood = s.scaryMild ? 'uncanny' : 'nightmare';
   delete out.scary;

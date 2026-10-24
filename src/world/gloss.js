@@ -4,6 +4,7 @@
 // er matte, og hver flis ligger litt skjevt, så speilbildet brytes opp flis for flis.
 import * as THREE from 'three';
 import { lampData, LAMP_STEP } from './lamp-map.js';
+import { FLOOR_REFLECTION_PARS } from './floor-reflection.js';
 
 export const GLOSS_PARS = /* glsl */ `
 uniform sampler2D uLamps;
@@ -11,6 +12,10 @@ uniform vec2 uLampGrid;
 uniform vec2 uLampHalf;
 uniform float uLampRound;
 uniform vec3 uLampColor;
+uniform vec3 uTint;
+#ifdef USE_FLOOR_MIRROR
+${FLOOR_REFLECTION_PARS}
+#endif
 vec4 lampAt(vec2 xz) { return texture2D(uLamps, (floor(xz) + 0.5) / uLampGrid); }
 float tileHash(vec2 c) { return fract(sin(dot(c, vec2(127.1, 311.7))) * 43758.5453); }
 vec3 lampGlint(vec3 p, vec3 N, vec3 V) {
@@ -32,7 +37,7 @@ vec3 lampGlint(vec3 p, vec3 N, vec3 V) {
   float s = 1.0 - smoothstep(1.0 - blur, 1.0 + blur, dist);
   float g = floor(lamp.g * 255.0 + 0.5) - 1.0;
   if (g >= 0.0) s *= 0.04 + 0.96 * dot(uFlick, vec4(equal(vec4(g), vec4(0.0, 1.0, 2.0, 3.0))));
-  return uLampColor * s;
+  return uLampColor * uTint * s;
 }
 // gUv: flisrutenettet (1 per flis), amount: hvor blank flaten er.
 vec3 gloss(vec2 gUv, float amount, vec3 light) {
@@ -47,7 +52,11 @@ vec3 gloss(vec2 gUv, float amount, vec3 light) {
   vec3 tilt = (vec3(tileHash(c), tileHash(c + 17.0), tileHash(c + 41.0)) - 0.5) * 0.025;
   N = normalize(N + tilt - N * dot(N, tilt));
   float fres = 0.05 + 0.95 * pow(1.0 - max(dot(N, V), 0.0), 5.0);
-  return (lampGlint(vPos, N, V) + light * 0.25) * fres * mask;
+  vec3 shine = (lampGlint(vPos, N, V) + light * 0.25) * fres * mask;
+  #ifdef USE_FLOOR_MIRROR
+  shine += floorReflection(vPos, N, V, mask);
+  #endif
+  return shine;
 }`;
 
 /** Uniforms for glansen (legges i de delte uniformene), og kartet som må frigjøres. */

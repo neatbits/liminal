@@ -1,8 +1,9 @@
 // Ballbinger (tema med `pit: 'balls'`): bassengene fylles med plastballer i stedet for vann,
-// tegnet som én instansiert mesh. I gåmodus dytter spilleren ballene til side (kjølvann i
-// vertex-shaderen, se Wake) – ingen ekte fysikk, men billig og overbevisende.
+// tegnet som romlige instansgrupper. I gåmodus dytter spilleren ballene til side (kjølvann i
+// vertex-shaderen, se Wake). De få ekte fysikkballene er separate playball-gjenstander.
 import * as THREE from 'three';
 import { ballLayout, BALL_RADIUS, Wake, WAKE_POINTS, WAKE_RADIUS } from './ball-layout.js';
+import { spatialBuckets, BALL_CHUNK } from './chunks.js';
 
 const VERT = /* glsl */ `
 uniform vec4 uWake[${WAKE_POINTS}];
@@ -19,6 +20,7 @@ void main() {
   vec3 off = vec3(0.0);
   for (int k = 0; k < ${WAKE_POINTS}; k++) {
     vec4 w = uWake[k];
+    if (w.z <= 0.0) continue;
     vec2 d = centre.xz - w.xy;
     float l = length(d);
     float f = w.z * (1.0 - smoothstep(0.0, ${WAKE_RADIUS.toFixed(2)}, l));
@@ -32,17 +34,18 @@ void main() {
 
 const FRAG = /* glsl */ `
 uniform float uBoost;
+uniform vec3 uTint;
 varying vec3 vColor;
 varying float vShade;
 #include <fog_pars_fragment>
 void main() {
-  gl_FragColor = vec4(vColor * vShade * uBoost, 1.0);
+  gl_FragColor = vec4(vColor * vShade * uBoost * uTint, 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
   #include <fog_fragment>
 }`;
 
-/** @returns {{ mesh, touch(x, z, strength), update(dt), dispose() } | null} */
+/** mesh er en Group med instansgrupper; vertices teller alle ballinstansene. */
 export function createBalls(level, field, shared, colors) {
   const balls = ballLayout(level, field, colors.length);
   if (!balls.length) return null;
@@ -51,25 +54,34 @@ export function createBalls(level, field, shared, colors) {
   const wakeValues = new Float32Array(WAKE_POINTS * 4);
   const uniforms = Object.assign(THREE.UniformsUtils.merge([THREE.UniformsLib.fog]), {
     uBoost: shared.uBoost,
+    uTint: shared.uTint,
     uWake: { value: Array.from({ length: WAKE_POINTS }, () => new THREE.Vector4()) },
   });
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: VERT, fragmentShader: FRAG, fog: true });
-  const mesh = new THREE.InstancedMesh(geometry, material, balls.length);
+  const mesh = new THREE.Group();
   mesh.name = 'balls';
   const m = new THREE.Matrix4();
   const c = new THREE.Color();
   const base = colors.map((hex) => new THREE.Color(hex));
-  balls.forEach((b, i) => {
-    m.makeTranslation(b.x, b.y, b.z);
-    mesh.setMatrixAt(i, m);
-    c.copy(base[b.color]);
-    mesh.setColorAt(i, c.setRGB(c.r * b.light[0], c.g * b.light[1], c.b * b.light[2]));
-  });
-  mesh.instanceMatrix.needsUpdate = true;
-  mesh.instanceColor.needsUpdate = true;
-  mesh.computeBoundingSphere();
+  for (const bucket of spatialBuckets(balls, BALL_CHUNK)) {
+    const part = new THREE.InstancedMesh(geometry, material, bucket.length);
+    part.name = 'ball-chunk';
+    bucket.forEach((b, i) => {
+      m.makeTranslation(b.x, b.y, b.z);
+      part.setMatrixAt(i, m);
+      c.copy(base[b.color]);
+      part.setColorAt(i, c.setRGB(c.r * b.light[0], c.g * b.light[1], c.b * b.light[2]));
+    });
+    part.instanceMatrix.needsUpdate = true;
+    part.instanceColor.needsUpdate = true;
+    part.computeBoundingSphere();
+    // Shaderen kan flytte baller utenfor den opprinnelige instansens bounds.
+    part.boundingSphere.radius += Math.hypot(WAKE_POINTS * 1.5 * 0.12, WAKE_POINTS * 1.5 * 0.06);
+    mesh.add(part);
+  }
   return {
     mesh,
+    vertices: geometry.attributes.position.count * balls.length,
     touch: (x, z, strength) => wake.touch(x, z, strength),
     update(dt) {
       wake.step(dt);
@@ -77,6 +89,7 @@ export function createBalls(level, field, shared, colors) {
       uniforms.uWake.value.forEach((v, k) => v.fromArray(wakeValues, k * 4));
     },
     dispose() {
+      for (const part of mesh.children) part.dispose(); // frigjør rendererens instansattributter
       geometry.dispose();
       material.dispose();
     },

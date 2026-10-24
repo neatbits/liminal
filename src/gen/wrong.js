@@ -115,7 +115,7 @@ const CHANGES = {
   /** En gjenstand står med forsiden mot veggen. */
   facingWall(level, rand) {
     const list = level.objects ?? [];
-    const turnable = list.map((o, k) => k).filter((k) => !OBJECTS[list[k].id].floats && !OBJECTS[list[k].id].surface);
+    const turnable = list.map((o, k) => k).filter((k) => !OBJECTS[list[k].id].floats && !OBJECTS[list[k].id].surface && !OBJECTS[list[k].id].walk);
     if (!turnable.length) return null;
     const turned = pick(rand, turnable);
     const o = list[turned];

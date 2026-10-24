@@ -19,7 +19,7 @@ function sizeSelect(value) {
   return h('select', { class: 'field' }, SIZES.map((s) => h('option', { value: s, text: `${s} m`, selected: s === value })));
 }
 
-export function newRoomDialog({ theme, onCreate }) {
+export function newRoomDialog({ theme, onCreate, startup = false }) {
   const themeEl = themeSelect(theme);
   const wEl = sizeSelect(48);
   const hEl = sizeSelect(48);
@@ -46,6 +46,7 @@ export function newRoomDialog({ theme, onCreate }) {
   const body = h(
     'div',
     {},
+    startup ? h('p', { text: 'Create a new room, or continue the room behind this dialog.' }) : null,
     h('div', { class: 'row' }, h('label', { text: 'Theme' }), themeEl),
     h('div', { class: 'row-2' }, h('div', {}, h('label', { text: 'Width' }), wEl), h('div', {}, h('label', { text: 'Depth' }), hEl)),
     h('div', { class: 'side-label', text: 'Start from' }),
@@ -56,7 +57,7 @@ export function newRoomDialog({ theme, onCreate }) {
     title: 'New room',
     body,
     actions: [
-      { label: 'Cancel' },
+      { label: startup ? 'Continue current room' : 'Cancel' },
       { label: 'Create room', primary: true, onClick: () => onCreate({ theme: themeEl.value, w: +wEl.value, h: +hEl.value, template, seed: seedEl.value }) },
     ],
   });
@@ -99,7 +100,7 @@ export function myRoomsDialog({ rooms, onOpen, onDelete, onImport, onExport }) {
               text: 'Delete',
               onclick: (e) => {
                 if (!confirm(`Delete “${r.name}”?`)) return;
-                onDelete(r.id);
+                if (onDelete(r.id) === false) return;
                 e.currentTarget.closest('.card').remove();
               },
             }),
@@ -147,10 +148,15 @@ export function helpDialog() {
     ['0', 'Fit the plan'],
     ['Ctrl+Z / Ctrl+Y', 'Undo / redo'],
     ['Ctrl+S', 'Save to My rooms'],
-    ['W A S D / arrows', 'Walk (in 3D)'],
+    ['W A S D / arrows', 'Walk'],
     ['Shift', 'Run'],
-    ['V / M', 'VHS filter / sound on and off'],
-    ['Esc', 'Release the mouse · back to overview'],
+    ['Space', 'Jump (higher from a diving board)'],
+    ['E', 'Open and close doors'],
+    ['P', 'Take a photo'],
+    ['X', 'Next mood (Normal … Nightmare)'],
+    ['G', 'Dream walk on and off'],
+    ['V / M / N', 'VHS filter / sound / music on and off'],
+    ['Esc', 'Release the mouse · back to the editor'],
   ];
   openModal({
     title: 'Keyboard shortcuts',

@@ -33,6 +33,52 @@ describe('historikk', () => {
     expect(history.canUndo).toBe(false);
   });
 
+  it('tomt strøk etter angre beholder hele gjør-om-stakken', () => {
+    const level = createLevel({ w: 8, h: 8 });
+    const history = new History();
+    for (const tile of [TILE.FLOOR, TILE.WATER]) {
+      history.push(level);
+      setTile(level, 1, 1, tile);
+    }
+    history.undo(level);
+    history.undo(level);
+    for (let k = 0; k < 2; k++) {
+      history.push(level);
+      setTile(level, 1, 1, TILE.WALL);
+      history.dropIfUnchanged(level);
+    }
+    expect(history.canUndo).toBe(false);
+    expect(history.redo(level)).toBe(true);
+    expect(level.tiles[9]).toBe(TILE.FLOOR);
+    expect(history.redo(level)).toBe(true);
+    expect(level.tiles[9]).toBe(TILE.WATER);
+  });
+
+  it('en faktisk endring etter angre fjerner gammel gjør-om', () => {
+    const level = createLevel({ w: 8, h: 8 });
+    const history = new History();
+    history.push(level);
+    setTile(level, 1, 1, TILE.FLOOR);
+    history.undo(level);
+    history.push(level);
+    setTile(level, 2, 1, TILE.WATER);
+    history.dropIfUnchanged(level);
+    expect(history.redo(level)).toBe(false);
+    expect(history.undo(level)).toBe(true);
+    expect(level.tiles[10]).toBe(TILE.WALL);
+  });
+
+  it('tomt strøk ved full angrestakk beholder det eldste steget', () => {
+    const level = createLevel({ w: 8, h: 8 });
+    const history = new History(1);
+    history.push(level);
+    setTile(level, 1, 1, TILE.FLOOR);
+    history.push(level);
+    history.dropIfUnchanged(level);
+    expect(history.undo(level)).toBe(true);
+    expect(level.tiles[9]).toBe(TILE.WALL);
+  });
+
   it('respekterer grensen for antall steg', () => {
     const level = createLevel({ w: 8, h: 8 });
     const history = new History(3);
@@ -71,6 +117,17 @@ describe('historikk', () => {
 });
 
 describe('frøet i angrehistorikken', () => {
+  it('en ny seed alene er en faktisk endring', () => {
+    const level = createLevel();
+    level.seed = 1;
+    const history = new History();
+    history.push(level);
+    level.seed = 2;
+    history.dropIfUnchanged(level);
+    expect(history.undo(level)).toBe(true);
+    expect(level.seed).toBe(1);
+  });
+
   it('følger med når man angrer en generering', () => {
     const level = createLevel({ w: 6, h: 6 });
     level.seed = 12;

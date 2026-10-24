@@ -1,0 +1,11 @@
+Model Information:
+* title:	Chair Hospital
+* source:	https://sketchfab.com/3d-models/chair-hospital-baaa4ec5d6d34ad49004e4d151b43aa2
+* author:	Khafesys (https://sketchfab.com/Khafesys)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Chair Hospital" (https://sketchfab.com/3d-models/chair-hospital-baaa4ec5d6d34ad49004e4d151b43aa2) by Khafesys (https://sketchfab.com/Khafesys) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

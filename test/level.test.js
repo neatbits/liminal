@@ -14,6 +14,7 @@ import {
   MAX_SIZE,
   MIN_SIZE,
   WATER_DEPTH,
+  LAYERS,
 } from '../src/core/level.js';
 import { ceilingAt, depthAt, floorAt } from '../src/core/heights.js';
 import { levelStats } from '../src/core/stats.js';
@@ -43,11 +44,11 @@ describe('level', () => {
     expect(clampSize('abc')).toBe(MIN_SIZE);
   });
 
-  it('fjerner lys når ruten blir vegg eller søyle', () => {
+  it.each([TILE.WALL, TILE.PILLAR])('fjerner lys når ruten blir %s (vegg eller søyle)', (tile) => {
     const level = createLevel({ w: 8, h: 8 });
     setTile(level, 2, 2, TILE.FLOOR);
     expect(setLight(level, 2, 2, LIGHT.ON)).toBe(true);
-    setTile(level, 2, 2, TILE.PILLAR);
+    setTile(level, 2, 2, tile);
     expect(level.lights[2 * 8 + 2]).toBe(LIGHT.NONE);
   });
 
@@ -129,5 +130,56 @@ describe('level', () => {
     expect(big.waterDepth).toBe(1.5);
     expect(ceilingAt(big, 5, 5)).toBe(4);
     expect(depthAt(big, 5, 5)).toBe(2);
+  });
+
+  it('kopierer verdiene i alle lag og spawn uten delte mutable referanser', () => {
+    const level = createLevel({ w: 8, h: 8 });
+    const values = { tiles: TILE.WATER, lights: LIGHT.FLICKER, ceilings: 40, depths: 20, floors: 10, finish: 1, meta: 2, decks: 40, corners: 1 };
+    for (const key of LAYERS) level[key][9] = values[key];
+    const copy = cloneLevel(level);
+    expect(copy.spawn).toEqual(level.spawn);
+    copy.spawn.x = 1;
+    expect(level.spawn.x).toBe(4);
+    for (const key of LAYERS) {
+      expect(copy[key]).toEqual(level[key]);
+      expect(copy[key]).not.toBe(level[key]);
+      copy[key][9] = 0;
+      expect(level[key][9]).toBe(values[key]);
+    }
+  });
+
+  it.each([
+    [10, 12, 16, 16, 4, 5, 7, 7],
+    [16, 14, 10, 8, 7, 6, 4, 3],
+    [10, 12, 13, 17, 4, 5, 5, 7],
+    [13, 17, 10, 12, 6, 8, 4, 5],
+  ])('flytter alle lag og spawn fra %s × %s til %s × %s', (w, h, nw, nh, x, z, nx, nz) => {
+    const level = createLevel({ w, h });
+    const values = { tiles: TILE.FLOOR, lights: LIGHT.ON, ceilings: 40, depths: 20, floors: 10, finish: 1, meta: 2, decks: 40, corners: 1 };
+    for (const key of LAYERS) level[key][z * w + x] = values[key];
+    level.spawn = { x: x + 0.5, z: z + 0.5, a: 1.2 };
+    const resized = resizeLevel(level, nw, nh);
+    expect([resized.w, resized.h]).toEqual([nw, nh]);
+    expect(resized.spawn).toEqual({ x: nx + 0.5, z: nz + 0.5, a: 1.2 });
+    for (const key of LAYERS) {
+      expect(resized[key]).toHaveLength(nw * nh);
+      expect(resized[key][nz * nw + nx]).toBe(values[key]);
+      resized[key][nz * nw + nx] = 0;
+      expect(level[key][z * w + x]).toBe(values[key]);
+    }
+  });
+
+  it('endringsreturverdier skiller nye verdier, gjentakelser og ugyldige koordinater', () => {
+    const level = createLevel({ w: 8, h: 8 });
+    expect(setTile(level, 2, 2, TILE.FLOOR)).toBe(true);
+    expect(setTile(level, 2, 2, TILE.FLOOR)).toBe(false);
+    expect(setLight(level, 2, 2, LIGHT.ON)).toBe(true);
+    expect(setLight(level, 2, 2, LIGHT.ON)).toBe(false);
+    for (const [x, z] of [[-1, 0], [8, 0], [0, -1], [0, 8]]) {
+      expect(setTile(level, x, z, TILE.WATER)).toBe(false);
+      expect(setLight(level, x, z, LIGHT.ON)).toBe(false);
+    }
+    expect(level.tiles.filter((t) => t !== TILE.WALL)).toHaveLength(1);
+    expect(level.lights.filter((l) => l !== LIGHT.NONE)).toHaveLength(1);
   });
 });

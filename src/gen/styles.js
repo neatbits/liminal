@@ -7,6 +7,7 @@ import { fillInterior, fillRect, keepLargestRegion } from './util.js';
 import { recursiveDivision, punchLoops } from './division.js';
 import { hangDoors, doorsInWalls } from './doors.js';
 import { addPoolSlide } from './slides.js';
+import { poolPillars } from './pool-pillars.js';
 
 // Dører legges inn til slutt i hver stil, så tidligere rom (samme frø) beholder utformingen.
 
@@ -128,9 +129,7 @@ export function pool(level, rand) {
     fillRect(level, r.x0 + inset, r.z0 + inset, r.x1 - inset, r.z1 - inset, TILE.WATER);
     if (inset >= 2) big.push(r);
     if (rw >= 9 && rh >= 9 && rand() < 0.5) {
-      for (let z = r.z0 + inset + 1; z <= r.z1 - inset - 1; z += 3) {
-        for (let x = r.x0 + inset + 1; x <= r.x1 - inset - 1; x += 3) fillRect(level, x, z, x, z, TILE.PILLAR);
-      }
+      poolPillars(level, r, inset);
     }
   }
   lights(level, rand, 0.02, 0.02);

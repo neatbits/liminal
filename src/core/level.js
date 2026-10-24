@@ -4,7 +4,7 @@
 // (`height` / `waterDepth` / gulv i 0 m). For trapper er `floors` høyden på toppen.
 // `decks` gir ruten et dekke (andre etasje) i den høyden (desimeter, 0 = ingen), se heights.js.
 // `meta` er tilleggsinfo som hører til rutetypen (dørblad for døråpninger, se doors.js;
-// retning for trapper, se heights.js) og nullstilles når ruten får en annen type.
+// retning for trapper, se heights.js; søylediameter, se pillars.js) og nullstilles ved ny type.
 // Høyder per rute og punkt regnes ut i heights.js.
 import { getTheme, DEFAULT_THEME } from './themes.js';
 
@@ -16,19 +16,19 @@ export const LIGHT_COUNT = 4;
 export const MIN_SIZE = 8;
 export const MAX_SIZE = 128;
 export const HEIGHT_MIN = 2.2;
-export const HEIGHT_MAX = 8;
+export const HEIGHT_MAX = 20; // høye haller (lampene henger da ned, se world/lighting.js)
 export const DOOR_HEIGHT = 2.1;
 export const WATER_DEPTH = 0.7; // standard bassengdybde, fra gulvkanten til bunnen
 export const DEPTH_MIN = 0.3;
 export const DEPTH_MAX = 3;
 export const WATER_SURFACE = -0.12;
 export const PILLAR_SIZE = 0.5;
-export const FLOOR_MAX = 4;
+export const FLOOR_MAX = 10; // platåer
 export const DECK_MIN = 2.4; // et dekke (mesanin) ligger minst så høyt over gulvet
-export const DECK_MAX = 5.5;
+export const DECK_MAX = 10;
 
 /** Alle lag med én verdi per rute (Uint8Array(w*h), indeks z*w+x). */
-export const LAYERS = ['tiles', 'lights', 'ceilings', 'depths', 'floors', 'finish', 'meta', 'decks'];
+export const LAYERS = ['tiles', 'lights', 'ceilings', 'depths', 'floors', 'finish', 'meta', 'decks', 'corners'];
 
 export function clampSize(n) {
   return Math.max(MIN_SIZE, Math.min(MAX_SIZE, Math.round(Number(n) || MIN_SIZE)));
@@ -76,6 +76,7 @@ export function createLevel({ name = 'Untitled', theme = DEFAULT_THEME, w = 48, 
     slides: [], // vannsklier (core/slides.js) – byttes ut, endres aldri på stedet
     objects: [], // gjenstander (core/objects.js) – byttes ut, endres aldri på stedet
     sky: null, // tiden på døgnet for lyset i vinduene (core/windows.js), null = dag
+    tint: null, // lysfargen (core/tints.js), null = temaets
   };
   for (const key of LAYERS) level[key] = new Uint8Array(w * h);
   return level;
@@ -109,7 +110,10 @@ export function setTile(level, x, z, tile) {
   if (!inBounds(level, x, z)) return false;
   const i = z * level.w + x;
   let changed = level.tiles[i] !== tile;
-  if (changed) level.meta[i] = 0;
+  if (changed) {
+    level.meta[i] = 0;
+    level.corners[i] = 0; // skrått/avrundet hjørne (core/corners.js) hører til rutetypen
+  }
   level.tiles[i] = tile;
   if (!canHaveLight(tile) && level.lights[i] !== LIGHT.NONE) {
     level.lights[i] = LIGHT.NONE;
@@ -140,6 +144,7 @@ export function resizeLevel(level, w, h) {
   out.fog = level.fog;
   out.bright = level.bright;
   out.sky = level.sky ?? null;
+  out.tint = level.tint ?? null;
   const ox = Math.floor((w - level.w) / 2);
   const oz = Math.floor((h - level.h) / 2);
   for (let z = 0; z < level.h; z++) {

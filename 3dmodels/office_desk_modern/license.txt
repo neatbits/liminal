@@ -1,0 +1,11 @@
+Model Information:
+* title:	Office Table
+* source:	https://sketchfab.com/3d-models/office-table-80130830a9814e9298f11920ad0b7275
+* author:	Agha.Najam (https://sketchfab.com/Agha.Najam)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Office Table" (https://sketchfab.com/3d-models/office-table-80130830a9814e9298f11920ad0b7275) by Agha.Najam (https://sketchfab.com/Agha.Najam) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

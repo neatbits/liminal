@@ -1,0 +1,176 @@
+#app.mobile-player {
+  display: block;
+  position: relative;
+  height: 100dvh;
+  background: var(--bg);
+  overflow: hidden;
+}
+.mobile-viewport { position: absolute; inset: 0; }
+.mobile-home {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--bg);
+  padding: max(22px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right))
+    max(28px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+}
+.mobile-home-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 34px;
+}
+.mobile-home-head .btn { min-height: 42px; padding: 8px 12px; }
+.mobile-eyebrow {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+.mobile-home h1 {
+  white-space: pre-line;
+  font-size: clamp(30px, 7vw, 44px);
+  line-height: 1.08;
+  letter-spacing: -.04em;
+  margin: 12px 0 18px;
+  font-weight: 600;
+}
+.mobile-intro { color: var(--muted); font-size: 14px; line-height: 1.65; max-width: 34em; }
+.mobile-mood {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  font-weight: 600;
+  margin-top: 24px;
+}
+.mobile-mood select {
+  min-height: 44px;
+  min-width: 150px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 8px 12px;
+}
+.mobile-mood-hint { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 9px 0 24px; }
+.mobile-room-list { display: grid; gap: 10px; margin: 16px 0 26px; }
+.mobile-room {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  min-height: 88px;
+  padding: 18px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.mobile-room:active { background: var(--accent-soft); border-color: var(--accent); }
+.mobile-room-copy { display: grid; gap: 6px; }
+.mobile-room strong { font-size: 17px; font-weight: 600; }
+.mobile-room-copy > span { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.mobile-room > [aria-hidden] { font-size: 24px; color: var(--accent); }
+.mobile-room[data-example=current] { background: var(--accent); color: white; border: 0; }
+.mobile-room[data-example=current] span { color: inherit; }
+.mobile-home h2 { font-size: 18px; }
+.mobile-home-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.mobile-home-foot a { color: var(--muted); }
+
+.mobile-mode .hud:not(.paused) .hud-walkbar { display: none; }
+/* One short flash explains the controls; a permanent hint would cover the room. */
+.mobile-mode .hud-hint { display: none; }
+.mobile-mode .hud.paused .hud-walkbar {
+  width: calc(100% - 32px);
+  max-height: calc(100% - 32px);
+  overflow: auto;
+  transition: none;
+}
+.mobile-mode .hud.paused .hud-walkbar button { min-height: 44px; }
+.mobile-mode .hud-vhs { font-size: 18px; }
+.mobile-mode .vhs-play { top: max(20px, env(safe-area-inset-top)); }
+.mobile-mode .vhs-speed,
+.mobile-mode .vhs-time { bottom: max(190px, calc(env(safe-area-inset-bottom) + 175px)); }
+
+.touch-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.touch-controls button {
+  touch-action: none;
+  pointer-events: auto;
+  min-width: 48px;
+  min-height: 48px;
+  border: 1px solid #ffffff4d;
+  border-radius: 14px;
+  background: #171918b3;
+  color: #fff;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  -webkit-tap-highlight-color: transparent;
+}
+.touch-controls button.held { background: #e8c75acb; color: #171918; border-color: var(--yellow); }
+/* The joystick rests here; while a thumb is down it is centred on the touch (inline left/top). */
+.touch-stick {
+  position: absolute;
+  left: calc(max(16px, env(safe-area-inset-left)) + 60px);
+  top: calc(100% - max(28px, env(safe-area-inset-bottom)) - 60px);
+  width: 112px;
+  height: 112px;
+  margin: -56px 0 0 -56px;
+  border: 1px solid #ffffff4d;
+  border-radius: 50%;
+  background: #17191866;
+  opacity: .45;
+  transition: opacity .2s;
+}
+.touch-stick.active { opacity: 1; transition: none; }
+.touch-knob {
+  position: absolute;
+  left: 32px;
+  top: 32px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #ffffffb3;
+  box-shadow: 0 2px 8px #0006;
+}
+.touch-action-pad {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(22px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(2, 64px);
+  gap: 8px;
+}
+.touch-action-pad button { min-height: 56px; }
+.touch-use { grid-column: 1 / 3; }
+.touch-menu {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  top: max(16px, env(safe-area-inset-top));
+  padding: 8px 14px;
+}
+.hud.paused .touch-controls,
+.mobile-player[data-playing=false] .touch-controls { display: none; }
+
+@media (orientation: landscape) {
+  .mobile-home { padding-inline: max(30px, env(safe-area-inset-left)); }
+  .mobile-room-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mobile-home-head { margin-bottom: 22px; }
+}

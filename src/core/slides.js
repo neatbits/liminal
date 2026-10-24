@@ -1,10 +1,13 @@
 // Vannsklier: objekter oppå rutenettet. En sklie er { points: [[x, z], …], tube, color } – ruter fra
 // toppen (på et hevet gulv) til bunnen (over vann). Banen glattes med Catmull-Rom gjennom
-// rutemidtene, og høyden faller jevnt fra startgulvet til litt over vannflaten.
+// rutemidtene, med rett/flatt innløp før fallet fra plattformen til litt over vannflaten.
 // Sklier endres aldri på stedet: legg til / fjern ved å lage en ny liste (angre sammenligner
 // referanser). Ren logikk.
 import { TILE, getTile, WATER_SURFACE, HEIGHT_MAX } from './level.js';
 import { topFloorAt, ceilingAt, groundAt } from './heights.js';
+import { slideCurve, blur, ease } from './slide-curve.js';
+import { launchLength } from './slide-launch.js';
+import { pillarsTouchBox } from './pillars.js';
 
 export const SLIDE = Object.freeze({
   RADIUS: 0.45, // rennens indre radius
@@ -12,6 +15,8 @@ export const SLIDE = Object.freeze({
   MIN_START: 1, // laveste startgulv
   STEP: 0.2, // avstand mellom punktene langs banen
   ENTRY: 1, // de første metrene er inngang (ingen kollisjon der)
+  LAUNCH: 1.2, // kort, rett og vannrett innløp; forlenges til rennen er klar av plattformen
+  LIP: 0.03, // 3 cm over gulvet, så rennebunnen ikke flimrer mot platåflaten
   CLEARANCE: 1.5, // takhøyde over bunnen av rennen
   SUPPORT_EVERY: 2.5,
   MAX_SLIDES: 32,
@@ -34,7 +39,7 @@ export function slideProblem(level, points) {
   if (points.length < 2) return 'Drag from a raised floor down to the water.';
   for (const [x, z] of points) {
     const t = getTile(level, x, z);
-    if (t === TILE.WALL || t === TILE.PILLAR || t === TILE.DOOR) return 'A wall, pillar or door is in the way.';
+    if (t === TILE.WALL || t === TILE.PILLAR || t === TILE.DOOR || pillarsTouchBox(level, [x, z, x + 1, z + 1])) return 'A wall, pillar or door is in the way.';
   }
   const [sx, sz] = points[0];
   const [ex, ez] = points[points.length - 1];
@@ -43,74 +48,10 @@ export function slideProblem(level, points) {
   return null;
 }
 
-/** Tett polylinje gjennom rutemidtene (uniform Catmull-Rom, endene doblet). */
-function smooth(points) {
-  const c = points.map(([x, z]) => [x + 0.5, z + 0.5]);
-  const P = (i) => c[Math.max(0, Math.min(c.length - 1, i))];
-  const out = [];
-  for (let i = 0; i < c.length - 1; i++) {
-    const [p0, p1, p2, p3] = [P(i - 1), P(i), P(i + 1), P(i + 2)];
-    for (let k = 0; k < 8; k++) {
-      const t = k / 8;
-      const t2 = t * t;
-      const t3 = t2 * t;
-      const f = (a, b, cc, d) => 0.5 * (2 * b + (-a + cc) * t + (2 * a - 5 * b + 4 * cc - d) * t2 + (-a + 3 * b - 3 * cc + d) * t3);
-      out.push([f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1])]);
-    }
-  }
-  out.push(c[c.length - 1]);
-  return out;
-}
-
-/** Punkter med fast avstand langs polylinjen: [[x, z, s], …]. */
-function resample(line, step) {
-  const out = [[line[0][0], line[0][1], 0]];
-  let s = 0;
-  let next = step;
-  for (let i = 1; i < line.length; i++) {
-    const [ax, az] = line[i - 1];
-    const [bx, bz] = line[i];
-    const d = Math.hypot(bx - ax, bz - az);
-    while (d > 0 && next <= s + d) {
-      const f = (next - s) / d;
-      out.push([ax + (bx - ax) * f, az + (bz - az) * f, next]);
-      next += step;
-    }
-    s += d;
-  }
-  const last = line[line.length - 1];
-  if (s - out[out.length - 1][2] > 1e-3) out.push([last[0], last[1], s]);
-  return out;
-}
-
-/** Jevner ut knekker (f.eks. fra diagonale ruter) ved å trekke hvert punkt mot naboene; endene står fast. */
-function relax(pts, passes) {
-  let p = pts.map(([x, z]) => [x, z]);
-  for (let k = 0; k < passes; k++) {
-    const q = p.map((v) => v.slice());
-    for (let i = 1; i < p.length - 1; i++) {
-      q[i][0] = (p[i - 1][0] + 2 * p[i][0] + p[i + 1][0]) / 4;
-      q[i][1] = (p[i - 1][1] + 2 * p[i][1] + p[i + 1][1]) / 4;
-    }
-    p = q;
-  }
-  return p;
-}
-
-/** Glidende gjennomsnitt over ±r punkter (for krengingen). */
-function blur(values, r) {
-  return values.map((_, i) => {
-    let sum = 0;
-    let n = 0;
-    for (let k = Math.max(0, i - r); k <= Math.min(values.length - 1, i + r); k++, n++) sum += values[k];
-    return sum / n;
-  });
-}
-
 const cache = new WeakMap();
 
 /**
- * Banen til en sklie: { problem, length, h0, h1, tube, color, samples, supports }.
+ * Banen til en sklie: { problem, length, launch, h0, h1, tube, color, samples, supports }.
  * samples[i] = { x, y, z, s, t: [tx, ty, tz] (enhetstangent), side: [nx, nz] (venstre, vannrett), bank }
  * y er bunnen av rennen. supports = [{ x, z, y0, y1 }] (støtteben fra bakken opp til rennen).
  */
@@ -118,14 +59,18 @@ export function slidePath(level, slide) {
   let problem = slideProblem(level, slide.points);
   const [sx, sz] = slide.points[0];
   const h0 = topFloorAt(level, sx, sz);
-  const key = `${h0}|${problem}`;
+  const pts = slideCurve(slide, SLIDE.STEP, SLIDE.LAUNCH);
+  const length = pts[pts.length - 1][2];
+  const launch = problem ? Math.min(SLIDE.LAUNCH, length * 0.4)
+    : launchLength(level, pts, h0, SLIDE.LAUNCH, SLIDE.RADIUS + 0.1, SLIDE.STEP);
+  const key = `${h0}|${problem}|${launch}`;
   const hit = cache.get(slide);
   if (hit && hit.key === key) return hit.path;
   const h1 = SLIDE.EXIT;
-  const pts = resample(relax(resample(smooth(slide.points), SLIDE.STEP), 30), SLIDE.STEP);
-  const length = pts[pts.length - 1][2];
+  if (!problem && length - launch < 0.6) problem = 'The slide needs more room after the platform.';
   if (!problem && (h0 - h1) / Math.max(length, 1e-6) < MIN_SLOPE) problem = 'The slide is too long for its height.';
-  const yAt = (s) => h1 + (h0 - h1) * Math.pow(1 - s / length, 1.25);
+  const top = h0 + SLIDE.LIP;
+  const yAt = (s) => top + (h1 - top) * ease((s - launch) / Math.max(length - launch, 1e-6));
   const samples = pts.map(([x, z, s], i) => {
     const a = pts[Math.max(0, i - 1)];
     const b = pts[Math.min(pts.length - 1, i + 1)];
@@ -143,14 +88,14 @@ export function slidePath(level, slide) {
     const [a, b] = [samples[i - 1].side, samples[i + 1].side];
     return Math.atan2(a[0] * b[1] - a[1] * b[0], a[0] * b[0] + a[1] * b[1]) / (2 * SLIDE.STEP);
   });
-  blur(blur(raw, 5), 5).forEach((k, i) => (samples[i].bank = Math.max(-0.3, Math.min(0.3, k * 0.35))));
+  blur(blur(raw, 5), 5).forEach((k, i) => (samples[i].bank = Math.max(-0.3, Math.min(0.3, k * 0.35)) * ease((samples[i].s - launch) / 1.2)));
   const supports = [];
   for (let s = SLIDE.ENTRY; s < length - 0.5; s += SLIDE.SUPPORT_EVERY) {
     const p = samples[Math.min(samples.length - 1, Math.round(s / SLIDE.STEP))];
     const g = groundAt(level, p.x, p.z);
     if (p.y - g > 0.3) supports.push({ x: p.x, z: p.z, y0: g, y1: p.y - 0.06 });
   }
-  const path = { problem, length, h0, h1, tube: !!slide.tube, color: colorOf(slide.color), samples, supports };
+  const path = { problem, length, launch, h0, h1, tube: !!slide.tube, color: colorOf(slide.color), samples, supports };
   cache.set(slide, { key, path });
   return path;
 }

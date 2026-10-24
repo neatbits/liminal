@@ -16,13 +16,14 @@ const FxShader = {
     uVignette: { value: 0.6 },
     uAberration: { value: 0.0025 },
     uVhs: { value: 0 },
+    uRose: { value: 0 },
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
     void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */ `
     uniform sampler2D tDiffuse;
-    uniform float uTime, uGrain, uVignette, uAberration, uVhs;
+    uniform float uTime, uGrain, uVignette, uAberration, uVhs, uRose;
     uniform vec2 uRes;
     varying vec2 vUv;
     float rand(vec2 co) { return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -38,6 +39,8 @@ const FxShader = {
       col.r = texture2D(tDiffuse, uv + dir * ab).r;
       col.g = texture2D(tDiffuse, uv).g;
       col.b = texture2D(tDiffuse, uv - dir * ab).b;
+      // A restrained magenta print cast for the mall, preserving bright cream tiles.
+      col = mix(col, col * vec3(1.08, 0.92, 1.05) + vec3(0.018, 0.0, 0.015), uRose);
       if (uVhs > 0.5) {
         float l = dot(col, vec3(0.299, 0.587, 0.114));
         col = mix(vec3(l), col, 0.78) * vec3(1.03, 1.0, 0.94);
@@ -52,6 +55,7 @@ const FxShader = {
 };
 
 export function createPostFX(renderer, scene, camera) {
+  let beforeRender;
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
   const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4 });
   const composer = new EffectComposer(renderer, target);
@@ -66,6 +70,7 @@ export function createPostFX(renderer, scene, camera) {
 
   return {
     composer,
+    setBeforeRender(fn) { beforeRender = fn; },
     setCamera(cam) {
       renderPass.camera = cam;
     },
@@ -81,8 +86,20 @@ export function createPostFX(renderer, scene, camera) {
       fx.uniforms.uVignette.value = look.vignette;
       fx.uniforms.uAberration.value = look.aberration;
       fx.uniforms.uVhs.value = look.vhs ? 1 : 0;
+      fx.uniforms.uRose.value = look.rose ?? 0;
+    },
+    /** full = bloom og kantutjevning (MSAA ×4); ellers uten begge (grafikkinnstillingen Effects). */
+    setQuality(full) {
+      bloom.enabled = full;
+      const samples = full ? 4 : 0;
+      for (const t of [composer.renderTarget1, composer.renderTarget2]) {
+        if (t.samples === samples) continue;
+        t.samples = samples;
+        t.dispose(); // lages på nytt med det nye antallet ved neste bilde
+      }
     },
     render(time) {
+      beforeRender?.();
       fx.uniforms.uTime.value = time;
       composer.render();
     },

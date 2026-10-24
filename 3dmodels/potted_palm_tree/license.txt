@@ -1,0 +1,11 @@
+Model Information:
+* title:	Potted Palm Tree
+* source:	https://sketchfab.com/3d-models/potted-palm-tree-dadb3ed13e894bbaaff3735d0fc425a0
+* author:	zaaranakhwa (https://sketchfab.com/zaaranakhwa)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Potted Palm Tree" (https://sketchfab.com/3d-models/potted-palm-tree-dadb3ed13e894bbaaff3735d0fc425a0) by zaaranakhwa (https://sketchfab.com/zaaranakhwa) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

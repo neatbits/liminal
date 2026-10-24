@@ -4,6 +4,7 @@ import { normRect } from '../core/ops.js';
 import { paintAt, paintLine, applyRect, applyFill, applyStairs, applySlide, extendSlidePath, placeSpawn, aimSpawn } from './tools.js';
 
 const OBJECT_HELP = 'Objects stand on floor cells (not on water, stairs, pillars or in doorways).';
+const CORNER_HELP = 'Click near a corner where two walls meet (inside a room), or where a wall sticks out into a room – it gets cut at 45° or rounded. Right-click removes it.';
 const DOOR_HELP = 'A door needs a wall (or a 1-cell gap in a wall) with wall on both ends and a room on at least one side.';
 
 function local(ed, e) {
@@ -35,13 +36,13 @@ function onDown(ed, e) {
     ed.stroke = { type: 'spawn' };
     ed.changed('live');
   } else if (tool.kind === 'stairs') {
-    ed.stroke = { type: 'stairs', a: cell, b: cell, erase };
+    ed.stroke = { type: 'stairs', a: cell, b: cell, erase, escalator: tool.escalator, down: tool.down };
   } else if (tool.kind === 'slide') {
     ed.stroke = { type: 'slide', points: [cell], erase };
-  } else if (tool.kind === 'door' || tool.kind === 'object') {
+  } else if (tool.kind === 'door' || tool.kind === 'object' || tool.kind === 'corner') {
     ed.history.push(level);
-    const help = tool.kind === 'door' ? DOOR_HELP : OBJECT_HELP;
-    if (!paintAt(level, tool, cell[0], cell[1], 1, erase) && !erase) ed.options.onHint?.(help);
+    const help = { door: DOOR_HELP, object: OBJECT_HELP, corner: CORNER_HELP }[tool.kind];
+    if (!paintAt(level, tool, cell[0], cell[1], 1, erase, wx - cell[0], wz - cell[1]) && !erase) ed.options.onHint?.(help);
     ed.history.dropIfUnchanged(level);
     ed.changed('commit');
   } else if (ed.shape === 'rect') {
@@ -93,7 +94,7 @@ function onUp(ed) {
   if (!s || s.type === 'pan') return ed.invalidate();
   if (s.type === 'stairs') {
     ed.history.push(ed.level);
-    applyStairs(ed.level, s.a, s.b, ed.brush, s.erase);
+    applyStairs(ed.level, s.a, s.b, ed.brush, s.erase, s);
   } else if (s.type === 'slide') {
     ed.history.push(ed.level);
     applySlide(ed.level, s.points, { tube: ed.slideTube, color: ed.slideColor }, s.erase);

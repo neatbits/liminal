@@ -1,8 +1,9 @@
 // Ballbinger (tema med `pit: 'balls'`): plassering, farge og bakt lys for hver ball. Ren logikk
 // (ingen three.js), så den kan testes i Node; world/balls.js lager meshen.
 import { TILE, WATER_SURFACE } from '../core/level.js';
+import { PLAY_BALL_RADIUS, pitBallY } from '../core/play-balls.js';
 
-export const BALL_RADIUS = 0.075;
+export const BALL_RADIUS = PLAY_BALL_RADIUS;
 const SPACING = 0.16;
 
 /** Liten, fast pseudotilfeldighet per rute og ball (samme rom gir samme baller). */
@@ -31,13 +32,16 @@ export function ballLayout(level, field = null, colors = 4) {
         for (let j = 0; j < n; j++) {
           for (let i = 0; i < n; i++, k++) {
             if (layer === 1 && hash(cx, cz, k) < 0.5) continue; // nederste lag er glissent
-            const jx = (hash(cx, cz, k + 1000) - 0.5) * 0.05;
-            const jz = (hash(cx, cz, k + 2000) - 0.5) * 0.05;
+            const jx = (hash(cx, cz, k + 1000) - 0.5) * 0.085;
+            const jz = (hash(cx, cz, k + 2000) - 0.5) * 0.085;
             const off = layer ? SPACING / 2 : 0;
+            const stagger = (j % 2 ? 1 : -1) * SPACING * 0.22;
+            const x = Math.min(cx + 0.98, Math.max(cx + 0.02, cx + (i + 0.5) / n + off + stagger + jx));
+            const z = Math.min(cz + 0.98, Math.max(cz + 0.02, cz + (j + 0.5) / n + off + jz));
             out.push({
-              x: Math.min(cx + 0.98, Math.max(cx + 0.02, cx + (i + 0.5) / n + off + jx)),
-              y: top - layer * BALL_RADIUS * 1.5 + (hash(cx, cz, k + 3000) - 0.5) * 0.03,
-              z: Math.min(cz + 0.98, Math.max(cz + 0.02, cz + (j + 0.5) / n + off + jz)),
+              x,
+              y: pitBallY(x, z) - layer * BALL_RADIUS * 1.5 + (hash(cx, cz, k + 3000) - 0.5) * 0.03,
+              z,
               color: Math.floor(hash(cx, cz, k + 4000) * colors),
               light,
             });

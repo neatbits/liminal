@@ -57,7 +57,8 @@ export async function takePhoto(viewer, { width, height, vhs = true, name = '', 
   const u = H / 22; // tekststørrelse etter bildets høyde
   ctx.textBaseline = 'alphabetic';
   if (vhs) {
-    text(ctx, '▶ PLAY', u * 0.9, u * 1.8, u);
+    text(ctx, 'PLAY ▶', u * 0.9, u * 1.8, u);
+    text(ctx, 'SP', u * 0.9, H - u * 2.1, u);
     text(ctx, vhsStamp(), W - u * 0.9, H - u * 0.9, u, 'right');
     if (name) text(ctx, name.toUpperCase(), u * 0.9, H - u * 0.9, u * 0.8);
   }

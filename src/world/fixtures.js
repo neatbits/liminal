@@ -37,8 +37,10 @@ export function buildFixtures(lights, theme) {
   const group = new THREE.Group();
   const geometry = fixtureGeometry(f);
   const glow = new THREE.Color(f.color).multiplyScalar(f.glow);
+  const tinted = new THREE.Color();
+  const tintColor = new THREE.Color();
   const drop = f.drop ?? 0;
-  const y = (l) => l.ceil - f.size[1] / 2 - drop - 0.005;
+  const y = (l) => l.top - f.size[1] / 2 - drop - 0.005;
   const disposables = [geometry];
 
   const add = (items, color) => {
@@ -65,16 +67,31 @@ export function buildFixtures(lights, theme) {
     const frameGeo = new THREE.BoxGeometry(f.size[0] + 0.08, 0.02, f.size[2] + 0.08);
     const frameMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(f.frame).multiplyScalar(0.55) });
     disposables.push(frameGeo, frameMat);
-    group.add(instanced(frameGeo, frameMat, lights, (l) => l.ceil - 0.012 - drop));
+    group.add(instanced(frameGeo, frameMat, lights, (l) => l.top - 0.012 - drop));
+  }
+
+  // Lamper som henger ned i høye rom (top under taket): en tynn ledning opp til taket.
+  const hanging = lights.filter((l) => l.ceil - l.top > 0.05);
+  if (hanging.length) {
+    const cordGeo = new THREE.CylinderGeometry(0.008, 0.008, 1, 4).translate(0, 0.5, 0);
+    const cordMat = new THREE.MeshBasicMaterial({ color: '#1c1b18' });
+    disposables.push(cordGeo, cordMat);
+    const cords = new THREE.InstancedMesh(cordGeo, cordMat, hanging.length);
+    const m = new THREE.Matrix4();
+    hanging.forEach((l, i) => cords.setMatrixAt(i, m.makeScale(1, l.ceil - l.top + drop, 1).setPosition(l.x, l.top - drop, l.z)));
+    cords.instanceMatrix.needsUpdate = true;
+    cords.computeBoundingSphere();
+    group.add(cords);
   }
 
   return {
     group,
-    /** values: blinkegruppene (0..1), power: strømmen (0..1, under strømbrudd). */
-    update(values, power = 1) {
-      onMaterial.color.copy(glow).multiplyScalar(power);
+    /** values: blinkegruppene (0..1), power: strømmen (0..1, under strømbrudd), tint: lysfargen ([r, g, b]). */
+    update(values, power = 1, tint = [1, 1, 1]) {
+      tinted.copy(glow).multiply(tintColor.setRGB(tint[0], tint[1], tint[2]));
+      onMaterial.color.copy(tinted).multiplyScalar(power);
       for (let g = 0; g < FLICKER_GROUPS; g++) {
-        flickerMaterials[g].color.copy(glow).multiplyScalar((0.04 + 0.96 * values[g]) * power);
+        flickerMaterials[g].color.copy(tinted).multiplyScalar((0.04 + 0.96 * values[g]) * power);
       }
     },
     dispose() {

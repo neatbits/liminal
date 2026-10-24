@@ -4,3 +4,13 @@ dist/
 .DS_Store
 # Tilkoblingsdetaljer for publisering (passord) – se deploy.example.env
 .env.deploy*
+# Modellkilder med lisens prosjektet ikke kan videreformidle (Sketchfab Standard, CC BY-SA):
+# bare model.json (som sier hvorfor de er utelatt) ligger i git.
+3dmodels/book_shelf/*
+!3dmodels/book_shelf/model.json
+3dmodels/potted_plant_01/*
+!3dmodels/potted_plant_01/model.json
+3dmodels/school_desk/*
+!3dmodels/school_desk/model.json
+3dmodels/stop_sign_level_0/*
+!3dmodels/stop_sign_level_0/model.json

@@ -1,0 +1,11 @@
+{
+  "textureSize": 512,
+  "instance": false,
+  "art": "electronics",
+  "split": {
+    "retro_pc_desktop": ["desktop", "screen1"],
+    "retro_pc_tower": ["tower", "screen2"],
+    "retro_pc_compact": "mac",
+    "retro_pc_terminal": "ibm"
+  }
+}

@@ -3,39 +3,33 @@
 import { fbm } from './noise.js';
 import { makeCanvas, pixelPass, shade } from './paint.js';
 
-/** Terrazzo: 4 × 4 fliser à 0,6 m i to beigetoner (rutemønster) med flekker og blank glans. */
+/** Small polished cream tiles, dusty rose accents and teal diamond insets (30 cm grid). */
 export function mallFloor(rand) {
-  const S = 512;
-  const T = S / 4;
+  const S = 512, T = S / 8;
   const { canvas, ctx } = makeCanvas(S);
-  ctx.fillStyle = '#a99c86';
-  ctx.fillRect(0, 0, S, S);
-  for (let j = 0; j < 4; j++) {
-    for (let i = 0; i < 4; i++) {
-      ctx.fillStyle = (i + j) % 2 ? '#e3d8c4' : '#d6c8ae';
-      ctx.fillRect(i * T + 1, j * T + 1, T - 2, T - 2);
-    }
+  ctx.fillStyle = '#a79a96'; ctx.fillRect(0, 0, S, S);
+  for (let z = 0; z < 8; z++) for (let x = 0; x < 8; x++) {
+    const rose = (x === 0 || z === 0) && (x + z) % 2 === 0;
+    const colors = rose ? ['#c79c9b', '#cfa6a2'] : ['#ded3c6', '#e5d8cb', '#e3d5c9', '#d8c9c2'];
+    ctx.fillStyle = colors[Math.floor(rand() * colors.length)];
+    ctx.fillRect(x * T + 1, z * T + 1, T - 2, T - 2);
+    ctx.strokeStyle = 'rgba(255,248,235,0.28)'; ctx.lineWidth = 1;
+    ctx.strokeRect(x * T + 2, z * T + 2, T - 4, T - 4);
   }
-  // Flekkene i terrazzoen: små steinbiter i brunt, grått og hvitt.
-  const chips = ['#8d7d66', '#b6ab98', '#f4efe4', '#6f6a62', '#c9a982'];
-  for (let k = 0; k < 2600; k++) {
-    ctx.fillStyle = chips[Math.floor(rand() * chips.length)];
-    const r = 0.6 + rand() * 1.6;
-    ctx.beginPath();
-    ctx.arc(rand() * S, rand() * S, r, 0, Math.PI * 2);
-    ctx.fill();
+  // Sparse diamonds sit within the finer grid, rather than forming a checkerboard.
+  for (const [x, z] of [[2, 2], [6, 6]]) {
+    const cx = (x + 0.5) * T, cz = (z + 0.5) * T, r = T * 0.43;
+    ctx.fillStyle = '#527d7c'; ctx.beginPath();
+    ctx.moveTo(cx, cz - r); ctx.lineTo(cx + r, cz); ctx.lineTo(cx, cz + r); ctx.lineTo(cx - r, cz); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#ac976f'; ctx.lineWidth = 2; ctx.stroke();
   }
-  for (let j = 0; j < 4; j++) {
-    for (let i = 0; i < 4; i++) {
-      const g = ctx.createLinearGradient(i * T, j * T, (i + 1) * T, (j + 1) * T);
-      g.addColorStop(0, 'rgba(255,255,255,0.10)');
-      g.addColorStop(0.6, 'rgba(255,255,255,0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(i * T + 1, j * T + 1, T - 2, T - 2);
-    }
+  const chips = ['#9e9291', '#b8a9a3', '#f5ece1'];
+  for (let k = 0; k < 2200; k++) {
+    ctx.fillStyle = chips[k % chips.length];
+    ctx.globalAlpha = 0.23;
+    ctx.fillRect(rand() * S, rand() * S, 0.5 + rand(), 0.5 + rand());
   }
-  const n = fbm(S, 8, 3, rand);
-  pixelPass(ctx, S, (x, y, i, d) => shade(d, i, 0.97 + (n[y * S + x] - 0.5) * 0.08));
+  ctx.globalAlpha = 1;
   return canvas;
 }
 
@@ -43,7 +37,7 @@ export function mallFloor(rand) {
 export function mallWall(rand) {
   const S = 256;
   const { canvas, ctx } = makeCanvas(S);
-  ctx.fillStyle = '#ece5d7';
+  ctx.fillStyle = '#e9ded2';
   ctx.fillRect(0, 0, S, S);
   const n = fbm(S, 16, 3, rand);
   pixelPass(ctx, S, (x, y, i, d) => shade(d, i, 0.97 + (n[y * S + x] - 0.5) * 0.06));
@@ -54,10 +48,10 @@ export function mallWall(rand) {
 export function mallStone(rand) {
   const S = 256;
   const { canvas, ctx } = makeCanvas(S);
-  ctx.fillStyle = '#9d907a';
+  ctx.fillStyle = '#a49a9e';
   ctx.fillRect(0, 0, S, S);
   for (let k = 0; k < 2; k++) {
-    ctx.fillStyle = k ? '#cfc2a8' : '#c9bba0';
+    ctx.fillStyle = k ? '#d0c3c4' : '#c7babc';
     ctx.fillRect((k * S) / 2 + 1, 1, S / 2 - 2, S - 2);
   }
   const vein = fbm(S, 4, 4, rand, 0.6);
@@ -65,17 +59,22 @@ export function mallStone(rand) {
   return canvas;
 }
 
-/** Himling: lyse gipsplater på 1,2 m med smale skjøter. */
+/** Perforert metallhimling med varm rosa tone, innrammet i 1,2 m store felt. */
 export function mallCeiling(rand) {
-  const S = 256;
+  const S = 512;
   const T = S / 2;
   const { canvas, ctx } = makeCanvas(S);
-  ctx.fillStyle = '#c9c4ba';
+  ctx.fillStyle = '#d1b9bc';
   ctx.fillRect(0, 0, S, S);
-  ctx.fillStyle = '#efebe3';
+  ctx.fillStyle = '#f0dadd';
   for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) ctx.fillRect(i * T + 1, j * T + 1, T - 2, T - 2);
   const n = fbm(S, 16, 2, rand);
   pixelPass(ctx, S, (x, y, i, d) => shade(d, i, 0.98 + (n[y * S + x] - 0.5) * 0.05));
+  ctx.fillStyle = '#ac9297';
+  for (let y = 8; y < S; y += 8) for (let x = 8; x < S; x += 8) {
+    if (x % T < 6 || y % T < 6) continue;
+    ctx.beginPath(); ctx.ellipse(x, y, 1.8, 1.3, 0, 0, Math.PI * 2); ctx.fill();
+  }
   return canvas;
 }
 

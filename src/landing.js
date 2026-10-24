@@ -5,6 +5,7 @@ import './styles/landing-sections.css';
 import './styles/landing-hall.css';
 import { PRESETS } from './gen/index.js';
 import { planImage } from './editor/plan-image.js';
+import { bindFeedback } from './ui/feedback.js';
 
 const THUMB = 4; // piksler per rute i planbildet
 
@@ -42,7 +43,7 @@ function fillCards() {
     root.append(el);
     // Rommene lages litt etter hverandre så siden er klar til å vises med en gang.
     setTimeout(() => {
-      const level = preset.make();
+      const level = preset.make({ seed: 7, layout: 'gallery' });
       const thumb = el.querySelector('.l-thumb');
       thumb.append(thumbnail(level));
     }, 0);
@@ -58,3 +59,4 @@ function adSlot() {
 
 fillCards();
 adSlot();
+bindFeedback({ endpoint: 'api/feedback.php', page: 'home' });

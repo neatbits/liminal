@@ -9,15 +9,37 @@ let current = null;
  */
 export function openModal({ title, body, actions = [], onClose }) {
   current?.close();
+  const previousFocus = document.activeElement;
+  let closed = false;
   const root = document.getElementById('modal-root');
   const close = () => {
+    if (closed) return;
+    closed = true;
     backdrop.remove();
     document.removeEventListener('keydown', onKey);
+    document.removeEventListener('focusin', onFocus);
     if (current?.backdrop === backdrop) current = null;
+    if (!current && previousFocus?.isConnected) previousFocus.focus();
     onClose?.();
   };
+  const focusable = () => [...modal.querySelectorAll('button, input, select, textarea, a[href], [tabindex]')]
+    .filter((el) => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length);
+  const onFocus = (e) => {
+    if (!modal.contains(e.target)) (focusable()[0] ?? modal).focus();
+  };
   const onKey = (e) => {
-    if (e.key === 'Escape') close();
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      close();
+    } else if (e.key === 'Tab') {
+      const items = focusable();
+      const at = items.indexOf(document.activeElement);
+      if (!items.length || at < 0 || (!e.shiftKey && at === items.length - 1) || (e.shiftKey && at === 0)) {
+        e.preventDefault();
+        (items[e.shiftKey ? items.length - 1 : 0] ?? modal).focus();
+      }
+    }
   };
   const foot = actions.length
     ? h(
@@ -37,7 +59,7 @@ export function openModal({ title, body, actions = [], onClose }) {
     : null;
   const modal = h(
     'div',
-    { class: 'modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
+    { class: 'modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': title, tabindex: '-1' },
     h('header', { class: 'modal-head' }, h('h2', { text: title }), h('button', { type: 'button', class: 'modal-close', 'aria-label': 'Close', text: '×', onclick: () => close() })),
     h('div', { class: 'modal-body' }, body),
     foot,
@@ -45,8 +67,9 @@ export function openModal({ title, body, actions = [], onClose }) {
   const backdrop = h('div', { class: 'modal-backdrop', onmousedown: (e) => e.target === backdrop && close() }, modal);
   root.append(backdrop);
   document.addEventListener('keydown', onKey);
+  document.addEventListener('focusin', onFocus);
   current = { close, backdrop };
-  (modal.querySelector('[autofocus]') ?? modal.querySelector('.btn-accent'))?.focus();
+  (modal.querySelector('[autofocus]') ?? modal.querySelector('.btn-accent') ?? focusable()[0] ?? modal).focus();
   return current;
 }
 

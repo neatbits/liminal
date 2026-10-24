@@ -1,6 +1,7 @@
 // Trapper i skissen: trinnstreker og en pil som peker oppover (som på en arkitekttegning),
 // og forhåndsvisning av trappeløpet mens man drar.
 import { stairSpan, STEP_RISE } from '../core/heights.js';
+import { isEscalator, ESCALATOR_DOWN } from '../core/escalators.js';
 
 const LINE = 'rgba(70,55,35,0.55)';
 const ARROW = '#5b4326';
@@ -31,6 +32,8 @@ function arrow(ctx, view, from, to, size) {
 export function drawStairs(ctx, view, level, x, z) {
   const s = view.scale;
   const { bottom, top, dir } = stairSpan(level, x, z);
+  const motor = isEscalator(level, x, z);
+  const down = motor && !!(level.meta[z * level.w + x] & ESCALATOR_DOWN);
   const n = Math.max(1, Math.round((top - bottom) / STEP_RISE));
   ctx.save();
   ctx.strokeStyle = LINE;
@@ -46,15 +49,15 @@ export function drawStairs(ctx, view, level, x, z) {
     ctx.stroke();
   }
   if (s >= 8) {
-    ctx.strokeStyle = ARROW;
+    ctx.strokeStyle = motor ? ACCENT : ARROW;
     ctx.lineWidth = 1.5;
-    arrow(ctx, view, local(dir, x, z, 0.15, 0.5), local(dir, x, z, 0.85, 0.5), Math.max(3, s * 0.18));
+    arrow(ctx, view, local(dir, x, z, down ? 0.85 : 0.15, 0.5), local(dir, x, z, down ? 0.15 : 0.85, 0.5), Math.max(3, s * 0.18));
   }
   ctx.restore();
 }
 
 /** Forhåndsvisning: rutene i løpet og en pil fra bunn til topp. */
-export function drawStairsPreview(ctx, view, { dir, rows, erase }) {
+export function drawStairsPreview(ctx, view, { dir, rows, erase, down = false }) {
   const s = view.scale;
   ctx.save();
   ctx.fillStyle = erase ? 'rgba(192,73,47,0.14)' : 'rgba(31,122,114,0.14)';
@@ -72,7 +75,8 @@ export function drawStairsPreview(ctx, view, { dir, rows, erase }) {
     const [x0, z0] = rows[0][mid];
     const [x1, z1] = rows[rows.length - 1][mid];
     ctx.lineWidth = 2;
-    arrow(ctx, view, local(dir, x0, z0, 0.1, 0.5), local(dir, x1, z1, 0.9, 0.5), Math.max(5, s * 0.3));
+    const from = local(dir, x0, z0, 0.1, 0.5), to = local(dir, x1, z1, 0.9, 0.5);
+    arrow(ctx, view, down ? to : from, down ? from : to, Math.max(5, s * 0.3));
   }
   ctx.restore();
 }

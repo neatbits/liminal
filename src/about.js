@@ -2,7 +2,10 @@
 // med CC BY-lisens krediteres med tittel, skaper, kilde og lisens (lenket), slik lisensen krever.
 import './styles/landing.css';
 import './styles/landing-sections.css';
+import './styles/changelog.css';
 import { OBJECTS } from './core/objects.js';
+import { GHOST } from './core/ghost.js';
+import { bindFeedback } from './ui/feedback.js';
 
 function link(text, href) {
   const a = document.createElement('a');
@@ -13,7 +16,7 @@ function link(text, href) {
 }
 
 const list = document.getElementById('model-credits');
-for (const o of Object.values(OBJECTS).filter((def) => def.credit)) {
+for (const o of [...Object.values(OBJECTS), GHOST].filter((def) => def.credit)) {
   const li = document.createElement('li');
   const a = o.attribution;
   if (a) {
@@ -24,3 +27,4 @@ for (const o of Object.values(OBJECTS).filter((def) => def.credit)) {
   }
   list.append(li);
 }
+bindFeedback({ endpoint: '../api/feedback.php', page: 'about' });

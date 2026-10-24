@@ -4,10 +4,12 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
-import { OBJECTS, objectPose } from '../core/objects.js';
-import { TILE } from '../core/level.js';
+import { OBJECTS, poser } from '../core/objects.js';
 import { VERT, FRAG } from './object-shader.js';
 import { buildProp, propKey } from './props.js';
+import { bakeLight } from './object-light.js';
+import { arcadeParts } from './arcade-textures.js';
+import { contactShadows } from './contact-shadows.js';
 
 // Konverterte modeller (npm run models) – Vite gir hver fil en URL med hash.
 const URLS = Object.fromEntries(
@@ -36,10 +38,11 @@ function loadProp(key) {
   return cache.get(key);
 }
 
-/** Midt på i x/z og bunnen i y = 0. */
+/** Midt på i x/z og bunnen i y = 0 (deler som stikker utenfor fotavtrykket, overhang, teller ikke). */
 function center(parts) {
   const box = new THREE.Box3();
   for (const p of parts) {
+    if (p.overhang) continue;
     p.geometry.computeBoundingBox();
     box.union(p.geometry.boundingBox);
   }
@@ -69,6 +72,7 @@ function loadModel(file, turn = 0) {
             if (turn) g.rotateY(turn); // forsiden mot +z
             const mat = m.material;
             parts.push({
+              materialName: mat.name,
               geometry: g,
               map: mat.map ?? null,
               arm: mat.metalnessMap ?? mat.roughnessMap ?? null,
@@ -85,48 +89,6 @@ function loadModel(file, turn = 0) {
   return cache.get(file);
 }
 
-/** Bakt lys per vertex for en kopi i verdenen (posisjon og normal etter dreiningen). */
-function bakeLight(geometry, matrix, field) {
-  const pos = geometry.attributes.position;
-  const nor = geometry.attributes.normal;
-  const light = new Float32Array(pos.count * 3);
-  const flick = new Float32Array(pos.count * 4);
-  const p = new THREE.Vector3();
-  const n = new THREE.Vector3();
-  const rot = new THREE.Matrix3().getNormalMatrix(matrix);
-  const q = (v, s) => Math.round(v / s) * s; // nærliggende punkter deler lysprøve (bufret i feltet)
-  for (let i = 0; i < pos.count; i++) {
-    p.fromBufferAttribute(pos, i).applyMatrix4(matrix);
-    n.fromBufferAttribute(nor, i).applyMatrix3(rot).normalize();
-    const s = field.sample(q(p.x, 0.05), q(p.y, 0.05), q(p.z, 0.05), q(n.x, 0.25), q(n.y, 0.25), q(n.z, 0.25));
-    light.set([s[0], s[1], s[2]], i * 3);
-    flick.set([s[3], s[4], s[5], s[6]], i * 4);
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', pos);
-  if (geometry.attributes.uv) g.setAttribute('uv', geometry.attributes.uv);
-  g.setIndex(geometry.index);
-  g.setAttribute('aLight', new THREE.BufferAttribute(light, 3));
-  g.setAttribute('aFlick', new THREE.BufferAttribute(flick, 4));
-  return g;
-}
-
-let shadowTexture = null;
-function contactShadow() {
-  if (!shadowTexture) {
-    const c = document.createElement('canvas');
-    c.width = c.height = 64;
-    const ctx = c.getContext('2d');
-    const grad = ctx.createRadialGradient(32, 32, 4, 32, 32, 32);
-    grad.addColorStop(0, 'rgba(0,0,0,0.55)');
-    grad.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 64, 64);
-    shadowTexture = new THREE.CanvasTexture(c);
-  }
-  return shadowTexture;
-}
-
 /**
  * Gjenstandene i rommet. Modellene lastes i bakgrunnen; `ready` løses når alle er på plass.
  * Hver gjenstand er en egen gruppe (`items[i]` for level.objects[i]) som kan flyttes – flytende
@@ -138,8 +100,6 @@ export function createObjects(level, field, shared) {
   group.name = 'objects';
   const owned = [];
   let disposed = false;
-  const shadowMat = new THREE.MeshBasicMaterial({ map: contactShadow(), transparent: true, depthWrite: false, color: 0x000000 });
-  owned.push(shadowMat);
   const materials = new Map(); // én per modelldel
   const materialFor = (part, def) => {
     if (!materials.has(part)) {
@@ -153,7 +113,8 @@ export function createObjects(level, field, shared) {
         uUnlit: { value: part.unlit ? 1 : 0 },
         uScreen: { value: new THREE.Vector4(...(def.screen ?? [0, 0, 0, 0])) },
       });
-      const m = new THREE.ShaderMaterial({ uniforms, vertexShader: VERT, fragmentShader: FRAG, fog: true, side: part.side });
+      const m = new THREE.ShaderMaterial({ uniforms, defines: part.vinyl ? { SOFT_VINYL: 1 } : {},
+        vertexShader: VERT, fragmentShader: FRAG, fog: true, side: part.side });
       materials.set(part, m);
       owned.push(m);
     }
@@ -161,13 +122,16 @@ export function createObjects(level, field, shared) {
   };
 
   const items = [];
+  const poseOf = poser(level); // del plasseringene mellom modellene, også for stablede klosser
+  const makeShadow = contactShadows(level, poseOf, owned);
   const spinners = []; // gjenstander som snurrer (takvifter)
   const jobs = (level.objects ?? []).map(async (o, index) => {
     const def = OBJECTS[o.id];
     if (!def) return;
-    const parts = await (def.build ? loadProp(propKey(def, level, o)) : loadModel(def.file, def.turn));
+    let parts = await (def.build ? loadProp(propKey(def, level, o)) : loadModel(def.file, def.turn));
+    if (o.id === 'arcade2') parts = await arcadeParts(parts, o);
     if (disposed) return;
-    const pose = objectPose(level, o);
+    const pose = poseOf(o);
     const s = def.scale ?? 1;
     const matrix = new THREE.Matrix4()
       .makeRotationY((-pose.rot * Math.PI) / 2)
@@ -178,18 +142,15 @@ export function createObjects(level, field, shared) {
     item.rotation.y = (-pose.rot * Math.PI) / 2;
     item.scale.setScalar(s);
     for (const part of parts) {
-      const geometry = bakeLight(part.geometry, matrix, field);
+      const geometry = bakeLight(part.geometry, matrix, field, part.side === THREE.DoubleSide);
       owned.push(geometry);
       item.add(new THREE.Mesh(geometry, materialFor(part, def)));
     }
     items[index] = item;
     if (def.spin) spinners.push([item, def.spin]);
     group.add(item);
-    if (def.floats && level.tiles[o.z * level.w + o.x] === TILE.WATER) return; // flyter: ingen skygge på vannet
-    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(pose.w * 1.5, pose.d * 1.5), shadowMat);
-    owned.push(shadow.geometry);
-    shadow.rotation.x = -Math.PI / 2;
-    shadow.position.set(pose.x, pose.y - Math.min(0, def.lift ?? 0) + 0.004, pose.z); // på gulvet, også for det som er senket
+    const shadow = makeShadow(o);
+    if(!shadow)return;
     item.userData.shadow = shadow; // følger med når fysikken flytter gjenstanden (view3d/softplay.js)
     group.add(shadow);
   });

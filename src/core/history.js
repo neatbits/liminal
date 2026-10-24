@@ -22,7 +22,7 @@ export function applySnapshot(level, snap) {
 }
 
 function sameContent(a, b) {
-  if (a.w !== b.w || a.h !== b.h || a.slides !== b.slides || a.objects !== b.objects) return false;
+  if (a.w !== b.w || a.h !== b.h || a.seed !== b.seed || a.slides !== b.slides || a.objects !== b.objects) return false;
   if (a.spawn.x !== b.spawn.x || a.spawn.z !== b.spawn.z || a.spawn.a !== b.spawn.a) return false;
   for (const key of LAYERS) {
     const x = a[key];
@@ -37,6 +37,7 @@ export class History {
     this.limit = limit;
     this.undoStack = [];
     this.redoStack = [];
+    this.pending = null;
   }
 
   get canUndo() {
@@ -49,18 +50,28 @@ export class History {
 
   /** Kalles før en endring. */
   push(level) {
-    this.undoStack.push(snapshot(level));
-    if (this.undoStack.length > this.limit) this.undoStack.shift();
+    const snap = snapshot(level);
+    this.pending = { snap, redo: this.redoStack.slice(), evicted: null };
+    this.undoStack.push(snap);
+    if (this.undoStack.length > this.limit) this.pending.evicted = this.undoStack.shift();
     this.redoStack.length = 0;
   }
 
   /** Fjerner siste bilde hvis endringen likevel ikke endret noe (f.eks. klikk uten effekt). */
   dropIfUnchanged(level) {
     const last = this.undoStack[this.undoStack.length - 1];
-    if (last && sameContent(last, level)) this.undoStack.pop();
+    if (last && sameContent(last, level)) {
+      this.undoStack.pop();
+      if (this.pending?.snap === last) {
+        this.redoStack = this.pending.redo;
+        if (this.pending.evicted) this.undoStack.unshift(this.pending.evicted);
+      }
+    }
+    this.pending = null;
   }
 
   undo(level) {
+    this.dropIfUnchanged(level);
     const snap = this.undoStack.pop();
     if (!snap) return false;
     this.redoStack.push(snapshot(level));
@@ -69,6 +80,7 @@ export class History {
   }
 
   redo(level) {
+    this.dropIfUnchanged(level);
     const snap = this.redoStack.pop();
     if (!snap) return false;
     this.undoStack.push(snapshot(level));
@@ -77,6 +89,7 @@ export class History {
   }
 
   clear() {
+    this.pending = null;
     this.undoStack.length = 0;
     this.redoStack.length = 0;
   }

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Whiteboard
+* source:	https://sketchfab.com/3d-models/whiteboard-1675efa75ddd4609960f7a3b08349e28
+* author:	EwanLejkowski (https://sketchfab.com/EwanLejkowski)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Whiteboard" (https://sketchfab.com/3d-models/whiteboard-1675efa75ddd4609960f7a3b08349e28) by EwanLejkowski (https://sketchfab.com/EwanLejkowski) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

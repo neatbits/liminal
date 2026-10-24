@@ -31,6 +31,16 @@ export function schoolFloor(rand) {
   }
   const n = fbm(S, 8, 3, rand);
   pixelPass(ctx, S, (x, y, i, d) => shade(d, i, 0.97 + (n[y * S + x] - 0.5) * 0.08));
+  ctx.strokeStyle = 'rgba(62,57,48,0.09)';
+  ctx.lineWidth = 1.2;
+  for (let k = 0; k < 85; k++) {
+    const x = rand() * S;
+    const y = rand() * S;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + 3 + rand() * 12, y + rand() * 3);
+    ctx.stroke();
+  }
   return canvas;
 }
 
@@ -55,6 +65,17 @@ export function blockWall(rand) {
   return canvas;
 }
 
+/** Sage-painted lower classroom walls, using the same block joints as the upper wall. */
+export function schoolPaint(rand) {
+  const canvas = blockWall(rand);
+  const ctx = canvas.getContext('2d');
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = '#adc1b0';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.globalCompositeOperation = 'source-over';
+  return canvas;
+}
+
 /** Metallskap: fire dører à 30 cm med lufteslisser, håndtak og nummerskilt. */
 export function lockers(rand) {
   // Høyere enn bred (1,2 × 1,85 m), så den lages uten makeCanvas.
@@ -72,6 +93,13 @@ export function lockers(rand) {
     const v = (rand() - 0.5) * 10;
     ctx.fillStyle = `rgb(${62 + v},${120 + v},${132 + v})`;
     ctx.fillRect(x + 2, 4, dw - 4, H - 8);
+    const steel = ctx.createLinearGradient(x, 0, x + dw, 0);
+    steel.addColorStop(0, 'rgba(0,15,25,0.3)');
+    steel.addColorStop(0.09, 'rgba(255,255,255,0.16)');
+    steel.addColorStop(0.82, 'rgba(255,255,255,0)');
+    steel.addColorStop(1, 'rgba(0,15,25,0.28)');
+    ctx.fillStyle = steel;
+    ctx.fillRect(x + 2, 4, dw - 4, H - 8);
     // Lufteslisser øverst og nederst.
     ctx.fillStyle = 'rgba(15,25,30,0.7)';
     for (const top of [20, H - 70]) for (let s = 0; s < 6; s++) ctx.fillRect(x + 14, top + s * 8, dw - 28, 3);
@@ -80,6 +108,10 @@ export function lockers(rand) {
     ctx.fillRect(x + dw - 16, H * 0.48, 6, 26);
     ctx.fillStyle = '#e8e4d8';
     ctx.fillRect(x + dw / 2 - 9, 76, 18, 10);
+    ctx.fillStyle = '#424c4f';
+    ctx.font = '8px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(101 + k), x + dw / 2, 84);
   }
   return canvas;
 }

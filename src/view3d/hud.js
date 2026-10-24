@@ -11,13 +11,14 @@ function el(tag, cls, html = '') {
 }
 
 export class Hud {
-  /** @param actions { exit(), vhs(), sound(), photo(), mood(), drift() } */
+  /** @param actions { exit(), resume(), vhs(), sound(), music(), photo(), mood(), drift() } */
   constructor(root, actions) {
     this.root = el('div', 'hud');
     this.walkbar = el(
       'div',
       'hud-walkbar',
-      `<span class="hud-badge">Walking</span>
+      `<button type="button" data-act="resume" class="hud-resume" title="Keep walking (or click anywhere)">▶ Resume</button>
+       <span class="hud-badge">Walking</span>
        <span class="hud-stats"></span>
        <span class="hud-extra"></span>
        <button type="button" data-act="drift" title="Dream walk: drift slowly through the rooms on your own (G)">Drift</button>
@@ -25,10 +26,11 @@ export class Hud {
        <button type="button" data-act="vhs" title="VHS filter (V)">VHS</button>
        <button type="button" data-act="mood" class="hud-mood" title="Mood: Normal → Abandoned → Liminal → Uncanny → Nightmare (X)">Liminal</button>
        <button type="button" data-act="sound" title="Sound on/off (M)">Sound</button>
-       <button type="button" data-act="exit" title="Back to overview (Esc)">Overview</button>`,
+       <button type="button" data-act="music" title="Music on/off (N)">♪ Music</button>
+       <button type="button" data-act="exit" title="Back to the editor (Esc)">✕ Exit</button>`,
     );
     this.hint = el('div', 'hud-hint');
-    this.vhs = el('div', 'hud-vhs', '<span class="vhs-play">▶ PLAY</span><span class="vhs-time"></span>');
+    this.vhs = el('div', 'hud-vhs', '<span class="vhs-play">PLAY ▶</span><span class="vhs-speed">SP</span><span class="vhs-time"></span>');
     this.loading = el('div', 'hud-loading', 'Building the room …');
     this.message = el('div', 'hud-message');
     for (const n of [this.walkbar, this.hint, this.vhs, this.loading, this.message]) {
@@ -57,8 +59,9 @@ export class Hud {
   }
 
   setWalking(on) {
-    this.walkbar.hidden = !on;
+    this.walkbar.hidden = !on || (!this._touch && !this.root.classList.contains('paused'));
     if (!on) this.hint.hidden = true;
+    if (!on) this.root.classList.remove('paused');
   }
 
   /** «Walking» eller «Sliding» i gålinjen. */
@@ -122,23 +125,29 @@ export class Hud {
     this.shot.classList.add('go');
   }
 
-  setLocked(locked, walking) {
-    this.hint.hidden = !walking || locked;
-    this.hint.textContent = this._touch
-      ? 'Left side: walk · Right side: look around'
-      : 'Click to look with the mouse · WASD/arrows to walk · Shift to run · Esc to release';
+  /** PC: kontrollene vises bare på pause. Berøring: behold den trykkbare gålinjen. */
+  setLocked(locked, walking, paused = walking && !locked && !this._touch) {
+    paused = walking && paused;
+    this.root.classList.toggle('paused', paused);
+    this.walkbar.hidden = !walking || (!this._touch && !paused);
+    this.hint.hidden = !walking || (locked && !paused);
+    this.hint.textContent = paused
+      ? 'Paused · Click anywhere to keep walking (WASD to walk, Shift to run) · Esc again to exit'
+      : this.phoneControls ? 'Left thumb: move · Right thumb: look around'
+        : this._touch ? 'Left side: walk · Right side: look around' : 'Drag to look around · WASD to walk · Esc to exit';
   }
 
   setStats(meters, explored) {
     this.walkbar.querySelector('.hud-stats').textContent = `${Math.round(meters)} m walked · ${Math.round(explored * 100)} % explored`;
   }
 
-  setToggles({ vhs, sound, mood }) {
+  setToggles({ vhs, sound, music, mood }) {
     const m = this.walkbar.querySelector('[data-act="mood"]');
-    m.textContent = getMood(mood).label;
+    m.textContent = `Mood: ${getMood(mood).label}`;
     m.dataset.mood = mood;
     this.walkbar.querySelector('[data-act="vhs"]').classList.toggle('on', vhs);
     this.walkbar.querySelector('[data-act="sound"]').classList.toggle('on', sound);
+    this.walkbar.querySelector('[data-act="music"]').classList.toggle('on', !!music);
   }
 
   setVhs(on) {

@@ -3,6 +3,8 @@
 // Bare i gåmodus – rommet endres ikke. Ren logikk (ingen three.js).
 import { TILE, getTile, WATER_SURFACE } from '../core/level.js';
 import { OBJECTS, objectPose } from '../core/objects.js';
+import { waterCell } from '../core/pillar-water.js';
+import { pillarContains } from '../core/pillars.js';
 
 // Radius sett ovenfra: halve bredden (en and ~0,14 m, en flamingo ~0,5 m).
 const DRAG = 0.6; // vannmotstand (1/s)
@@ -24,7 +26,7 @@ export class Floaters {
   }
 
   _water(x, z) {
-    return getTile(this.level, Math.floor(x), Math.floor(z)) === TILE.WATER;
+    return waterCell(this.level, Math.floor(x), Math.floor(z)) && !pillarContains(this.level, x, z);
   }
 
   /** Dytter alt innenfor `radius` fra (x, z) utover, f.eks. når man plasker ned fra sklien. */

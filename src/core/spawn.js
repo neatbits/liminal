@@ -1,5 +1,7 @@
 // Startpunkt: sørger for at spilleren alltid starter på en gangbar rute.
 import { TILE, getTile, inBounds } from './level.js';
+import { pillarContains } from './pillars.js';
+import { halfWallContains } from './half-walls.js';
 
 const DIRS = [
   [0, -1],
@@ -10,7 +12,7 @@ const DIRS = [
 
 export function isWalkableCell(level, x, z) {
   const t = getTile(level, x, z);
-  return t !== TILE.WALL && t !== TILE.PILLAR;
+  return t !== TILE.WALL && t !== TILE.PILLAR && !pillarContains(level, x + .5, z + .5, .3) && !halfWallContains(level, x + .5, z + .5, .3);
 }
 
 /** Nærmeste gangbare rute fra (x, z) via bredde-først-søk, eller null om rommet er tomt. */

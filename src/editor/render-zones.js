@@ -2,6 +2,7 @@
 // skifter høyde, skravur over dekker (andre etasje) og etiketter med høyden/dybden.
 import { TILE } from '../core/level.js';
 import { deckAt } from '../core/heights.js';
+import { FINISH } from '../core/finishes.js';
 
 const LABEL = {
   ceiling: { fill: 'rgba(92, 70, 160, 0.92)', text: (v) => `↕ ${v.toFixed(1)} m` },
@@ -104,7 +105,7 @@ export function drawTileGrid(ctx, view, level, r) {
   for (let z = r.z0; z <= r.z1; z++) {
     for (let x = r.x0; x <= r.x1; x++) {
       const i = z * w + x;
-      if (!finish[i] || tiles[i] === TILE.WALL || tiles[i] === TILE.WATER) continue;
+      if (finish[i] !== FINISH.TILES || tiles[i] === TILE.WALL || tiles[i] === TILE.WATER) continue;
       const [sx, sy] = view.toScreen(x, z);
       for (const f of [1 / 3, 2 / 3]) {
         ctx.moveTo(Math.round(sx + f * s) + 0.5, sy);

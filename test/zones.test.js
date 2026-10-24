@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createLevel, setTile, setLight, TILE, LIGHT } from '../src/core/level.js';
+import { createLevel, setTile, setLight, TILE, LIGHT, HEIGHT_MAX } from '../src/core/level.js';
 import { ceilingAt, depthAt, floorAt } from '../src/core/heights.js';
 import { fillTiles, rectIndices } from '../src/core/ops.js';
 import { paintZone, fillZone, floodFillZone, zoneDm, zoneLabels } from '../src/core/zones.js';
@@ -15,7 +15,7 @@ function hall() {
 describe('soner', () => {
   it('lagrer verdien i desimeter, klemt til lovlige høyder', () => {
     expect(zoneDm('ceiling', 4.04)).toBe(40);
-    expect(zoneDm('ceiling', 99)).toBe(80);
+    expect(zoneDm('ceiling', 99)).toBe(HEIGHT_MAX * 10);
     expect(zoneDm('depth', 0.01)).toBe(3);
     expect(zoneDm('depth', 0)).toBe(0);
     expect(zoneDm('ceiling', null)).toBe(0);

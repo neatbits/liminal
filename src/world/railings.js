@@ -2,9 +2,10 @@
 // rekkverket slutter, og håndlist på veggen langs trapper. Ren logikk – MeshData med bakt lys.
 import { TILE, getTile } from '../core/level.js';
 import { groundAt } from '../core/heights.js';
+import { isEscalator } from '../core/escalators.js';
 import { railSides, RAIL_HEIGHT } from '../core/railings.js';
 import { MeshData, faceQuad } from './mesher.js';
-import { orientedBox } from './doors.js';
+import { orientedBox } from './mesher.js';
 import { stepProfile, surfaceHeight } from './stairs.js';
 
 const INSET = 0.05; // vernets senterlinje innenfor kanten
@@ -80,9 +81,13 @@ function railing(out, level, x, z, side) {
   beam(out.rail, top(ends[0], RAIL_HEIGHT), top(ends[1], RAIL_HEIGHT), RAIL_W, RAIL_H);
   const stairs = getTile(level, x, z) === TILE.STAIRS ? stepProfile(level, x, z) : null;
   const count = stairs ? 2 * stairs.n : 4;
-  for (let k = 0; k < count; k++) {
-    const p = at((k + 0.5) / count);
-    post(out.bars, p, BAR, foot(p), g(p) + RAIL_HEIGHT - RAIL_H / 2);
+  if (level.theme === 'mall' && side.kind === 'guard' && !stairs) {
+    faceQuad(out.railGlass, [top(ends[0], 0.1), top(ends[1], 0.1), top(ends[1], RAIL_HEIGHT - RAIL_H / 2), top(ends[0], RAIL_HEIGHT - RAIL_H / 2)], [side.dx, 0, side.dz]);
+  } else {
+    for (let k = 0; k < count; k++) {
+      const p = at((k + 0.5) / count);
+      post(out.bars, p, BAR, foot(p), g(p) + RAIL_HEIGHT - RAIL_H / 2);
+    }
   }
   ends.forEach((p, end) => {
     if (continues(level, x, z, side, end)) return;
@@ -90,11 +95,12 @@ function railing(out, level, x, z, side) {
   });
 }
 
-/** @returns {{ rail, bars }} MeshData for håndlister/stolper og spiler */
+/** MeshData for håndlister/stolper, spiler og Malls glassvern. */
 export function buildRailings(level, field) {
-  const out = { rail: new MeshData(field), bars: new MeshData(field) };
+  const out = { rail: new MeshData(field), bars: new MeshData(field), railGlass: new MeshData(field) };
   for (let z = 0; z < level.h; z++) {
     for (let x = 0; x < level.w; x++) {
+      if (isEscalator(level, x, z)) continue; // eget lukket vern og håndløper
       for (const side of railSides(level, x, z)) railing(out, level, x, z, side);
     }
   }

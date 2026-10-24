@@ -4,13 +4,34 @@ import { getTexture } from '../textures/index.js';
 import { WATER_DEPTH } from '../core/level.js';
 import { GLOSS_PARS } from './gloss.js';
 
+// Kaustikk: lysnettet på bassengbunnen. Kantene mellom celler (Worley F2 − F1) med punkter som
+// beveger seg, i to lag med ulik skala, vridd så nettet ikke blir regelmessig.
 const CAUSTIC = /* glsl */ `
+vec2 causticHash(vec2 p) {
+  p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+  return fract(sin(p) * 43758.5453);
+}
+float causticCells(vec2 p, float t) {
+  vec2 ip = floor(p);
+  vec2 fp = fract(p);
+  float f1 = 8.0;
+  float f2 = 8.0;
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2 o = vec2(float(x), float(y));
+      vec2 h = causticHash(ip + o);
+      vec2 d = o + 0.5 + 0.4 * sin(t * 0.8 + 6.2831 * h) - fp;
+      float dd = dot(d, d);
+      if (dd < f1) { f2 = f1; f1 = dd; } else if (dd < f2) { f2 = dd; }
+    }
+  }
+  return sqrt(f2) - sqrt(f1);
+}
 float caustic(vec2 p, float t) {
-  vec2 q = p * 1.7;
-  float v = sin(q.x * 2.1 + t * 0.9 + sin(q.y * 1.7 + t * 0.6) * 1.4)
-          + sin(q.y * 2.4 - t * 0.7 + sin(q.x * 1.3 - t * 0.8) * 1.6);
-  v = abs(v) * 0.5;
-  return pow(1.0 - clamp(v, 0.0, 1.0), 6.0);
+  vec2 w = p * 1.25 + 0.3 * vec2(sin(p.y * 1.3 + t * 0.5), sin(p.x * 1.1 - t * 0.4));
+  float a = 1.0 - smoothstep(0.0, 0.11, causticCells(w, t));
+  float b = 1.0 - smoothstep(0.0, 0.14, causticCells(w * 1.7 + 3.1, t * 1.25));
+  return a * 0.8 + b * 0.35 + a * b * 0.6;
 }`;
 
 const VERT = /* glsl */ `
@@ -18,6 +39,7 @@ attribute vec3 aLight;
 attribute vec4 aFlick;
 uniform vec4 uFlick;
 uniform vec3 uFlickColor;
+uniform vec3 uTint;
 varying vec2 vUv;
 varying vec3 vLight;
 varying vec3 vPos;
@@ -25,7 +47,7 @@ varying vec3 vPos;
 void main() {
   vUv = uv;
   vPos = position;
-  vLight = aLight + uFlickColor * dot(aFlick, uFlick);
+  vLight = (aLight + uFlickColor * dot(aFlick, uFlick)) * uTint; // lysfargen (core/tints.js)
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
   gl_Position = projectionMatrix * mvPosition;
   #include <fog_vertex>
@@ -111,6 +133,7 @@ export function createSharedUniforms(flickColor) {
     uFlickColor: { value: new THREE.Color().setRGB(...flickColor) },
     uTime: { value: 0 },
     uBoost: { value: 1 },
+    uTint: { value: new THREE.Vector3(1, 1, 1) }, // lysfargen (core/tints.js, world.setTint)
   };
 }
 
@@ -155,6 +178,7 @@ export function surfaceMaterial(def, shared, anisotropy) {
   const g2 = def.map2?.gloss;
   if ((g1 || g2) && shared.uLamps) {
     defines.USE_GLOSS = '';
+    if (def.mirror && shared.uFloorMirror) defines.USE_FLOOR_MIRROR = '';
     uniforms.uGloss = { value: new THREE.Vector2(g1?.amount ?? 0, g1?.grid ?? 1) };
     if (def.map2) uniforms.uGloss2 = { value: new THREE.Vector2(g2?.amount ?? 0, g2?.grid ?? 1) };
   }

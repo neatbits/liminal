@@ -6,7 +6,9 @@ import { slidesAt, slidePath } from '../core/slides.js';
 import { OBJECTS, objectsAt } from '../core/objects.js';
 import { windowInfo } from '../core/windows.js';
 import { SHAPES } from '../editor/tools.js';
+import { isEscalator, ESCALATOR_DOWN } from '../core/escalators.js';
 import { $ } from '../ui/dom.js';
+import { FINISH, FINISHES } from '../core/finishes.js';
 
 const NAMES = {
   [TILE.WALL]: 'Wall',
@@ -24,7 +26,8 @@ export function hoverText(level, cell) {
   if (!cell || !level || !inBounds(level, cell[0], cell[1])) return '';
   const [x, z] = cell;
   const tile = level.tiles[z * level.w + x];
-  const parts = [`x ${x} m`, `y ${z} m`, windowInfo(level, x, z) ? 'Window' : NAMES[tile]];
+  const name = isEscalator(level, x, z) ? `Escalator (${level.meta[z * level.w + x] & ESCALATOR_DOWN ? 'down' : 'up'})` : NAMES[tile];
+  const parts = [`x ${x} m`, `y ${z} m`, windowInfo(level, x, z) ? 'Window' : name];
   const door = doorInfo(level, x, z);
   if (door?.state) parts.push(door.oneSided ? `${DOOR_NAMES[door.state]} door to nowhere` : `${DOOR_NAMES[door.state]} door`);
   if (tile === TILE.WATER) parts.push(`${m(depthAt(level, x, z))} deep`);
@@ -35,7 +38,8 @@ export function hoverText(level, cell) {
     parts.push(`floor ${m(floorAt(level, x, z))}`);
   }
   if (deckAt(level, x, z)) parts.push(`deck ${m(deckAt(level, x, z))}`);
-  if (tile !== TILE.WALL && tile !== TILE.WATER && level.finish[z * level.w + x]) parts.push('tiled');
+  const finish = level.finish[z * level.w + x];
+  if (tile !== TILE.WALL && tile !== TILE.WATER && finish) parts.push(finish === FINISH.TILES ? 'tiled' : FINISHES[finish]?.label ?? 'finish');
   for (const i of slidesAt(level, x, z)) {
     const path = slidePath(level, level.slides[i]);
     parts.push(path.problem ? `slide: ${path.problem}` : `${path.color} ${path.tube ? 'tube slide' : 'slide'} from ${m(path.h0)}`);
@@ -45,14 +49,15 @@ export function hoverText(level, cell) {
   return parts.join(' · ');
 }
 
-export function toolText({ tool, shape, brush, zone, doorState, slideTube, slideColor, objectId }) {
+export function toolText({ tool, shape, brush, zone, doorState, slideTube, slideColor, objectId, escalatorDown }) {
   if (tool.kind === 'spawn') return `${tool.label} · click and drag to aim`;
   if (tool.kind === 'door') return `${tool.label} (${DOOR_NAMES[doorState].toLowerCase()}) · click a wall or doorway`;
   if (tool.kind === 'object') return `${tool.label} (${OBJECTS[objectId]?.label}) · click a floor cell, click again to turn`;
+  if (tool.escalator) return `${tool.label} (${escalatorDown ? 'down' : 'up'}) · drag from lower to upper landing, ${brush} m wide`;
   if (tool.kind === 'stairs') return `${tool.label} · drag from bottom to top, ${brush} m wide`;
   if (tool.kind === 'slide') return `${tool.label} (${slideColor} ${slideTube ? 'tube' : 'open'}) · drag from a raised floor to the water`;
   const shapeLabel = SHAPES.find((s) => s.id === shape)?.label;
-  const label = tool.kind === 'zone' && tool.layer !== 'finish' ? `${tool.label} ${m(zone[tool.layer])}` : tool.label;
+  const label = tool.layer === 'finish' ? `${tool.label} (${FINISHES[zone.finish]?.label})` : tool.kind === 'zone' ? `${tool.label} ${m(zone[tool.layer])}` : tool.label;
   return `${label} · ${shapeLabel}, ${brush} m`;
 }
 

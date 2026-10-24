@@ -23,10 +23,16 @@ import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import { metalRough, prune, weld, simplify } from '@gltf-transform/functions';
 import { MeshoptSimplifier } from 'meshoptimizer';
+import { retailArt } from './retail-art.mjs';
+import { electronicsArt } from './electronics-art.mjs';
+import { vhsArt } from './vhs-art.mjs';
+import { sampleMorphClip } from './model-morphs.mjs';
 
 const SRC = '3dmodels';
 const OUT = 'models';
 const all = process.argv.includes('--all');
+// Valgfrie mappenavn begrenser byggingen: npm run models -- arm_chair coffee_mug.
+const selected = new Set(process.argv.slice(2).filter((arg) => !arg.startsWith('--')));
 mkdirSync(OUT, { recursive: true });
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 
@@ -38,6 +44,7 @@ function newest(dir) {
 }
 
 for (const name of readdirSync(SRC)) {
+  if (selected.size && !selected.has(name)) continue;
   const dir = join(SRC, name);
   if (!statSync(dir).isDirectory()) continue;
   const file = readdirSync(dir).find((f) => ['.gltf', '.glb'].includes(extname(f).toLowerCase()));
@@ -47,6 +54,10 @@ for (const name of readdirSync(SRC)) {
   }
   const configFile = join(dir, 'model.json');
   const config = existsSync(configFile) ? JSON.parse(readFileSync(configFile, 'utf8')) : {};
+  if (config.disabled) {
+    console.log(`${name}: hoppet over (${config.disabled})`);
+    continue;
+  }
   for (const [target, keep] of config.split ? Object.entries(config.split) : [[name, null]]) {
     await build(dir, file, config, target, keep);
   }
@@ -54,14 +65,23 @@ for (const name of readdirSync(SRC)) {
 
 async function build(dir, file, config, name, keep) {
   const out = join(OUT, `${name}.glb`);
-  if (!all && existsSync(out) && statSync(out).mtimeMs > newest(dir)) return;
+  const artFile = { retail: 'scripts/retail-art.mjs', electronics: 'scripts/electronics-art.mjs', vhs: 'scripts/vhs-art.mjs' }[config.art];
+  const changed = Math.max(newest(dir), artFile ? statSync(artFile).mtimeMs : 0,
+    config.morphSamples ? statSync('scripts/model-morphs.mjs').mtimeMs : 0);
+  if (!all && existsSync(out) && statSync(out).mtimeMs > changed) return;
 
   const doc = await io.read(join(dir, file));
+  if(config.morphSamples)sampleMorphClip(doc,config.morphSamples);
+  if (config.art === 'retail') await retailArt(doc, name);
+  if (config.art === 'electronics') await electronicsArt(doc, name);
+  if (config.art === 'vhs') await vhsArt(doc);
   if (keep) {
     // Bare den ene modellen: søsknene til noden med prefikset fjernes.
-    const node = doc.getRoot().listNodes().find((n) => n.getName().startsWith(keep));
+    const prefixes = Array.isArray(keep) ? keep : [keep];
+    const matches = n => prefixes.some(prefix => n.getName().startsWith(prefix));
+    const node = doc.getRoot().listNodes().find(matches);
     if (!node) throw new Error(`${name}: fant ingen node som starter med «${keep}»`);
-    for (const sib of node.getParentNode()?.listChildren() ?? []) if (sib !== node) sib.dispose();
+    for (const sib of node.getParentNode()?.listChildren() ?? []) if (!matches(sib)) sib.dispose();
   }
   for (const prefix of config.drop ?? []) {
     for (const node of doc.getRoot().listNodes()) if (node.getName().startsWith(prefix)) node.dispose();
@@ -92,6 +112,8 @@ async function build(dir, file, config, name, keep) {
       '--compress', 'meshopt',
       '--texture-compress', 'webp',
       '--texture-size', String(config.textureSize ?? 1024),
+      // The baked object loader needs explicit geometry rather than instanced nodes.
+      '--instance', String(config.instance ?? true),
       '--simplify', 'false',
     ],
     { stdio: 'inherit' },

@@ -34,7 +34,7 @@ export function lampData(level, lights, below = 0) {
     if (l.state === LIGHT.BROKEN) continue;
     data[i * 4] = 255;
     data[i * 4 + 1] = l.state === LIGHT.FLICKER ? l.group + 1 : 0;
-    data[i * 4 + 2] = height(l.ceil);
+    data[i * 4 + 2] = height(l.top ?? l.ceil);
   }
   return data;
 }

@@ -4,19 +4,25 @@
 // vegg (eller midt på gulvet) – og returnerer true hvis oppsettet ble satt inn. Ren logikk.
 import { TILE, getTile } from '../core/level.js';
 import { FACING, placeObject, objectsAt, objectFits } from '../core/objects.js';
+import { RETRO_PC_IDS } from '../core/object-catalog-electronics.js';
+import { deskItem } from './desk-items.js';
 
 // Det som står på skrivebordene (vektet).
 const ON_DESK = [
-  ['laptop', 0.4],
-  ['pc', 0.2],
-  ['tv', 0.15],
-  ['boombox', 0.1],
-  ['cassette', 0.08],
-  ['console', 0.07],
+  ['laptop', 0.22],
+  ['pc', 0.15],
+  ['tv', 0.08],
+  ['boombox', 0.06],
+  ['cassette', 0.02],
+  ['walkman', 0.06],
+  ['vhsplayer', 0.04],
+  ['console', 0.02],
+  ['mug', 0.17],
+  ['desklamp', 0.18],
 ];
 
 // Skrivebordet per tema: metallpulten på kontoret og sykehuset, treskrivebord ellers.
-const DESKS = { office: ['desk', 'desk', 'desk2'], ward: ['desk'], mall: ['desk'] };
+const DESKS = { office: ['desk', 'desk', 'desk2', 'moderndesk', 'table'], ward: ['desk', 'moderndesk'], school: ['desk2', 'moderndesk', 'table'], mall: ['desk'] };
 
 export function pick(rand, weights) {
   let r = rand();
@@ -54,7 +60,11 @@ export function desk(level, rand, x, z) {
   const id = DESKS[level.theme] ? DESKS[level.theme][Math.floor(rand() * DESKS[level.theme].length)] : 'desk2';
   const d = tryPlace(level, x, z, id, 2);
   if (!d) return false;
-  if (rand() < 0.85) placeObject(level, x, z, pick(rand, ON_DESK));
+  if (rand() < 0.85) {
+    const selected = pick(rand, ON_DESK);
+    const id = selected === 'pc' && ['office', 'school'].includes(level.theme) ? ['pc', ...RETRO_PC_IDS][(x + z) % 5] : selected;
+    deskItem(level, d, id);
+  }
   if (rand() < 0.75) {
     const [fx, fz] = FACING[d.rot];
     const rot = rand() < 0.2 ? (d.rot + 1 + Math.floor(rand() * 3)) % 4 : (d.rot + 2) % 4; // vanligvis mot pulten
@@ -135,6 +145,7 @@ export function poolside(level, rand, x, z) {
 
 /** Ventestoler på rad mot veggen (sykehus, hotell). */
 export function chairs(level, rand, x, z) {
+  if (level.theme === 'ward') return !!tryPlace(level, x, z, 'waitingchairs', 1);
   return row(level, rand, x, z, ['dinerchair'], 1);
 }
 

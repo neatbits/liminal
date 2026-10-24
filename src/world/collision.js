@@ -1,20 +1,21 @@
 // Kollisjon for en sirkel (spilleren sett ovenfra) mot vegger, søyler, lukkede dører,
 // rekkverk, vannsklier og gulv som ligger for høyt til å gå rett opp på.
-import { TILE, getTile, PILLAR_SIZE } from '../core/level.js';
+import { TILE, getTile } from '../core/level.js';
+import { pillarContains } from '../core/pillars.js';
+import { pushFromPillars } from './pillar-collision.js';
+import { waterCell } from '../core/pillar-water.js';
 import { groundAt, headAt } from '../core/heights.js';
 import { guardBoxes } from '../core/railings.js';
 import { slideColliders } from '../core/slides.js';
-import { objectColliders } from '../core/objects.js';
+import { objectColliders, objectGround, walkBlockers } from '../core/objects.js';
 import { doorInfo } from '../core/doors.js';
 import { closedLeafBox } from './doors.js';
+import { cornerShape, pointInPolygon } from '../core/corners.js';
+import { halfWallContains } from '../core/half-walls.js';
 
 function solidBox(level, cx, cz) {
   const t = getTile(level, cx, cz);
-  if (t === TILE.WALL) return [cx, cz, cx + 1, cz + 1];
-  if (t === TILE.PILLAR) {
-    const h = PILLAR_SIZE / 2;
-    return [cx + 0.5 - h, cz + 0.5 - h, cx + 0.5 + h, cz + 0.5 + h];
-  }
+  if (t === TILE.WALL) return cornerShape(level, cx, cz) ? null : [cx, cz, cx + 1, cz + 1]; // åpnet hjørne: se pushFromShape
   if (t === TILE.DOOR) return closedLeafBox(doorInfo(level, cx, cz));
   return null;
 }
@@ -32,7 +33,10 @@ const RING = Array.from({ length: 8 }, (_, k) => [Math.cos((k * Math.PI) / 4), M
 export function climbBase(level, x, z, r = 0, y = null) {
   let g = groundAt(level, x, z, y);
   for (const [cx, cz] of RING) g = Math.max(g, groundAt(level, x + cx * r * 0.95, z + cz * r * 0.95, y));
-  return getTile(level, Math.floor(x), Math.floor(z)) === TILE.WATER ? Math.max(g, 0) : g;
+  // Står man på en gjenstand man kan gå på (stupebrettet), klatrer man derfra.
+  const on = level.objects?.length ? objectGround(level, x, z, (y ?? g) + STEP_UP) : null;
+  if (on) g = Math.max(g, on.y);
+  return waterCell(level, Math.floor(x), Math.floor(z)) ? Math.max(g, 0) : g;
 }
 
 /**
@@ -55,6 +59,9 @@ function tooHigh(level, cx, cz, x, z, base) {
 export function resolveCircle(level, x, z, r, base = null) {
   for (let iter = 0; iter < 3; iter++) {
     let moved = false;
+    const pushed = pushFromPillars(level, x, z, r);
+    moved = pushed[0] !== x || pushed[1] !== z;
+    [x, z] = pushed;
     for (let cz = Math.floor(z - r); cz <= Math.floor(z + r); cz++) {
       for (let cx = Math.floor(x - r); cx <= Math.floor(x + r); cx++) {
         const boxes = guardBoxes(level, cx, cz, base);
@@ -64,6 +71,7 @@ export function resolveCircle(level, x, z, r, base = null) {
         for (const o of level.objects?.length ? objectColliders(level, cx, cz) : []) {
           if (base === null || (o.top > base + 0.05 && o.bottom < base + BODY)) boxes.push(o.box);
         }
+        if (base !== null && level.objects?.length) boxes.push(...walkBlockers(level, cx, cz, base, STEP_UP, BODY));
         for (const box of boxes) {
           const qx = Math.max(box[0], Math.min(x, box[2]));
           const qz = Math.max(box[1], Math.min(z, box[3]));
@@ -91,6 +99,15 @@ export function resolveCircle(level, x, z, r, base = null) {
         }
       }
     }
+    for (let cz = Math.floor(z - r); cz <= Math.floor(z + r); cz++) {
+      for (let cx = Math.floor(x - r); cx <= Math.floor(x + r); cx++) {
+        const shape = cornerShape(level, cx, cz);
+        if (!shape) continue;
+        const pushed = pushFromPolygon(x, z, r, shape.solid);
+        moved ||= pushed[0] !== x || pushed[1] !== z;
+        [x, z] = pushed;
+      }
+    }
     if (base !== null && level.slides?.length) {
       const pushed = pushFromSlides(level, x, z, r, base);
       moved ||= pushed[0] !== x || pushed[1] !== z;
@@ -99,6 +116,29 @@ export function resolveCircle(level, x, z, r, base = null) {
     if (!moved) break;
   }
   return [x, z];
+}
+
+/** Skyver sirkelen (x, z, r) ut av polygonet (den massive delen av et skrått eller avrundet hjørne). */
+export function pushFromPolygon(x, z, r, poly) {
+  let best = null;
+  let dist = Infinity;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [ax, az] = poly[j];
+    const [bx, bz] = poly[i];
+    const ex = bx - ax;
+    const ez = bz - az;
+    const f = Math.max(0, Math.min(1, ((x - ax) * ex + (z - az) * ez) / (ex * ex + ez * ez || 1)));
+    const qx = ax + ex * f;
+    const qz = az + ez * f;
+    const d = Math.hypot(x - qx, z - qz);
+    if (d < dist) [best, dist] = [[qx, qz], d];
+  }
+  const inside = pointInPolygon(poly, x, z);
+  if (!inside && dist >= r) return [x, z];
+  if (dist < 1e-9) return [x, z];
+  // Ut av polygonet: fra nærmeste punkt på kanten og r videre ut.
+  const s = inside ? -1 : 1;
+  return [best[0] + ((x - best[0]) / dist) * r * s, best[1] + ((z - best[1]) / dist) * r * s];
 }
 
 /** Skyver sirkelen bort fra sklierenner og støtteben som er i kroppshøyde. */
@@ -141,7 +181,8 @@ export function moveCircle(level, x, z, dx, dz, r, climb = false, y = null) {
 /** Avstand til første vegg langs en retning (for autopilot/kamera). */
 export function rayDistance(level, x, z, dirX, dirZ, max = 20, step = 0.1) {
   for (let d = 0; d <= max; d += step) {
-    if (solidBox(level, Math.floor(x + dirX * d), Math.floor(z + dirZ * d))) return d;
+    const px = x + dirX * d, pz = z + dirZ * d;
+    if (solidBox(level, Math.floor(px), Math.floor(pz)) || pillarContains(level, px, pz) || halfWallContains(level, px, pz)) return d;
   }
   return max;
 }

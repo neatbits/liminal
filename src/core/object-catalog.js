@@ -1,25 +1,24 @@
 // Katalogen over gjenstander (core/objects.js har reglene for hvor de står). Ren data.
 import { BUILT_OBJECTS } from './object-catalog-built.js';
 
-/** Kreditering for en CC BY 4.0-modell fra Sketchfab: credit-teksten og attribution (About-siden). */
-function ccBy(title, author, source, authorUrl) {
-  return {
-    credit: `“${title}” by ${author} (CC BY 4.0)`,
-    attribution: { title, source, author, authorUrl, license: 'CC BY 4.0', licenseUrl: 'http://creativecommons.org/licenses/by/4.0/' },
-  };
-}
+import { ccBy } from './object-credit.js';
+import { ELECTRONIC_OBJECTS } from './object-catalog-electronics.js';
+import { INTERIOR_OBJECTS } from './object-catalog-interiors.js';
+import { MALL_OBJECTS } from './object-catalog-mall.js';
 
 /**
  * Katalogen. size = [bredde, høyde, dybde] i meter slik gjenstanden står i rommet (selve filen
  * sentreres av world/objects.js), scale = skalering av modellfilen (size er allerede skalert),
  * file = models/<file>.glb, build = bygges av enkle former (world/props.js) i stedet for fil.
- * surface = høyden på en flate andre gjenstander kan stå på. screen = området i teksturen
+ * surface = høyden på en flate andre gjenstander kan stå på. fullSupport krever hele fotavtrykket på flaten.
+ * structural = et fast bygningsstykke, sentrert i ruten og uten automatisk stabling.
+ * screen = området i teksturen
  * [u0, v0, u1, v1] der en skjerm viser sne-støy, glow = hvor sterkt den lyser opp rundt seg
  * (andel av et taklys). soft = myke lekeklosser: kan stables, og i gåmodus har de fysikk (de
  * dyttes, velter og faller ned) i stedet for å stå fast (world/softphysics.js). loose = lette
  * gjenstander som også har fysikk i gåmodus (men ikke stables): { mass (kg), com (tyngdepunktets
- * høyde, m), parts: [[x, y, z, hx, hy, hz], …] } – bokser (midtpunkt og halv størrelse) målt fra
- * midt under gjenstanden, forsiden mot +z. mount = 'ceiling'
+ * høyde, m), parts: [[x, y, z, hx, hy, hz], …] } – bokser målt fra bunnen; `radius` velger kule.
+ * `pit` tillater gjenstanden på ballbingens topplag. mount = 'ceiling'
  * (henger under taket) eller 'wall' (henger på veggen bak seg, `lift` m over gulvet; uten mount
  * flytter lift gjenstanden opp, eller ned i gulvet med negativ verdi). gap = avstand fra veggen bak (m). spin = rad/s
  * (snurrer, f.eks. en takvifte). turn = dreining av modellfilen (radianer) så forsiden vender mot
@@ -58,13 +57,13 @@ export const OBJECTS = {
     label: 'Arcade cabinet',
     file: 'arcade_machine_2',
     scale: 0.27,
-    size: [0.678, 1.845, 0.725],
-    lift: -0.12, // sokkelen nederst ser rar ut: senkes ned i gulvet
+    size: [0.678, 2.145, 0.725], // hele geometrien, inkludert delen skjult under gulvet
+    lift: -0.305, // kabinettets bunn ligger 0,300 m over modellens laveste punkt
     // Grafikken (sider, skjerm, toppskilt, panel) er byttet ut med egen (scripts/arcade-art.mjs).
     credit: '“Arcade Machine” by Bruno Macena (CC BY 4.0), with new artwork',
     attribution: {
       title: 'Arcade Machine',
-      changes: 'artwork replaced with our own',
+      changes: 'artwork replaced with ten original game designs',
       source: 'https://sketchfab.com/3d-models/arcade-machine-e9f530f79c674880ad48ff23b5cf5ed1',
       author: 'Bruno Macena',
       authorUrl: 'https://sketchfab.com/Macena',
@@ -109,6 +108,7 @@ export const OBJECTS = {
     ...ccBy('Office desk', 'ms_Butor', 'https://sketchfab.com/3d-models/office-desk-bf2f5c812068489c92188cde9932ef0d', 'https://sketchfab.com/butortervezo'),
   },
   pc: {
+    fullSupport: true,
     label: 'Retro PC',
     file: 'retro_pc_with_screen',
     scale: 0.15, // bordplaten og matta modellen kom med er fjernet (model.json)
@@ -169,13 +169,6 @@ export const OBJECTS = {
     size: [0.601, 0.838, 0.948],
     ...ccBy('deck chair', 'MaX3Dd', 'https://sketchfab.com/3d-models/deck-chair-38de6171cbeb41c5bdc49c07df76ede9', 'https://sketchfab.com/MaX3Dd'),
   },
-  plasticpalm: {
-    label: 'Plastic palm',
-    file: 'plastic_palm',
-    scale: 0.67, // 2,4 m høy (modellen er 3,6 m)
-    size: [1.651, 2.407, 1.677],
-    ...ccBy('Palm Tree Fiberglass', 'Bensonnix', 'https://sketchfab.com/3d-models/palm-tree-fiberglass-9695d4db80554d20b2751839582cf8a9', 'https://sketchfab.com/Bensonnix'),
-  },
   bouncecourse: {
     label: 'Inflatable obstacle course',
     file: 'bounce_course',
@@ -207,7 +200,19 @@ export const OBJECTS = {
     size: [4.687, 2.41, 2.776],
     ...ccBy('Playground set', 'Rasputnik00', 'https://sketchfab.com/3d-models/playground-set-04d81b7497634b5f8110a4b99656ae78', 'https://sketchfab.com/Rasputnik00'),
   },
+  divingboard: {
+    label: 'Diving board',
+    file: 'diving_board',
+    scale: 0.26, // 5,2 m langt, brettet 0,84 m over gulvet
+    shift: 1.9, // foten på kanten og brettet ca. 4 m ut over vannet (fram fra ruten)
+    walk: { top: 0.835, width: 0.7, climb: 0.6, spring: true }, // man går ut på brettet og hopper (core/object-walk.js)
+    size: [1.466, 1.717, 5.195],
+    ...ccBy('Diving Board', 'danielisthebosss', 'https://sketchfab.com/3d-models/diving-board-581cc7f80f4f44a7a0f535b4df44d93b', 'https://sketchfab.com/danielisthebosss'),
+  },
   duck: { label: 'Rubber duck', file: 'rubber_duck', size: [0.214, 0.286, 0.3], floats: true, credit: 'Rubber Duck Toy – Poly Haven (CC0)' },
+  ...INTERIOR_OBJECTS,
+  ...ELECTRONIC_OBJECTS,
+  ...MALL_OBJECTS,
   ...BUILT_OBJECTS, // bygget av enkle former (object-catalog-built.js)
 };
 

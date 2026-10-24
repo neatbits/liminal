@@ -8,6 +8,7 @@ import { buildSurfaces } from '../src/world/surfaces.js';
 import { buildWindows } from '../src/world/windows.js';
 import { moveCircle } from '../src/world/collision.js';
 import { generateLevel } from '../src/gen/index.js';
+import { getTheme } from '../src/core/themes.js';
 
 // Rom 12 × 10 med gulv i x 1–10, z 1–8; nordveggen (z 0) har plass til vinduer.
 function room() {
@@ -70,9 +71,32 @@ describe('vinduer', () => {
     expect(wall.has(2.2)).toBe(true);
     const parts = buildWindows(level, null);
     expect(parts.glass.vertexCount).toBe(4);
-    expect(parts.frame.vertexCount).toBe(16);
+    expect(parts.frame.vertexCount).toBeGreaterThan(16);
+    // Et fysisk vindusbrett stikker ut i rommet.
+    expect(Math.max(...parts.frame.pos.filter((_, k) => k % 3 === 2))).toBeGreaterThan(1.1);
     expect(parts.sun.vertexCount).toBe(4);
   });
+
+  it.each(['pool', 'office', 'mall', 'playroom', 'ward', 'school', 'hotel', 'basement'])(
+    '%s får bare sprosser når miljøet uttrykkelig bruker dem', (theme) => {
+      const level = room();
+      level.theme = theme;
+      paintWindows(level, [[5, 0]], true);
+      const win = windowInfo(level, 5, 0);
+      const mid = (win.sill + win.head) / 2;
+      const frame = buildWindows(level, null).frame;
+      let covered = false;
+      for (let i = 0; i < frame.pos.length; i += 12) {
+        const xs = [0, 3, 6, 9].map((k) => frame.pos[i + k]);
+        const ys = [1, 4, 7, 10].map((k) => frame.pos[i + k]);
+        // Ingen karm eller sprosse skal dekke midten av glassflaten i de moderne temaene.
+        if (Math.min(...xs) < 5.5 && Math.max(...xs) > 5.5 && Math.min(...ys) < mid && Math.max(...ys) > mid) covered = true;
+      }
+      const expected = ['school', 'hotel', 'basement'].includes(theme);
+      expect(covered).toBe(expected);
+      expect(getTheme(theme).window?.bars === true).toBe(expected);
+    },
+  );
 
   it('lagres med tiden på døgnet, og kontoret får vinduer', () => {
     const level = room();

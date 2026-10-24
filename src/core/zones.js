@@ -1,23 +1,24 @@
 // Soner: egen takhøyde, bassengdybde, gulvhøyde eller belegg for deler av rommet. Verdiene
 // ligger i lagene `ceilings` / `depths` / `floors` (desimeter, 0 = rommets standard) og
-// `finish` (0 = temaets gulv og vegg, 1 = fliser). Maling påvirker bare ruter der sonen
+// `finish` (paletten i finishes.js: tema, fliser og butikkbelegg). Maling påvirker bare ruter der sonen
 // gjelder, men verdien beholdes om ruten senere bygges om – så en vegg som tegnes og viskes
 // ut igjen ikke lager hull i sonen.
 import { TILE, inBounds, clampHeight, clampDepth, clampFloor, clampDeck } from './level.js';
 import { floodRegion } from './ops.js';
+import { submergedPillar } from './pillar-water.js';
+import { clampFinish } from './finishes.js';
+export { FINISH } from './finishes.js';
 
 // Gulvhøyde gjelder ikke vann (vannflaten er felles) og ikke trapper (de styres av
 // trappeverktøyet). Belegg lagres som et tall (raw) og får ingen etikett i skissen.
 export const ZONES = {
   ceiling: { key: 'ceilings', clamp: clampHeight, applies: (t) => t !== TILE.WALL },
-  depth: { key: 'depths', clamp: clampDepth, applies: (t) => t === TILE.WATER },
+  depth: { key: 'depths', clamp: clampDepth, applies: (t, l, i) => t === TILE.WATER || !!l && submergedPillar(l, i % l.w, Math.floor(i / l.w)) },
   floor: { key: 'floors', clamp: clampFloor, applies: (t) => t !== TILE.WALL && t !== TILE.WATER && t !== TILE.STAIRS },
   // Dekke (andre etasje) over gulv og søyler; trapper og dører går gjennom begge etasjer.
   deck: { key: 'decks', clamp: clampDeck, applies: (t) => t === TILE.FLOOR || t === TILE.PILLAR },
-  finish: { key: 'finish', clamp: (v) => (v ? 1 : 0), applies: (t) => t !== TILE.WALL && t !== TILE.WATER, raw: true },
+  finish: { key: 'finish', clamp: clampFinish, applies: (t) => t !== TILE.WALL && t !== TILE.WATER, raw: true },
 };
-
-export const FINISH = Object.freeze({ THEME: 0, TILES: 1 });
 
 /** Lagret verdi for en sone: desimeter for høyder (0/null = rommets standard), ellers tallet. */
 export function zoneDm(layer, metres) {
@@ -28,7 +29,7 @@ export function zoneDm(layer, metres) {
 
 function setAt(level, layer, i, dm) {
   const { key, applies } = ZONES[layer];
-  if (!applies(level.tiles[i]) || level[key][i] === dm) return false;
+  if (!applies(level.tiles[i], level, i) || level[key][i] === dm) return false;
   level[key][i] = dm;
   return true;
 }
@@ -55,7 +56,7 @@ export function zoneRegion(level, layer, x, z) {
   const { key, applies } = ZONES[layer];
   const values = level[key];
   const start = values[z * level.w + x];
-  return floodRegion(level, x, z, (t, i) => applies(t) && values[i] === start);
+  return floodRegion(level, x, z, (t, i) => applies(t, level, i) && values[i] === start);
 }
 
 /** Fyll: gir hele den sammenhengende sonen under (x, z) en ny verdi. */
@@ -79,7 +80,7 @@ export function zoneLabels(level) {
     const values = level[key];
     const seen = new Uint8Array(values.length);
     for (let i = 0; i < values.length; i++) {
-      if (seen[i] || !values[i] || !applies(level.tiles[i])) continue;
+      if (seen[i] || !values[i] || !applies(level.tiles[i], level, i)) continue;
       const region = zoneRegion(level, layer, i % w, (i / w) | 0);
       let sx = 0;
       let sz = 0;

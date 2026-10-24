@@ -6,7 +6,311 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ukommet]
 
+## [0.2.0] – 2026-10-24
+
 ### Lagt til
+- «Floor finish» (T) lar brukeren male Theme default, Tiles, Department store,
+  Electronics, Arcade og Café manuelt med pensel, rektangel eller fyll. Arkadeteppet
+  og butikkbeleggene får tilhørende vegg- og takflater i alle temaer, uten krav om
+  generert butikk eller glassfront. Gjenstander plasseres separat.
+  Beleggene har egne farger i skissen og riktige fottrinn. Eksisterende butikkfasader
+  og automatisk avledede interiører beholdes ved lokal overmaling. Lagres i det
+  eksisterende finish-laget (verdier 2–5), med støtte for deling, kopiering og angre.
+- Level 0 får noen brede åpninger med 1,1 meter høye, tynne skillevegger,
+  gult tapet, gulvlist og brun topplist. Hele endepilarer og en 30 cm overligger
+  rammer inn åpningene. Eget genereringsfrø, begrenset tetthet og to meter åpent
+  gulv på begge sider bevarer rommenes gangforbindelser. Bare nye genereringer
+  endres; eksisterende rom beholdes.
+- «Half wall» finnes også i objektvelgeren og følger temaets veggtekstur.
+  Partisjonene lagres som vanlige objekter uten nytt romformat. Samme fotavtrykk
+  brukes i gange, navigasjon, startpunkt og fysikk; siktlinjer og bakt lys passerer
+  over topplisten, men stoppes av selve veggen. Hjørneforming beskytter endepilarene.
+  Tester dekker begge sider, rotasjon, opphøyet underlag, lagring/deling, angre,
+  lys, kollisjon og sammenhengende genererte rom; nettlesersjekken tegner begge sider.
+- Skjult Basement-utsikt: håndbygde vinduer viser en egen, tett betongby fra
+  ca. 52 meter over gatenivå, inspirert av Babbdis stemning. Ulike blokkhøyder,
+  inntrukne tak, tekniske takoppbygg, enkelte gangbroer, mørke vinduer og grågrønn
+  dis. Egen prosedyrell arkitektur og materialer; ingen lånte spillressurser.
+  Perspektiv, parallakse og tid på døgnet følger vinduene. Standardeksemplet og
+  genererte Basement-rom får fortsatt ingen automatiske vinduer. Utsikten krever
+  ingen ny scene, rendertekstur eller endring i romformatet.
+- Den nye CC BY-modellen Office Table fra Konstantin Koretskyi er optimalisert
+  til ca. 66 kB og lagt i møbelvelgeren, Mall-utstillinger og kontor-/skoleoppsett.
+  PC-utstillinger bruker nå dype bord i stedet for grunne TV-benker. Alle fem PC-er
+  krever at hele fotavtrykket får plass på støtteflaten; grunne pulter erstattes
+  med bord ved generering når det er plass. TV-oppsett beholder TV-benken.
+- Poolrooms har runde søyler med jevn belysning og sammenhengende flislegging.
+  Søyleverktøyet får diameter 0,5/1/2/3 m; romslige bassenghaller får også større,
+  mer glissent plasserte søyler automatisk. Gange, løse gjenstander, veifinning,
+  startpunkt og møbelplassering følger faktisk fotavtrykk. Diameteren lagres i
+  eksisterende søylemetadata og følger deling, eksport, størrelsesendring og angre.
+- Egen telefonspiller: romvelger, eksempler, delte rom og lokalt lagrede rom åpnes
+  direkte i gåmodus med ett trykk. Telefoner oppretter ingen editor eller automatisk
+  utkastlagring. Skjermknapper for fire bevegelsesretninger, løping, hopping, dørbruk
+  og pause; høyre side sveipes for å se rundt. Flerberøring, pointer capture,
+  avbrutte trykk og inputnullstilling ved pause hindrer fastlåst bevegelse. Touch
+  ber ikke lenger om pointer lock. Større nettbrett og musevinduer beholder editoren.
+  Stående/liggende visning, valg av stemning og grafikkinnstillinger, pause ved
+  bakgrunnsfane, delte rom/dørbruk og bevaring av utkast testes i nettleseren.
+- Den svarte figuren er erstattet med «Ghost from Room 226» av fatalityferi (CC BY
+  4.0). Originalen beholdes; spillfilen har 16 interpolerte stoffposer og en sømløs
+  tosekunders klipp, forenklet geometri og Meshopt-komprimering (ca. 746 kB mot
+  100,8 MB kildebuffer). Opprinnelig stoffbevegelse kombineres med rolig sveving,
+  svak vugging og vending mot spilleren. Normalisering måles på de faktiske
+  animerte vertexene, så ubrukt basepose ikke gjør spøkelset for lite. Selvlysende
+  stoff med foldskygger vises i mørket og følger tåke/dybde. Lastes bare i stemninger
+  som bruker monsteret; eksisterende AI, fangstregler og pause beholdes. About har
+  lenket kreditering, og tester dekker lasting, animasjon, sveving, pause og dispose.
+- To nye Mall-oppsett: Cross Court med et sammenhengende, syv meter bredt tverrtorg
+  mellom returarkadene, og Terraces med vekselvis to meter inntrukne butikkfronter.
+  Ett Mall-eksempel velger mellom alle tre med nytt frø ved åpning. Tilfeldige
+  store Mall-rom velger deterministisk mellom tre oppsett etter frø; små rom
+  beholder gallerioppsettet. Tidligere variantlenker åpner fortsatt samme faste rom.
+  En tre meter bred ferdselsstripe gjennom gjennomgående tverrtorg holdes møbelfri.
+  Geometri, butikkmaterialer, dekker, fontener og rulletrapper bruker eksisterende romlag.
+- Formtilpassede kontaktskygger for brede sokler, runde potter og møbelbein. Et delt
+  64 × 192-atlas erstatter den store ellipsen; skyggene klippes til samme gulvhøyde,
+  utenfor vegger/vann og til bord-/benkflater. Vegg-/takmonterte gjenstander utelates.
+  Bevegelige gjenstander beholder skygger som følger fysikken. Ingen ekstra renderpass.
+- Stedbundet fontenesus, motorlyd fra rulletrapper og korte originale arkadetoner.
+  Avstand i tre dimensjoner, hoderetning, vegger, dører og dekker styrer styrke,
+  panorering og lavpassfiltrering. Stillhetsperioder og strømbrudd demper også disse
+  kildene. Maksimalt tre avspillingsstemmer, seks sikttester fire ganger i sekundet;
+  kildene gjenbrukes og stoppes ved temabytte. Mute/pause bruker eksisterende lydmotor.
+  Nye enhets-, GPU- og OfflineAudioContext-kontroller dekker oppsett, skyggeflater,
+  panelbaksider, lydretning, hindringer, stille perioder, avstand, strøm og mute/pause.
+- Butikkinteriør følger Malls fire lagrede fasadeprofiler: arkade med mørkt romteppe,
+  egne planeter/stjernemotiver, mørke veggpaneler og blå/lilla bånd; elektronikk med
+  kjølige tekniske fliser og sporpaneler; varebutikk med store kremfliser og trepanel;
+  kafé med varme rutefliser og burgunderrød flisbrystning. Separate gulv-, vegg- og
+  himlingsmaterialer brukes i begge etasjer. Materialene velges via en avgrenset
+  flomfylling fra butikkfrontene, uten nye romlag eller formatendring, også i gamle rom.
+  Gallerier, terskler og returarkader beholder Mall-materialene. Ingen overlagte gulv;
+  gulvspeilingen skjuler også de nye gulvgruppene. Fottrinn følger teppe/fliser.
+- Ni importerte retroobjekter: hi-fi-anlegg, Walkman, fire separate PC-er, VHS-spiller,
+  fylt VHS-reol og minikjøleskap. Alle har CC BY 4.0-kreditering og optimaliserte GLB-er.
+  Elektronikkbutikkene får hi-fi, PC-/TV-utstillinger og båndspillere på disker; VHS-
+  reoler brukes også i varebutikker. PC-ene varierer pultoppsettene i kontorer og skoler,
+  små båndspillere brukes sparsomt på andre pulter, og minikjøleskap i kaféer, kontor,
+  hotell og kjeller. VHS-kilden som ble erstattet var NC-SA; bare den nye CC BY-modellen
+  brukes. PC-pakken deles med grupper av nodeprefikser, med tastatur/mus beholdt.
+  Originale skjermbilder, album-/kassettkunst og merker er erstattet med egne motiver.
+- VHS-reolen har 210 fysiske coverbokser på fem nivåer og begge sider, med tolv
+  originale fiktive filmtitler og geometriske cover: blant andre MIDNIGHT WING,
+  SECOND FLOOR, LAST ATRIUM og DEAD CHANNEL. `scripts/vhs-art.mjs` bygger geometri
+  og delt atlas ved modellbygging. Hi-fi/VHS-spilleren forenkles til ca. 20 600/16 000
+  trekanter; alle nye modeller holdes under 600 kB hver. Tester kontrollerer katalog,
+  lisensmetadata, fotavtrykk/støtte, romfil/deling, butikkavgrensning og materialer;
+  nettleseren laster modellene i fire retninger og kontrollerer butikkmaterialer i GPU.
+- Soft-klossene har avrundede polstrede kanter, formtilpasset vinyltekstur med fine
+  korn, innfelte sømmer, trådsting og en liten vaskelapp. De åtte eksisterende fargene
+  deler ett deterministisk teksturatlas per form, med sømmer målt i meter. Myk,
+  synsvinkelavhengig glans følger rommets bakte lys, strøm og fargetone, også når
+  klossene flyttes/velter. Normaler beholdes gjennom lysbakingen. Hver kloss er
+  fortsatt én renderdel; avrundede bokser har 216 delte vertexer / 300 trekanter.
+- Tre nye soft-former: rampe, rund sylinderpute og lav totrinnskloss. De finnes i
+  objektvelgeren og genererte lekerom. Fysikken bruker skrå konveks rampe, sylinder
+  og sammensatte trinn i stedet for omsluttende bokser. Alle kan dyttes og beholder
+  samme fargevarianter og romformat som klossene. Tester dekker formmål, normaler,
+  fysikk etter hvile, profil/rotasjon, automatisk møblering og lagring/deling.
+- Malls fontener har tykkere sammenhengende vannkjerner under de animerte dråpene,
+  med kraftigere midtstråle, åtte vannbuer, strømmende høylys og større dråper.
+  Samme sikre baner og pauserbare tid beholdes. Alle kjernene samles i én mesh / ett
+  ekstra renderkall for hele rommet; geometri/materialer frigjøres ved ombygging.
+  GPU-sjekken kontrollerer synlig økt strålestyrke, animasjon og pause, samt soft-
+  klossenes materiale, delte teksturer og geometri i Full/Reduced.
+- To importerte butikkreoler: bred kosmetikkreol og smal apotekreol, tilgjengelige i
+  objektvelgeren og automatisk langs bakveggen i Malls hyllereolbutikker. Mål og retning
+  følger faktisk GLB-geometri; fotavtrykket holdes inne i butikken og uten overlapp.
+  Kildenes CC BY 4.0-kreditering beholdes med endringsmerknad. Originale plakater,
+  produktpakninger og skilt erstatter kildefotoer og varemerker; apotekets logogeometri
+  fjernes ved bygging. Begge optimaliseres med Meshopt og 512 px WebP-teksturer;
+  gjentatte hylledeler bakes til eksplisitt geometri som objektlasteren støtter.
+  Plastpalmen fjernes fra katalog, objektvelger, automatisk møblering og modellpakken;
+  `model.json.disabled` markerer modellen som utelatt, også for `npm run models -- --all`.
+  Pottepalmen beholdes i Poolrooms og Mall. Tester dekker plassering, små/stengte butikker,
+  lagring/deling og fjerningen. GPU-sjekken inkluderer begge nye modeller i fire retninger.
+- Mall får et møneformet glasstak over atriet, med skrå glassfelt, mørke sprosser og
+  rosa lyslister langs kantene. Det flate taket fjernes bare over åpningen; glassgavler
+  tetter endene. Himmelfarge og bakt dagslys følger rommets tid på døgnet. Taklys som
+  ellers ville svevd under glasset utelates; lys under broer og gallerier beholdes.
+  Taket leses fra faktisk romgeometri, så eldre Mall-rom også får glasstak der det passer.
+- Fontenesprut midt i Malls dekorbassenger: høy midtstråle, åtte lavere vannbuer og
+  animerte ringer ved nedslaget. Én dysegruppe velges per sammenhengende vannflate,
+  også i ujevne bassenger; sentrum og nedslag holdes i vannet innenfor steinkanten,
+  og høyden begrenses av tak/dekke. Små vannflekker utelates. GPU-partikler deler rommets
+  simuleringstid, lys og strømstyrke; pause fryser sprut/ringer uten ekstra fysikk.
+- Større genererte Mall-rom har brede tverrplasser og sidearkader bak butikkene, med
+  90-graders svinger og sammenhengende rundløyper i begge etasjer. Galleriene, atriet,
+  fontenene og rulletrappenes klare tilførselsareal beholdes. Retur- og endegangene
+  holdes fri for automatisk møblering, og butikkarealet tilpasses den nye planløsningen.
+  Små Mall-rom beholder enklere plan. Alle former lagres i de eksisterende rutelagene.
+  Tester kontrollerer skrå takflater uten dobbelt himling, lagring, dagslys, fontene-
+  baner/nedslag og faktiske gåturer rundt begge etasjene. Produksjonssjekken tester
+  lys/mørke, synlig/animerte vannsprut, pause og GPU-piksler. Ingen nye renderpass.
+- Ti egne arkadedesign med ulike spillmotiver, farger, sidekunst, toppskilt, skjermbilder
+  og kontrollpaneler: STAR LANES, NEON RALLY, DEEP SIGNAL, CIRCUIT RUN, LUNAR HAUL,
+  PRISM DROP, MOSS RELAY, IRON COMET, SUNSET SERVE og NOVA BUMPER. Eksisterende og nye
+  maskiner velger stabilt etter plasseringen; naborader får variasjon, og eksplisitt
+  objektvariant `v` bevares gjennom lagring/deling. Samme GLB-geometri brukes for alle;
+  tjue komprimerte WebP-teksturer lastes ved behov og deles mellom like varianter.
+  `node scripts/arcade-art.mjs` bygger UV-tilpasset grafikk fra egne geometriske motiver
+  og pikselskrift. Kilde-/lisensfilene og modellgeometrien er beholdt.
+  Arkadene senkes nå 30,5 cm (tidligere 12 cm), slik at delen under kabinettet skjules.
+  Kataloghøyden er rettet til hele modellens utstrekning, så synlig topp og kollisjon
+  stemmer med geometrien. Tester dekker variantfordeling, rotasjon, romfil/deling,
+  teksturbudsjett og hevede gulv. GPU-sjekken laster alle ti fra produksjonsbygget,
+  kontrollerer materialdeling, UV-retning og kabinettets bunn/topp og tar forhåndsbilde.
+- Mall har blanke 30 cm kremfliser med støvrosa innslag og teal romber, glassvern på
+  galleriene og svak rosa fargegradering. Full Effects speiler faktiske rulletrapper,
+  møbler og butikkfronter i gulvet med ett renderpass i halv oppløsning for etasjen
+  kameraet er i; Reduced beholder armaturglans. Passet skjuler gulv og vann for å
+  unngå rekursjon, følger bildestørrelsen og frigjør GPU-ressurser ved ombygging.
+  HDR-prøver avgrenses og ugyldige fargeverdier stoppes før bloom (hindrer svart bilde på NVIDIA).
+- Genererte Mall-butikker har glassfelt, metallrammer, åpne innganger på to meter,
+  rosa fasciabånd og åtte fiktive skiltidentiteter i to etasjer. Fire butikkprofiler
+  gir hyllereoler, elektronikk, arkade eller kafébord; stengte butikker beholder dørblad.
+  Glass forblir vegg for kollisjon og vises blågrønt i 2D. Eksisterende meta-biter
+  lagrer fasaden og identiteten i v3-formatet; kopiering/deling/angre trenger ingen nye lag.
+  Enkeltfelt etter redigering bygges fortsatt; hjørnevariasjon beskytter butikkfrontene.
+- Mall-benk, pottepalme, potteplante og pottetre er optimalisert og lagt i objektvelgeren,
+  med mål kontrollert mot synlig geometri i fire rotasjoner og lenket CC BY-kreditering.
+  Mall får sitteplasser og grønt, Poolrooms får også pottepalmer, og kontor/hotell/sykehus
+  får sparsomme potteplanter. Innganger og rulletrappenes tilførselsareal holdes fri.
+  `potted_plant_01` har Sketchfab Standard-lisens og holdes utenfor katalog/bygg med
+  `model.json.disabled`, i tråd med prosjektets valg av CC0/CC BY.
+  VHS-overlegg og fotostempel har PLAY ▶ og SP i tillegg til dato/klokke.
+  Tester dekker fasader, kollisjon, serialisering, temabruk, modellbudsjett og plassering;
+  GPU-sjekken verifiserer faktiske piksler med bloom/speiling i begge etasjer og Reduced.
+- Tolv nye, komprimerte interiørmodeller: lenestol, kaffekopp, skrivebordslampe, moderne
+  kontorpult, klasseromsskap, mobil/veggmontert tavle, sykehusseng, ventestoler,
+  skjermbrett, medisinskap og tralle. Tilgjengelige i objektvelgerens grupper og sparsommelig
+  møblert inn i kontor, skole, sykehus, hotell, kjeller og kjøpesenter der de passer.
+  Pasientoppsett samler seng med valgfritt skjermbrett/tralle; kopper og lamper står på pulter.
+  Kildene (104,5 MB) er redusert til 2,71 MB med WebP, Meshopt og geometriforenkling,
+  under 22 000 trekanter per modell. Credits viser tittel, skaper, kilde, CC BY 4.0 og endringer.
+  Skolepulten (CC BY-SA) og bokhyllen (Sketchfab Standard) er utsatt etter brukerens ønske;
+  `model.json.disabled` holder dem utenfor bygg også med `--all`. Modellbyggeren støtter
+  valg av mappenavn. Se `docs/models.md` for oversikt og kontroll av dimensjoner/retning.
+  Vegg-/takobjekter beholder monteringshøyden over møbler; genererte hjørner respekterer hele
+  fotavtrykket til brede, tynne veggtavler. Produksjonssjekken laster alle modellene i fire
+  retninger, sammenligner synlig geometri med kollisjonsboksene og sjekker krediteringslenkene.
+  Tosidige modelldeler får eget bakt lys/blinkekanaler for bakflaten, valgt med
+  `gl_FrontFacing`, slik at sengetøy og skjermbrett ikke får mørke trekantfelt. Ensidige
+  deler beholder samme lysdata som før; GPU-sjekken sammenligner lyst sengetøy med en
+  referanse uten lys for å fange svarte felt.
+- Eget Escalator-verktøy under Heights (E): tegn rulletrapper manuelt fra nedre til
+  øvre repos, velg motorretning Up/Down og bredde via Brush size. Bruker eksisterende
+  trappe-/rulletrappgeometri og høyder; grønne forhåndspiler/status viser retningen.
+  Høyre-drag fjerner, angre/gjør om og lagring/deling bevarer løpet. Vanlig Stairs
+  og automatisk Mall-generering beholdes. Ingen nye shaders eller romformatendring.
+  Rene tester og produksjonssjekk med ekte verktøyknapper/pekerdrag; se `docs/escalators.md`.
+- Plask når fysikkgjenstander som plaststoler dyttes eller faller i vann: lyd og doble
+  ringer ved treffpunktet, med styrke etter masse/fart og lyddemping etter avstand.
+  Kontakt følger stolens deler og rotasjon; nedsenking og kontakt med bassengbunnen
+  gjentar ikke plasket. Virker ved 0 % bakgrunnsbølger og beholder ringer med lyden av.
+  Pause/reset støttes uten endring av romdata. Ballbinger gir ikke vannplask.
+  Se `docs/object-splashes.md` for implementasjon, fysikktester og nettlesersjekk.
+- Utsikt med egen horisont i Office, Mall, Garage, School, Ward, Hotel og Basement:
+  byhorisont, tom parkering, skolegård, grønne gårdsrom eller rolig bebyggelse etter tema.
+  Egen geometri, avstand, grunnfarge og bakkemønster per profil, med svakt opplyste
+  fasadevinduer om natten der det passer. Playrooms uttrykk beholdes; Level 0 får ikke
+  et påtvunget uteområde. Første Poolrooms-forslag: en lys, disig bassenggård med brede
+  kanter, lav hvit arkitektur og en svak horisont. Ni analytiske boksoppslag per glasspiksel,
+  uten nye renderpass. Eksisterende vinduer bruker utsikten direkte; romformat og plassering
+  er uendret. GPU-kontroll verifiserer avstand og parallakse for alle profiler; se `docs/windows.md`.
+- Liminal utsikt i Playrooms vinduer: tomt gressområde, betongstriper og lave bygg med
+  avstandsdis, fra omtrent 40 m utenfor veggen. Analytisk 3D-perspektiv/parallakse følger
+  kameraet og er sammenhengende mellom nabovinduer. Følger tiden på døgnet uten ekstra
+  scene, eksteriørmodeller eller renderpass. GPU-kontroll måler treffavstand og bekrefter
+  kameraforflytning. Se `docs/windows.md` for implementasjon og avgrensninger.
+- Løse lekeballer i Playroom: tilfeldig plassert på gulv og på toppen av ballbingene, opptil
+  48 automatisk per rom. Ekte kulefysikk gir rulling, sprett og kollisjon med spilleren,
+  vegger, møbler og andre baller. De kan sparkes ut av bingene. Play ball kan også settes
+  inn manuelt fra objektvelgeren; farge/plassering følger lagring, deling og angre.
+  Resten av bingen beholder effektiv instansiert geometri, men får kontinuerlige hauger
+  og mindre synlige rader. Pause/reset bevarer romdata. Statisk veggfysikk samles i færre
+  bokser med uendret volum, og møbleringen reserverer plass til ballene innenfor objektgrensen.
+  Se `docs/play-balls.md` for hybridens avgrensning, kontroller og CPU-måling.
+- Rulletrapper i nye Mall-rom og eksempelet: vest opp, øst ned, med bevegelige metalltrinn,
+  gule trinnkanter, lyse sidepaneler og avrundede svarte håndløpere. Stillestående spillere
+  fraktes mellom atriet og galleriet uten fottrinn; pause fryser bevegelsen. Grønne 2D-piler
+  viser kjøreretningen. Flagg lagres i eksisterende metadata; gamle trapper beholdes.
+  Mall får også større grålilla steinfliser, rosa perforert himling og varmere lys, inspirert
+  av eldre kjøpesentre. Se `docs/escalators.md` for implementasjon og renderkontroll.
+- «Water waves»-slider i View → Settings (0–200 %). 0 gir stille bakgrunn, 100 % beholder
+  temaets styrke, og høyere verdier gir kraftigere bakgrunnsbølger. Plaskringer er uavhengige. Endringen brukes
+  direkte uten å bygge rommet på nytt og huskes på enheten, også ved bytte av rom og vannkvalitet.
+- Mer særpreg i Mall, Playroom og School: messing-/tealinnlegg og glans i kjøpesentergulvet,
+  polstrede veggbånd og falmede veggmalerier i lekerommet, samt grønne brystninger, slitt
+  linoleum og skap med dybde og nummer på skolen. Sparsomme temaskilt deler én mesh og ett
+  teksturatlas per rom, og plasseres aldri på vinduer eller formede hjørner.
+- Repeterbar CPU-måling (`node scripts/measure-world.mjs`) og renderkontroll med skjermbilder
+  (`node scripts/check-scenes.mjs`). Se `docs/performance.md` for målinger og avgrensninger.
+- Offentlig «What's new» på About-siden, lenket fra forsiden og simulatorens About-dialog.
+  Viser bare store nyheter, med upubliserte høydepunkter under «Coming next». CLAUDE.md
+  beskriver skillet mellom den offentlige oversikten og den detaljerte interne endringsloggen.
+- Suggestions-knapp på forsiden, About og i simulatoren (og under Help). Dialog for forslag,
+  feil og kommentarer sender til hello@liminalsimulator.com, med valgfri svaradresse. Adressen
+  er også synlig på siden. PHP-endepunktet har honeypot, servervalidering og sendebegrensning
+  per IP og totalt. Ingen romdata sendes med. PHP- og nettlesertester sender ingen ekte e-post.
+- New room åpnes ved vanlig oppstart av simulatoren. «Continue current room» beholder rommet
+  fra forrige økt; delte rom og eksempellenker åpnes direkte uten oppstartsdialog.
+- Innstillinger (View → Settings …): format i fullskjerm (skjermens, 16:9, 21:9 eller 16:10 – et
+  smalere format tegnes midt på skjermen med svarte felt, så brede skjermer som 32:9 slipper å regne ut
+  dobbelt så mange piksler), oppløsning (100/75/50 %), vann (enkelt/normalt/detaljert), effekter
+  (full eller redusert: uten glød og kantutjevning) og bildefrekvens (ubegrenset/60/30). I tillegg
+  musfølsomhet, synsfelt og volum, som før ikke kunne endres. Alt brukes med en gang og lagres
+  (`ui/settings-dialog.js`, `view3d/display.js`).
+- Skrå og avrundede hjørner: det nye verktøyet Corner (Q) skjærer et hjørne på skrå (45°) eller
+  runder det av – både innvendige hjørner i et rom (gulvruten får en veggkile) og utvendige hjørner der
+  en vegg stikker ut (veggruten åpnes). Velg Angled eller Rounded, klikk nær hjørnet; høyreklikk
+  fjerner. Genererte rom får dem også (ikke eksemplene): litt skrått i Level 0, på kontoret og i
+  garasjen, avrundet i Poolrooms, lekerommet og kjøpesenteret. Nytt lag `corners` (lagres og deles);
+  geometri, kollisjon, lys, veggtopper og 2D-skissen følger formen (`core/corners.js`,
+  `world/corners.js`, `gen/corners.js`, `editor/render-corners.js`).
+- Mer levende vann: ringer i vannet der du vasser eller svømmer (oftere og større når du går), og
+  store, doble ringer når du plasker uti fra stupebrettet, en kant eller en sklie. Ringene speiler
+  lyset og forvrenger bunnen som i ekte vann (`world/ripples.js`, alltid på – det koster lite).
+- Ny kaustikk på bassengbunnen: et levende nett av lys (kantene mellom bevegelige celler, to lag).
+- «Toggle detailed water» (View-menyen, av som standard): speiling og lysbrytning i full oppløsning
+  (ellers halv) og flere små bølger som glitrer. Tyngre for svake maskiner.
+- Høyere tak og platåer: takhøyden kan nå være opptil 20 m (før 8 m), hevede gulv (platåer) opptil
+  10 m (før 4 m) og dekker opptil 10 m (før 5,5 m) – høye sklietårn og store haller. I rom over
+  8 m henger lampene i en ledning 8 m over gulvet (eller platået) under, så gulvet er like godt
+  opplyst; lavere rom ser ut som før (`HANG` i `world/lighting.js`).
+- Ny objektvelger for objektverktøyet: søkefelt, gjenstandene i grupper (Furniture, Electronics,
+  Pool & water, Play, Shop & food) med ikon, og en linje om den valgte gjenstanden – størrelse og hva
+  den kan (flyter, henger i taket, kan gå ut på …). Erstatter de 39 tekstknappene
+  (`ui/object-picker.js`, `ui/object-info.js`; en test passer på at nye modeller får gruppe og ikon).
+- Stupebrett («Diving Board» av danielisthebosss, CC BY 4.0, kreditert på About-siden). I Poolrooms
+  får omtrent halvparten av de store bassengene et brett – noen ganger to – med foten på kanten og
+  brettet ut over vannet, og dypt vann (2,8 m) der man lander (ikke i eksemplene, som har faste
+  dybder). Man kan gå ut på brettet og hoppe: mellomrom hopper (høyere fra brettet), og går man
+  utfor tuppen, faller man i vannet med et plask (`gen/diving.js`, `core/object-walk.js`).
+- Hopp og fall i gåmodus: mellomrom hopper overalt (ikke fra bunnen av bassenget), og går man utfor
+  en kant (over 0,5 m), faller man med tyngdekraft i stedet for å gli ned.
+- Pause i gåmodus: Esc slipper musa og legger menyen midt på skjermen (dempet bakgrunn, store
+  knapper og «▶ Resume» øverst), så Drift, Photo, VHS, Mood, Sound, Music og Exit alltid kan nås.
+  Et klikk eller Resume fortsetter i fullskjerm; Esc én gang til går tilbake til editoren. I
+  Chrome/Edge holder Keyboard Lock fullskjermen ved et kort trykk på Esc (hold for å gå ut); i
+  Firefox/Safari forsvinner fullskjermen, men man blir stående på pause i panelet.
+- Monsteret går: bena har kne og lange, tynne føtter som går i takt med farten, kroppen vugger litt
+  i skrittet, og står det stille, flytter det vekten fra fot til fot (`view3d/monster.js`).
+- Lysfarger: rommet kan få en egen lysfarge (Atmosphere → Light colour: Warm, Cold blue, Lilac,
+  Pink, Sickly green, Teal, Red – eller Shifting, som glir rolig fra farge til farge, 20 s hver og
+  14 s overgang). Fargen lagres med rommet og følger med lenken. Velgeren i 3D-vinduet følger
+  rommets farge («Room's light») eller overstyrer den. Fargen legges over det bakte lyset i
+  shaderne (`uTint`), med samme lysstyrke som temaets lamper, så den kan endres uten ny baking
+  (`core/tints.js`). Av og til (1 av 4) får et nytt uendelig nivå en egen lysfarge.
+- Musikk: ♪-knappen over 3D-panelet (og «♪ Music» / N i gåmodus) slår musikk av og på. Sangene i
+  `music/` (fire stykker, laget med Mureka) spilles etter hverandre i loop fra en tilfeldig sang,
+  med myk inn- og uttoning, og følger volumet. Nye sanger legges bare i `music/` – tittelen hentes
+  fra filnavnet (`audio/music.js`, `audio/playlist.js`). Kreditert på About-siden.
+- Størrelse på de uendelige nivåene: en velger over 3D-panelet (Small / Medium / Large / Huge
+  levels) bestemmer hvor store rommene bak dørene til ingensteds blir (0,6–2,2 × dagens størrelse),
+  og hvor lange korridornivåene er. Lagres med innstillingene og gjelder fra neste nivå
+  (`gen/sizes.js`).
 - Lekeplass i lekerommet: et lekestativ med krone, sklier og husker («Playground set» av
   Rasputnik00) og tre hoppeslott fra «Bounce House» av Jeremy E. Grayson – et klassisk hoppeslott,
   et kombislott med klatrevegg og sklie, og en ca. 10 m lang hinderløype. Alle CC BY 4.0 og
@@ -297,6 +601,109 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   skjules når den er tom). Lenken `app/#example=<id>` åpner et eksempel direkte.
 
 ### Endret
+- Telefonspilleren styres med en flytende analog joystick under venstre tommel (vises der
+  tommelen settes ned, med dødsone og gradvis fart) i stedet for fire pilknapper; høyre halvdel
+  sveiper blikket med omtrent 2,5 × høyere følsomhet, så en skjermbredde snur nesten en halv runde.
+  Run er en av/på-knapp, Run/Jump/Use er større, og bare ett kort hint vises ved start.
+- Mer naturlig vindusutsikt: skråtak på lave bygg, inntrukne toppetasjer i Office,
+  sparsom avrundet vegetasjon i Playroom/School/Ward/Basement, myke skyer og mer
+  variasjon i bakke, fasader og lys. Poolrooms beholder ren, lav arkitektur uten
+  trær/vindusruter. Avstand, kameraforflytning og sammenheng mellom glass beholdes.
+  Detaljer beregnes bare for nærmeste treff og ubrukte deler kompileres bort per
+  tema; mipfiltrert 16 KiB-støykilde erstatter kostbar løpende støy og frigjøres ved
+  materialdisponering. Ingen nye renderpass. GPU-kontroll dekker ni temaer ved fire
+  tider på døgnet, fire veggretninger og åtte prøver av nye former. Se `docs/windows.md`.
+- Roligere lyd ved gange i vann: langsommere anslag, dobbel lavpassfiltrering, færre
+  og svakere bobleklikk, lavere nivå og egen lydutgang med mindre romklang. Lydprøve
+  `audio-water.wav` og tester ved fire samplingsfrekvenser; plask fra hopp/landing beholdes.
+- Mykere fotsteg på alle underlag, særlig teppe og skummatter: avrundet, lengre anslag,
+  dempet bassdunk, lavere topp-/avspillingsnivå og egen lydutgang med mindre romklang
+  for teppe/skum. Filterfrekvensene følger samplingsfrekvensen, og bufferne fader til
+  null ved slutt. Fliser, betong, vann og ballbinger beholder ulike lydkarakterer.
+- Gummiklosser får en egen, dempet kompresjonslyd med kort hale i stedet for bygningens
+  tunge dunk. Fysikken sender materialtype til lydlaget; styrken følger fallet, og
+  tette kontaktmeldinger fra én velting begrenses til ett gummistøt per 120 ms.
+  Stoler/baller og bakgrunnsdunk beholder sine lyder. Offline Web Audio-kontroll med
+  WAV-prøver og tester ved fire samplingsfrekvenser; se `docs/audio.md`.
+- Poolrooms får færre, større automatiske vindusfelt: 3–5 m brede, 45 cm brystning og
+  opptil 3 m overkant, begrenset av takhøyden. Like nabovinduer deler én sammenhengende
+  glassflate uten stolper; karmer/lysning ligger i flukt med veggen, uten utstikkende
+  vindusbrett. Editor, åpninger og brede solflekker følger feltene. Eksisterende flagg,
+  håndmalte vinduer og romformat bevares; andre miljøers vindusstil er uendret.
+  Se `docs/windows.md` for generering, geometri og kontroller.
+- Playrooms sklier har tørr plastoverflate uten vannkaustikk. Vannsklier i Poolrooms
+  beholder den animerte vannfilmen; nettleserkontrollen sjekker begge materialvariantene.
+- Store statiske flater deles i romlige grupper på 16 × 16 m, slik at grafikkortet slipper
+  geometri utenfor hvert kamerabilde, også i vannets speil-/brytningspass. Små flater beholdes
+  samlet. Ballene i Playroom deles i instansgrupper på 8 × 8 m; antall, form, farge, lys og
+  kjølvann er uendret. Bounds tar høyde for shaderbevegelsen, inaktive kjølvannspunkter
+  hoppes over, og instansbuffere frigjøres når rommet byttes. Vertexstatistikken teller nå
+  også ballene. Ingen endring av romdata, fysikk eller grafikkinnstillinger.
+  Gjennomsnittet av tre faste kameravinkler, frø 6: 56–68 % færre innsendte trekanter i
+  Playroom og 16–23 % i Poolrooms (48 × 40 og 96 × 80). Dette er geometrimålinger, med flere
+  tegnekommandoer, ikke en målt FPS-økning. Se `docs/performance.md` og `scripts/measure-render.mjs`.
+- Level 0 får et renere og mer velholdt uttrykk: lysere, jevnere gulfarget tapet uten
+  vannringer, roligere teppefibre uten mørke fuktflekker og en egen himlingsvariant uten
+  vannskader, med færre mørke porer. Gulfarge, tapetmønster og lysrør beholdes. Delte
+  himlingsplater i andre temaer er uendret. Ingen nye renderpass eller romformatendringer.
+- Dekorbassengene i Mall får egen grønn mosaikk med messingdetaljer, en lav kant i rosa
+  stein og roligere, mer dempet vann. Kraftige svømmebasseng-kaustikker brukes ikke her.
+  Geometri og gange deler kantens fotavtrykk (`core/fountains.js`, `world/fountains.js`);
+  steinkanten ligger inne i vannrutene og tar ikke av gangarealet. Poolrooms er uendret.
+- Dempet utvasket standardlys i Poolrooms: mindre flisglans på gulv og vegger, svakere
+  armaturglød og bloom, samt litt lavere eksponering. Grunnbelysning og refleksjoner beholdes;
+  øvrige temaer og de felles lys-/refleksjonsberegningene er uendret.
+- Gålinjen øverst til venstre skjules under aktiv gåmodus på PC, både i fullskjerm og i
+  panelet. Kontrollene vises i pausemenyen (Esc), også tydelig under drømmegange.
+  Berøringsskjermer beholder den trykkbare gålinjen.
+- Vindusstil følger miljøet: sprosser er eksplisitt valgt for School, Hotel og Basement.
+  Poolrooms, Office og øvrige temaer har hele glassflater; solflekkene følger samme valg.
+- Automatisk vindustetthet er redusert til omtrent en fjerdedel for kontor, bassengrom,
+  lekerom, skole og sykehus. Håndmalte og lagrede vinduer endres ikke. Yttervegger undersøkes
+  bare én gang per generering. Kontortemaet heter nå «The Office»; natt-eksempelet beholder
+  «The Office at 3 AM» og nattehimmel.
+- Vinduer har fysisk karm, sprosser og vindusbrett, med innfelt glass, disig bakgrunn og
+  svake refleksstriper. Sprossefrie vinduer beholder stilen sin. Ingen ekstra renderpass.
+- Raskere lysbaking: eksakte tallnøkler for vanlige rutenettpunkter, gjenbruk av romlige
+  lyskandidater og lineær nabotelling for dagslys. Vilkårlige punkter/normaler bruker fortsatt
+  tapsfrie nøkler; siktlinjer og lysets beregning er uendret. Modellene deler én poser per rom.
+- «Toggle water reflections» og «Toggle detailed water» i View-menyen er erstattet av vannvalget i
+  Settings. Størrelsen på 3D-bildet regnes ut i `view3d/display.js` (før i `viewer.js`).
+- Bedre dører: vridere med rund rosett og nøkkelskilt (kontor, skole, sykehus, garasje, kjøpesenter,
+  basseng …) eller runde dørknotter (paneldørene i hotellet og kjelleren) i stedet for en firkantet
+  kloss, tre hengsler på siden døra slår ut mot, sparkeplate i stål nederst på dørene i offentlige bygg,
+  og karmlist med en hevet kant ytterst (`world/door-hardware.js`; temaets `door.handle` og `door.kick`).
+  `orientedBox` er flyttet fra `world/doors.js` til `world/mesher.js`.
+- Musikken spilles i tilfeldig rekkefølge: alle sporene én gang per runde, så stokkes de på nytt
+  (aldri samme spor to ganger på rad). To nye spor (Liminal 3 og 4, laget med Mureka) – nå seks.
+- Kiosken har fått bedre grafikk: opplyst skilt med ramme og et ikon som passer til maten (burger,
+  pizzastykke, nudler, pølse i brød, pommes frites – brett i kantina og kaffe i sykehuskiosken), stripete
+  markise, disk med paneler, menytavle med bilder og priser, kjøleskap med glassdør og flasker,
+  brusautomat, frityr og grill, kassaapparat, servietter og ketchup/sennep, og hjørnestolper i
+  kioskens farge (`world/props-kiosk.js`, grafikken i `props-kiosk-art.js` og `props-kiosk-icons.js`).
+  Byggede deler som stikker utenfor fotavtrykket (`overhang`) teller ikke når gjenstanden sentreres.
+- Vanninnstillingene i View-menyen er flyttet fra `app/app.js` til `app/view-settings.js`.
+- Ryddigere grensesnitt (alle funksjoner er med):
+  - «▶ Walk the room» oppe til høyre går rett i fullskjerm, og «🌙 Drift» ved siden av starter
+    drømmegangen. Går man ut av fullskjermen (Esc) eller trykker «✕ Exit», er man tilbake i
+    editoren. Knappene «Walk the room», «Drift» og «Fullscreen» i 3D-panelet er borte, og View-menyen
+    har «Walk the room», «Dream walk (drift)» og «Music on/off». Der fullskjerm ikke går (iframe,
+    iPhone), går man i panelet som før.
+  - 3D-panelet har bare kameravalgene (3D, Top, Reset) og Photo. Stripen i 3D-vinduet har etiketter
+    (Mood, Light, New levels) og ♪ Music.
+  - Verktøyene er gruppert: Build, Heights, Lights og Details.
+  - Sidepanelet: «Light & atmosphere» samler lysstyrke, tåke, lysfarge, vinduslys og lysknappene, og
+    frø, Generate, Random og «Make it wrong» har fått en egen seksjon, «Generate». «Key figures» er
+    lukket fra start.
+  - HUD-en i gåmodus: «Mood: Liminal» og «✕ Exit» i stedet for «Liminal» og «Overview».
+  - Hurtigtastene (Help) viser også E, P, X, G og N.
+- Velgerne for stemning, lysfarge og nivåstørrelse ligger i en stripe øverst i 3D-vinduet (skjult i
+  gåmodus) i stedet for i panelhodet, så knappene der («Walk the room» osv.) får plass.
+- `_applyLook` (tåke, eksponering, etterbehandling) er delt ut fra `view3d/viewer.js` til
+  `view3d/look.js`.
+- Gjenstander som stables (lekeklossene) regnes ut én gang per kall (`poser` i
+  `core/object-pose.js`, delt ut fra `core/objects.js`): lekerommet genereres ca. 25 ganger raskere i
+  store rom, og samme rom blir som før.
 - Katalogen bruker `ccBy()` for CC BY-krediteringen (kortere oppføringer, samme innhold).
 - Starten på vannskliene er en avrundet balje (kanten er like høy rundt hele bakenden, som enden
   på et badekar) i stedet for en flat endeplate, med høyere sider de første metrene og et håndtak
@@ -372,6 +779,103 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   når døren lukkes, i stedet for den syntetiske knirkingen.
 
 ### Fikset
+- Spøkelset spiller kun den oppreiste delen av stoffanimasjonen, rolig frem og
+  tilbake med myke vendinger. Originalklippets sammenfall til et flatt laken
+  spilles ikke. Størrelse og sentrering beregnes fra de samme oppreiste posene.
+  Gjentatte løkker, lange bilderuter, pause og ny opptreden testes med modellens
+  faktiske animerte geometri.
+- Runde Poolrooms-søyler fortsetter nå ned til bassengbunnen. Den gamle firkantede
+  gulvruten under søylen erstattes av bassengbunn og vann rundt sirkelen. Vannkontakt,
+  kollisjon, dybdesoner, flytende gjenstander og sletting av søylen følger vannruten.
+  Nye søyler husker underlaget i metadata; eldre søyler omgitt av vann gjenkjennes.
+- Fottrinn dempes med 85 % i avspillingsforsterkning (ytterligere til en tredel av
+  forrige demping). Fliser og betong får lengre,
+  mykere anslag, lavere filtergrense, svakere bassdunk og mindre romklang, uten å
+  endre volumet på øvrige lyder. Ekko-trinn beholder sin relative demping.
+- Mall samles under ett eksempelkort på forsiden og i romvelgerne. Hver åpning
+  trekker nytt frø og velger Gallery, Cross Court eller Terraces. Gamle variantlenker
+  virker fortsatt. Terraces tilpasser inntrukket til butikkdybden (én meter ved
+  standardstørrelse, to i store rom), så oppsettet også blir synlig i vanlige
+  genererte og uendelige Mall-rom. Minst fire meter butikkdybde beholdes.
+- Vindusnisjene i Mall får nå også komplette, tosidige sidepaneler mot de åpne
+  butikkdørene. De erstatter den ensidige veggen som tidligere ble tegnet fra
+  inngangsruten og forsvant ved innsyn fra vindusnisjen. Panelets 4 cm tykkelse
+  legges inn i vindusfeltet, så inngangen beholder full bredde. Regresjonen dekker
+  begge inngangskanter, begge butikkrekker og begge etasjer, inkludert GPU-kontroll.
+- Sidepanelene i Malls vindusnisjer har nå egne baksider med 4 cm avstand og separat
+  bakt lys. De forsvinner ikke ved innsyn fra motsatt side; grunnplan og øvre etasje,
+  begge butikkrekker og begge nisjeender kontrolleres med raycasting og GPU-markører.
+- Mall-glasstakets gavler avsluttes med sammenhengende tverrbjelker ved himlingen,
+  med overlapp i begge ender og mørkere ramme. Himmelen i glasset får retningsbaserte
+  skylag og mer dybde, tilpasset valgt tid på døgnet og eksponering. En liten lokalt
+  generert støytekstur erstatter bølgemønsteret; ingen nye nedlastede bildeaktiva.
+  Tverrbjelkene raycast-testes langs begge gavler; GPU-sjekken viser begge ender.
+- Gulvet ved Malls butikkvinduer i andre etasje ser ikke lenger ut som et hull ned til
+  første etasje. Glassfrontenes åpne veggdybde får lukkede sideflater mot massive pilarer
+  og over tilstøtende dører, også gjennom dekkets tykkelse. Retningen på endeflatene er
+  riktig ved begge ender og på begge butikkrekker. Øvre dørterskler får gulv og underside.
+  Geometritester kontrollerer skrå siktlinjer, dekkekanter, terskler og dørpassasje.
+  GPU-testen gjenskaper feilen ved å skjule endeflatene og verifiserer at nederste gulv
+  er skjult med både Full og Reduced Effects. Rettingen gjelder også eksisterende rom.
+- Tomt grensesnitt når nettleseren avviser oppretting av WebGL-kontekst, for eksempel
+  etter et tidligere GPU-krasj: 3D-feilen stoppet hele App-konstruktøren før menyer,
+  verktøy og rommet var lastet. Appen starter nå i 2D med tydelig forklaring og knapp
+  for nytt 3D-forsøk. Rom, utkast og lagring bevares; andre programmeringsfeil skjules
+  ikke. Nettlesertest gjenskaper blokkert WebGL og kontrollerer 2D, menyer, bevaring
+  av siste redigering/romliste og vellykket nytt 3D-forsøk. Se `docs/graphics-recovery.md`.
+- Krasj ved innlasting av rom med vindusutsikt på Direct3D11: blandede heltalls- og
+  flyttallskonstruktører i den nye GLSL-koden ga en tvetydig ANGLE/HLSL-hjelpefunksjon,
+  etterfulgt av tapt grafikkontekst og blokkert simulator. Vektorkonstanter bruker nå
+  eksplisitte flyttall; grafikken beholdes. Feilen ble gjenskapt mot den publiserte
+  siden på Intel Graphics, og rettelsen verifisert i produksjonsbygg på samme driver.
+  Nettlesersjekken tester nå tegnet 2D, shaderlinking og levende WebGL-kontekst i
+  Office/Playroom/Poolrooms, feiler ved konsollfeil og støtter `--hardware`.
+  Alle ni utsikter er også kontrollert på Direct3D11. Se `docs/windows.md`.
+- Spisst hakk og små trekantede hull ved inngangen til rørsklier: rørtaket starter nå
+  med en hel bue og lukket godstykkelse i ett tverrsnitt, i stedet for at sidekantene
+  trekkes sammen til en spiss. Rennen fortsetter med samme profil under taket.
+  Bane, skliing og platåklaring beholdes. Stråletester dekker åpning/tetthet i fire
+  retninger med og uten tidlig sving; Playroom renderkontrolleres ovenfra og fra siden.
+  Se `docs/slides.md` for geometri, avgrensning og kontroller.
+- Delte sol-/skymotiver og smale ekstrastriper på avrundede Playroom-vegger: hele
+  hjørnebanen får riktig retning, og UV følger sammenhengende rundt buen og videre på
+  rette nabovegger i meterskala. Gjelder også øvrige temaer med formede hjørner.
+  Regresjonstester dekker fire retninger, innvendig/utvendig, skrå form og hevet gulv;
+  egen nettleserkontroll gjenskaper feilen med Playroom-materialene (`docs/corners.md`).
+  Repeterbarhetstesten som genererer maksimale Playroom-rom to ganger får 15 s tidsfrist
+  for å tåle varierende maskinlast; øvrige testers tidsfrister beholdes.
+- Hvite/grå felt under rulletrappene sett ovenfra skyldtes manglende gulv i trappeløpets
+  fotavtrykk. Rulletrappene får nå en egen flislagt gulvflate under det frie løpet.
+  Renderkontrollen tar bilder fra siden og ovenfra og bekrefter gulvet med raycasting.
+- Fontenene i Mall flyttes til siden av atriets trafikkakse, med to hele gulvrader fram
+  til rulletrappene. Smale atrier utelater fontener hvis de ikke får plass. Palmer fjernes
+  fra automatisk Mall-møblering; de beholdes i Poolrooms. Gjelder nye rom og Mall-eksempelet.
+- Platåer skjærer ikke lenger gjennom skliestarten: kort, rett og vannrett innløp med
+  3 cm gulvklaring. Fallet og krengingen begynner først etter klaring fra platåkanten,
+  med en myk overgang nedover. Innløpet følger endringer av platået; 2D, 3D, kollisjon og
+  skliing deler samme bane. Regresjonstester dekker tidlige svinger, diagonaler, fire
+  retninger, rør og større platåer (`docs/slides.md`).
+- Hopp, plask og bevegelse lager synlige ringer også når «Water waves» står på «Still».
+  Slideren styrer bare bakgrunnsbølgene. Renderkontrollen gjenskaper en landing og sjekker
+  synlige ringer og at vannet roer seg igjen i enkel, normal og detaljert vannkvalitet.
+- Mørkt rektangel i vannflaten ved stupebrett og andre dybdesoner: vannets absorpsjon bruker
+  nå dybden til den synlige bassengbunnen/veggen fra det eksisterende brytningspasset, med
+  riktig invers av Refractors skrå klippeprojeksjon. Dype partier er fortsatt mørkere, men
+  fargeskillet følger geometrien ved bevegelse. Enkel vannkvalitet bruker en jevn vannhinne.
+  Regresjonskontroll: `node scripts/check-water-depth.mjs` (skjermbilder og GPU/raycast-prøver).
+- Høye taksoner (fra 8,3 m), platåer (fra 6,2 m) og dekker (fra 8,5 m) kunne gjøre lagrede rom,
+  utkast, eksport og delingslenker uleselige. Romformat v3 lagrer hele høydeområdet og leser fortsatt v1/v2.
+- Blokkert nettleserlagring kunne rapporteres som vellykket. Feil meldes nå uten å tildele rommet id;
+  ødelagte romlister bevares og åpning/sletting gir ingen ufanget feil. Utkast varsler ved feil og
+  lagres straks ved sideskifte/skjult fane, også før 600 ms-timeren har gått.
+- Pause stopper nå bevegelse, fysikk, hendelser og simuleringstid, tømmer input og demper romlyden.
+  Nivåoverganger venter på Resume og avbrytes når man går ut. Berøring og fallback uten pointer lock beholdes.
+- Endring av innstillinger kunne starte lyden igjen etter mute eller utgang fra gåmodus.
+- Tomme strøk etter angre slettet gjør-om; ved full angrestakk kunne også det eldste steget forsvinne.
+- Dialoger holder nå tastaturfokus inne i dialogen og gir det tilbake ved lukking.
+- Store rom bygger ikke lenger hele 3D-verdenen gjentatte ganger mens penselen beveger seg.
+  three.js skilles ut i en egen, bufret byggpakke. Nye regresjonstester og `npm run test:browser`
+  dekker lagring, innlesing, deling, dialogfokus, lyd og pause; `CLAUDE.md` beskriver videre arbeid.
 - TV-en på TV-benken stakk 28 cm ut over forkanten og så ut til å vippe. Benken står nå litt ut
   fra veggen (`gap` i katalogen), så TV-en har forkanten i flukt og bildeskjermen henger bak.
 - Lekeklossene kunne ikke dyttes etter at man hadde stått stille et sekund (spillerens

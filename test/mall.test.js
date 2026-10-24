@@ -8,7 +8,7 @@ import { getTheme } from '../src/core/themes.js';
 
 describe('kjøpesenteret', () => {
   it('har galleri i andre etasje rundt et åpent atrium, og en bro over det', () => {
-    const level = presetById('mall').make();
+    const level = presetById('mall').make({ seed: 7, layout: 'gallery' });
     const { atrium } = mallLayout(level.w, level.h);
     expect(level.theme).toBe('mall');
     expect(deckAt(level, atrium.x0 + 2, atrium.z0 - 1)).toBe(MALL_DECK); // galleriet
@@ -38,7 +38,7 @@ describe('kjøpesenteret', () => {
   });
 
   it('galleriets kant mot atriet har vern', () => {
-    const level = presetById('mall').make();
+    const level = presetById('mall').make({ seed: 7, layout: 'gallery' });
     const { atrium } = mallLayout(level.w, level.h);
     const guard = railSides(level, atrium.x0 + 2, atrium.z0 - 1);
     expect(guard).toEqual([{ dx: 0, dz: 1, kind: 'guard', y: MALL_DECK }]);
@@ -56,7 +56,7 @@ describe('kjøpesenteret – gange', () => {
 
   it('man går opp trappen og blir stående på galleriet, og faller ikke gjennom', async () => {
     const { Walker } = await import('../src/view3d/walker.js');
-    const level = presetById('mall').make();
+    const level = presetById('mall').make({ seed: 7, layout: 'gallery' });
     const { atrium } = mallLayout(level.w, level.h);
     const sz = atrium.z0 + Math.floor((atrium.z1 - atrium.z0 + 1) / 2) - 1;
     const w = new Walker();
@@ -74,7 +74,7 @@ describe('kjøpesenteret – gange', () => {
 
   it('vernet holder en inne på galleriet; under galleriet går man rett ut i atriet', async () => {
     const { Walker } = await import('../src/view3d/walker.js');
-    const level = presetById('mall').make();
+    const level = presetById('mall').make({ seed: 7, layout: 'gallery' });
     const { atrium } = mallLayout(level.w, level.h);
     const theme = getTheme('mall');
     const w = new Walker();
@@ -94,12 +94,14 @@ describe('kjøpesenteret – gange', () => {
 describe('kjøpesenteret – butikkene', () => {
   it('butikkene er store, har teppe og ryddig innredning – og ingen kiosker inne i dem', async () => {
     const { objectPose, objectBox } = await import('../src/core/objects.js');
-    const level = presetById('mall').make();
+    const level = presetById('mall').make({ seed: 7, layout: 'gallery' });
     const carpet = level.tiles.filter((t, i) => t === TILE.FLOOR && level.finish[i]).length;
-    expect(carpet).toBeGreaterThan(400);
+    expect(carpet).toBeGreaterThan(250); // return arcades and cross-courts use part of the old shop area
     const ids = level.objects.map((o) => o.id);
     expect(ids).toContain('counter');
-    expect(ids.filter((id) => id === 'shelf' || id === 'wallshelf').length).toBeGreaterThan(4);
+    expect(ids.filter((id) => ['shelf', 'wallshelf', 'cosmeticsshelf', 'pharmacyshelf'].includes(id)).length).toBeGreaterThan(3);
+    expect(ids).toContain('cosmeticsshelf');
+    expect(ids).toContain('pharmacyshelf');
     for (const o of level.objects) {
       if (!['kiosk', 'cafe', 'boombox'].includes(o.id)) continue;
       expect(level.finish[o.z * level.w + o.x], o.id).toBe(0);

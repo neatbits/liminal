@@ -6,6 +6,8 @@ import { createSpace } from './space.js';
 import { Ambient } from './ambient.js';
 import { eerieBuffer, playAround } from './eerie.js';
 import { slideRush, splash, door, shutter, staticHiss, power, pickup } from './effects.js';
+import { createStepBuses, playStep } from './footsteps.js';
+import { PlacedAudio } from './placed-audio.js';
 
 const HUM_SCALE = 0.35; // lysrørsurret samlet (temaenes hum ganges med dette)
 
@@ -17,6 +19,7 @@ export class AudioEngine {
     this.themeId = null;
     this.volume = 0.8;
     this.enabled = true;
+    this.playing = false;
     this.steps = {};
     this.eventIn = 20;
     this.burst = 0;
@@ -49,19 +52,25 @@ export class AudioEngine {
       this._teardown();
       this.graph = this._build(theme.sound);
       this.graph.ambient = new Ambient(this, this.graph);
+      this.graph.placed = new PlacedAudio(this, this.graph);
       this.themeId = theme.id;
     }
-    this.master.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.6);
+    this.playing = true;
+    this._syncVolume(0.6);
   }
 
   stop() {
-    if (!this.ctx) return;
-    this.master.gain.setTargetAtTime(0, this.ctx.currentTime, 0.15);
+    this.playing = false;
+    this._syncVolume(0.15);
   }
 
   setVolume(v) {
-    this.volume = v;
-    if (this.ctx && this.graph) this.master.gain.setTargetAtTime(v, this.ctx.currentTime, 0.1);
+    this.volume = Math.max(0, Math.min(1, Number(v) || 0));
+    this._syncVolume(0.1);
+  }
+
+  _syncVolume(seconds) {
+    this.master?.gain.setTargetAtTime(this.enabled && this.playing ? this.volume : 0, this.ctx.currentTime, seconds);
   }
 
   setEnabled(on) {
@@ -131,7 +140,7 @@ export class AudioEngine {
     stepBus.gain.value = 0.45;
     send(stepBus, 0.5 + sound.reverb);
     for (const s of ['carpet', 'tile', 'concrete', 'water', 'foam', 'balls']) this.steps[s] ??= footstepBuffers(ctx, s);
-    return { nodes, hum, room, stepBus, sound, space };
+    return { nodes, hum, room, stepBus, stepBuses: createStepBuses(ctx, keep, send), sound, space };
   }
 
   _teardown() {
@@ -148,24 +157,21 @@ export class AudioEngine {
     this.themeId = null;
   }
 
-  _oneShot(buffer, gain, rate = 1) {
-    if (!this.graph || !this.ctx) return;
+  _oneShot(buffer, gain, rate = 1, destination = this.graph?.stepBus) {
+    if (!this.graph || !this.ctx || !this.enabled || !this.playing) return;
     const src = this.ctx.createBufferSource();
     src.buffer = buffer;
     src.playbackRate.value = rate;
     const g = this.ctx.createGain();
     g.gain.value = gain;
-    src.connect(g).connect(this.graph.stepBus);
+    src.connect(g).connect(destination);
+    src.onended = () => { src.disconnect(); g.disconnect(); };
     src.start();
   }
 
   /** Ett fottrinn; volume ganges med (svakere ekko-trinn). */
   step(surface, volume = 1) {
-    const list = this.steps[surface] ?? this.steps.carpet;
-    // Trinnene skal ligge lavt i lydbildet; fliser i store, ekkoaktige rom (Poolrooms) enda lavere,
-    // og teppe lavest – det demper.
-    const gain = (surface === 'tile' ? 0.26 : surface === 'carpet' ? 0.17 : 0.34) + Math.random() * (surface === 'carpet' ? 0.07 : 0.14);
-    if (list) this._oneShot(list[Math.floor(Math.random() * list.length)], gain * volume, 0.9 + Math.random() * 0.2);
+    playStep(this, surface, volume);
   }
 
   flickerBuzz(distance) {
@@ -177,8 +183,8 @@ export class AudioEngine {
     slideRush(this, speed);
   }
 
-  splash(speed) {
-    splash(this, speed);
+  splash(speed, gain = 1) {
+    splash(this, speed, gain);
   }
 
   door(opening) {
@@ -208,10 +214,11 @@ export class AudioEngine {
 
   /** @param humLevel 0..1 – hvor nær og mange lys som surrer */
   update(dt, humLevel) {
-    if (!this.graph) return;
+    if (!this.graph || !this.enabled || !this.playing) return;
     const { sound, hum, ambient } = this.graph;
     ambient.update(dt, this.listener);
     const quiet = ambient.level; // < 1 i de stille periodene
+    this.graph.placed.update(dt, this.listener, quiet);
     // Surret er dempet, nesten borte langt fra lysene, og glir sakte opp og ned (bølger) så
     // det ikke ligger helt jevnt hele tiden.
     this.humIn -= dt;

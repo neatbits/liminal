@@ -1,0 +1,11 @@
+Model Information:
+* title:	School Cabinet
+* source:	https://sketchfab.com/3d-models/school-cabinet-ad8de156775541daa242bc17ced69b0a
+* author:	Richard Menez (https://sketchfab.com/richardwmenez)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "School Cabinet" (https://sketchfab.com/3d-models/school-cabinet-ad8de156775541daa242bc17ced69b0a) by Richard Menez (https://sketchfab.com/richardwmenez) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -1,6 +1,7 @@
 // Lydeffekter fra gåmodus som ikke hører til selve lydbildet: vannsus i sklien, plask,
 // dører og kameralukker. Funksjonene tar lydmotoren (AudioEngine) og bruker dens graf og én-skudd.
 import { splashBuffer, ballsBuffer } from './synth.js';
+export { playImpact as bump } from './contact-impact.js';
 
 /** Vannsus i sklien: 0 = stille, ellers farten (m/s) – lysere og sterkere jo fortere. */
 export function slideRush(engine, speed) {
@@ -23,13 +24,13 @@ export function slideRush(engine, speed) {
   rush.filter.frequency.setTargetAtTime(300 + speed * 160, now, 0.12);
 }
 
-/** Landing etter en sklietur: vannplask, eller baller i en ballbinge (sound.splash: 'balls'). */
-export function splash(engine, speed) {
+/** Landing eller gjenstand i vann: plask (evt. baller). gain demper små/fjerne gjenstander. */
+export function splash(engine, speed, gain = 1) {
   if (!engine.ctx || !engine.graph) return;
   const balls = engine.graph.sound.splash === 'balls';
   const key = balls ? 'ballsSound' : 'splashSound';
   engine[key] ??= balls ? ballsBuffer(engine.ctx) : splashBuffer(engine.ctx);
-  engine._oneShot(engine[key], Math.min(1.3, 0.5 + speed * 0.1), 0.9 + Math.random() * 0.15);
+  engine._oneShot(engine[key], Math.min(1.3, 0.5 + speed * 0.1) * gain, 0.9 + Math.random() * 0.15);
 }
 
 const decay = (t, tau) => (t < 0 ? 0 : Math.exp(-t / tau));
@@ -141,12 +142,6 @@ export function pickup(engine) {
   if (!engine.ctx || !engine.graph) return;
   engine.pickupSound ??= pickupBuffer(engine.ctx);
   engine._oneShot(engine.pickupSound, 0.8, 0.95 + Math.random() * 0.1);
-}
-
-/** En myk lekekloss som lander hardt: et dumpt, lavt dunk (strength 0..1). */
-export function bump(engine, strength) {
-  if (!engine.graph) return;
-  engine._oneShot(engine.thump, 0.12 + strength * 0.45, 1.25 + Math.random() * 0.2);
 }
 
 /** Kameralukker: to korte, mekaniske klikk (speilet slår opp og ned). */

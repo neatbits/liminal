@@ -10,7 +10,7 @@ import { confirmDialog } from '../ui/modal.js';
 import { toast } from '../ui/toast.js';
 
 export const SHARE_PARAM = 'room';
-const STORAGE_FULL = 'Could not save – browser storage is full or blocked.';
+const STORAGE_FULL = 'Could not save – browser storage is full, blocked or damaged. Export the room to keep a copy.';
 
 /** Spør før ulagret arbeid erstattes. */
 async function confirmReplace(app) {
@@ -22,9 +22,10 @@ async function confirmReplace(app) {
   );
 }
 
-export function newRoom(app) {
+export function newRoom(app, { startup = false } = {}) {
   newRoomDialog({
     theme: app.level.theme,
+    startup,
     onCreate: async (o) => {
       if (!(await confirmReplace(app))) return;
       const seed = parseSeed(o.seed) ?? randomSeed();
@@ -54,8 +55,15 @@ export function openMine(app) {
       else toast('Could not find the room.', { error: true });
     },
     onDelete: (id) => {
-      deleteRoom(id);
-      if (app.level.id === id) app.level.id = null;
+      if (!deleteRoom(id)) {
+        toast('Could not delete – browser storage is blocked or damaged.', { error: true });
+        return false;
+      }
+      if (app.level.id === id) {
+        app.level.id = null;
+        app.changed();
+      }
+      return true;
     },
     onImport: () => importFile(app),
     onExport: () => exportFile(app),

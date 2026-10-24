@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { footstepBuffers } from '../src/audio/synth.js';
 import { doorBuffer } from '../src/audio/effects.js';
 import { surfaceFor } from '../src/view3d/walker.js';
 import { getTheme } from '../src/core/themes.js';
 import { TILE } from '../src/core/level.js';
+import { mulberry32 } from '../src/core/rng.js';
+import { playStep } from '../src/audio/footsteps.js';
 
 const ctx = {
   sampleRate: 22050,
@@ -25,6 +27,18 @@ function sharpness(data) {
 }
 
 describe('fottrinn', () => {
+  it('keeps footstep playback subdued, including louder randomized variants',()=>{
+    const surfaces = ['carpet', 'foam', 'tile', 'concrete', 'water', 'balls'];
+    const engine = { steps: Object.fromEntries(surfaces.map(s => [s, [s]])), _oneShot: vi.fn() };
+    const random = vi.spyOn(Math, 'random').mockReturnValue(.999);
+    try {
+      for(const surface of surfaces) {
+        playStep(engine, surface); const gain = engine._oneShot.mock.lastCall[1];
+        expect(gain).toBeGreaterThan(.01); expect(gain).toBeLessThan(.055);
+        playStep(engine, surface, .4); expect(engine._oneShot.mock.lastCall[1]).toBeCloseTo(gain * .4);
+      }
+    } finally {random.mockRestore();}
+  });
   it('trinn på fliser er dumpe, ikke klikkende som hæler', () => {
     for (const b of footstepBuffers(ctx, 'tile')) expect(sharpness(b.getChannelData(0))).toBeLessThan(0.25);
   });
@@ -51,10 +65,13 @@ describe('fottrinn', () => {
 
 describe('fottrinn på teppe', () => {
   it('er mykere enn på fliser og betong: lavere skarphet og langsommere anslag', () => {
-    // Snitt over 32 trinn (støyen er tilfeldig, så noen få trinn kan overlappe).
+    // Samme repeterbare støy for alle underlag. Få, helt tilfeldige trinn kan overlappe.
     const avg = (surface, f) => {
-      const all = Array.from({ length: 8 }, () => footstepBuffers(ctx, surface)).flat();
-      return all.reduce((sum, b) => sum + f(b.getChannelData(0)), 0) / all.length;
+      const random = vi.spyOn(Math, 'random').mockImplementation(mulberry32(1));
+      try {
+        const all = Array.from({ length: 32 }, () => footstepBuffers(ctx, surface)).flat();
+        return all.reduce((sum, b) => sum + f(b.getChannelData(0)), 0) / all.length;
+      } finally { random.mockRestore(); }
     };
     // Hvor tidlig toppen kommer (ms): et mykt trinn bygger seg opp.
     const peakAt = (d) => {

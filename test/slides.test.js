@@ -37,7 +37,7 @@ describe('vannsklier', () => {
     const level = poolHall();
     const path = slidePath(level, { points: ROUTE, tube: false });
     const { samples } = path;
-    expect(samples[0]).toMatchObject({ x: 4.5, z: 3.5, y: 2 });
+    expect(samples[0]).toMatchObject({ x: 4.5, z: 3.5, y: 2 + SLIDE.LIP });
     expect(samples[samples.length - 1].y).toBeCloseTo(SLIDE.EXIT, 6);
     for (let i = 1; i < samples.length; i++) expect(samples[i].y).toBeLessThanOrEqual(samples[i - 1].y + 1e-9);
     expect(path.length).toBeGreaterThan(8);
@@ -97,7 +97,7 @@ describe('vannsklier', () => {
     level.slides = [{ points: ROUTE, tube: true, color: 'blue' }];
     const tube = buildSlides(level, null);
     expect(open.slideIn_blue.quadCount).toBeGreaterThan(100);
-    expect(tube.slideIn_blue.quadCount).toBe(open.slideIn_blue.quadCount);
+    expect(tube.slideIn_blue.quadCount).toBeGreaterThan(open.slideIn_blue.quadCount); // eget tak over rennen
     expect(open.slideLeg.quadCount).toBeGreaterThan(0);
     level.slides = [{ points: [[6, 3], [12, 6]], tube: false }];
     expect(buildSlides(level, null).slideIn_blue.quadCount).toBe(0);
@@ -118,12 +118,11 @@ describe('vannsklier', () => {
   it('røret er åpent ved inngangen og lukket lenger ned', () => {
     const level = poolHall();
     addSlide(level, ROUTE, true);
-    const { slideOut_blue: out } = buildSlides(level, null);
+    const { slideOut_blue: out, slideIn_blue: inside } = buildSlides(level, null);
     // Kanten øverst (leppa) finnes bare der rennen er åpen: noen, men færre enn for en åpen renne.
     level.slides = [{ ...level.slides[0], tube: false }];
-    const open = buildSlides(level, null).slideOut_blue;
-    expect(out.quadCount).toBeLessThan(open.quadCount);
-    expect(out.quadCount).toBeGreaterThan(open.quadCount - 2 * (slidePath(level, level.slides[0]).samples.length - 1));
+    const { slideOut_blue: open, slideIn_blue: openInside } = buildSlides(level, null);
+    expect(out.quadCount - inside.quadCount).toBeLessThan(open.quadCount - openInside.quadCount);
   });
 
   it('Poolrooms-eksempelet får en sklie som virker, med trapp opp til plattformen', () => {

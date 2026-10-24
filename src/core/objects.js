@@ -4,117 +4,30 @@
 // stedet. Gjenstander står midt i ruten eller inntil veggen bak seg; store gjenstander kan
 // stikke inn i naboruter. Små gjenstander settes oppå en flate (`surface`, f.eks. et
 // skrivebord) som dekker ruten, og flytende (`floats`) kan ligge i vannet. Ren logikk.
-import { TILE, getTile, inBounds, WATER_SURFACE } from './level.js';
+import { TILE, getTile, inBounds } from './level.js';
+import { cornerShape } from './corners.js';
+import { pillarsTouchBox } from './pillars.js';
+import { getTheme } from './themes.js';
 import { floorAt, ceilingAt } from './heights.js';
 import { OBJECTS } from './object-catalog.js';
+import { FACING, objectBox, overlaps, poser } from './object-pose.js';
 
 export { OBJECTS, OBJECT_IDS } from './object-catalog.js';
+export { FACING, objectBox, objectPose, poser } from './object-pose.js';
+export { objectGround, walkBlockers } from './object-walk.js';
 
 export const MAX_OBJECTS = 400;
-const WALL_GAP = 0.03; // avstand fra veggen bak
-const FLOAT_DEPTH = 0.06; // hvor dypt en flytende gjenstand ligger i vannet
-// Retningen forsiden peker for rot 0–3 (med klokken sett ovenfra: sør, vest, nord, øst).
-export const FACING = [
-  [0, 1],
-  [-1, 0],
-  [0, -1],
-  [1, 0],
-];
 
 const list = (level) => level.objects ?? [];
-const overlaps = (a, b, e = 0.02) => a[0] < b[2] - e && b[0] < a[2] - e && a[1] < b[3] - e && b[1] < a[3] - e;
 const covers = (b, x, z) => x > b[0] && x < b[2] && z > b[1] && z < b[3];
-
-/** Fotavtrykket sett ovenfra: [x0, z0, x1, z1]. */
-export function objectBox(p) {
-  return [p.x - p.w / 2, p.z - p.d / 2, p.x + p.w / 2, p.z + p.d / 2];
-}
-
-/** Plassering uten hensyn til flater: på gulvet (eller i vannet), inntil veggen bak. */
-function basePose(level, o) {
-  const [w, h, d] = OBJECTS[o.id].size;
-  const [fx, fz] = FACING[o.rot & 3];
-  let x = o.x + 0.5;
-  let z = o.z + 0.5;
-  if (getTile(level, o.x - fx, o.z - fz) === TILE.WALL) {
-    // Negativ: dypere enn ruten, skyves fram fra veggen. Veggklokker henger helt inntil; gap
-    // trekker gjenstanden ut fra veggen (TV-benken, så et dypt TV står med forkanten i flukt).
-    const back = 0.5 - d / 2 - (OBJECTS[o.id].mount === 'wall' ? 0.005 : WALL_GAP + (OBJECTS[o.id].gap ?? 0));
-    x -= fx * back;
-    z -= fz * back;
-  }
-  const water = getTile(level, o.x, o.z) === TILE.WATER;
-  const def = OBJECTS[o.id];
-  const floor = floorAt(level, o.x, o.z);
-  const y = water ? WATER_SURFACE - FLOAT_DEPTH : def.mount === 'ceiling' ? ceilingAt(level, o.x, o.z) - h - 0.01 : floor + (def.lift ?? 0);
-  const across = fx === 0; // forsiden mot ±z: bredden ligger langs x
-  return { x, y, z, rot: o.rot & 3, w: across ? w : d, d: across ? d : w, h };
-}
-
-/**
- * Flaten under punktet (x, z), kanten medregnet: { top, box } for den høyeste
- * `surface`-gjenstanden som dekker det, eller null.
- */
-function supportAt(level, x, z) {
-  let best = null;
-  for (const q of list(level)) {
-    const def = OBJECTS[q.id];
-    if (!def?.surface) continue;
-    const p = basePose(level, q);
-    const box = objectBox(p);
-    const top = p.y + def.surface;
-    if (x >= box[0] - 0.01 && x <= box[2] + 0.01 && z >= box[1] - 0.01 && z <= box[3] + 0.01 && (!best || top > best.top)) best = { top, box };
-  }
-  return best;
-}
-
-/**
- * Hvor gjenstanden står: midtpunkt (x, y, z), retning (rot), og utstrekning sett ovenfra
- * (w langs x, d langs z etter dreiningen). Små gjenstander står oppå en flate som dekker
- * midten av ruten, trukket inn så de står helt på flaten.
- */
-export function objectPose(level, o) {
-  const p = basePose(level, o);
-  if (OBJECTS[o.id].soft) return softPose(level, o, p);
-  // Flaten under der gjenstanden ville stått (ikke midten av ruten: en smal benk inntil veggen
-  // dekker ikke midten).
-  const s = OBJECTS[o.id].surface ? null : supportAt(level, p.x, p.z);
-  if (s) {
-    // Er gjenstanden bredere/dypere enn flaten, holdes den på den siden den ble skjøvet mot (ryggen
-    // mot veggen) og stikker ut på den andre.
-    const clamp = (v, lo, hi) => (lo > hi ? (Math.abs(v - lo) < Math.abs(v - hi) ? lo : hi) : Math.max(lo, Math.min(hi, v)));
-    p.y = s.top;
-    p.x = clamp(p.x, s.box[0] + p.w / 2, s.box[2] - p.w / 2);
-    p.z = clamp(p.z, s.box[1] + p.d / 2, s.box[3] - p.d / 2);
-  }
-  return p;
-}
-
-/**
- * Myke klosser stables: en kloss ligger oppå de klossene før den i listen som overlapper
- * fotavtrykket (rekkefølgen gjør at det aldri blir en sirkel). Fotavtrykket beholdes.
- */
-function softPose(level, o, p) {
-  const objects = list(level);
-  const own = objects.indexOf(o);
-  const box = objectBox(p);
-  for (let k = 0; k < (own < 0 ? objects.length : own); k++) {
-    const q = objects[k];
-    // Fotavtrykket endres ikke av stablingen, så overlapp sjekkes før høyden regnes ut (ellers
-    // ville hver kloss regnet ut alle klossene før seg, om og om igjen).
-    if (!OBJECTS[q.id]?.soft || !overlaps(box, objectBox(basePose(level, q)), 0.05)) continue;
-    const qp = objectPose(level, q);
-    p.y = Math.max(p.y, qp.y + qp.h);
-  }
-  return p;
-}
 
 /** Gjenstandene som står i ruten eller dekker midten av den, øverste først (indekser). */
 export function objectsAt(level, x, z) {
   const hits = [];
+  const pose = poser(level);
   list(level).forEach((o, i) => {
     if (!OBJECTS[o.id]) return;
-    const p = objectPose(level, o);
+    const p = pose(o);
     if ((o.x === x && o.z === z) || covers(objectBox(p), x + 0.5, z + 0.5)) hits.push([i, p.y]);
   });
   return hits.sort((a, b) => b[1] - a[1]).map(([i]) => i);
@@ -124,22 +37,32 @@ export function objectsAt(level, x, z) {
 export function objectFits(level, o, objects = list(level)) {
   const def = OBJECTS[o.id];
   const tile = getTile(level, o.x, o.z);
-  if (!def || !(tile === TILE.FLOOR || (def.floats && tile === TILE.WATER))) return false;
+  if (!def || !(tile === TILE.FLOOR || ((def.floats || (def.pit && getTheme(level.theme).pit === 'balls')) && tile === TILE.WATER))) return false;
   // På veggen: det må være vegg bak.
   if (def.mount === 'wall' && getTile(level, o.x - FACING[o.rot & 3][0], o.z - FACING[o.rot & 3][1]) !== TILE.WALL) return false;
-  const lv = { ...level, objects };
-  const p = objectPose(lv, o);
+  const pose = poser({ ...level, objects });
+  const p = pose(o);
   const box = objectBox(p);
+  if (pillarsTouchBox(level, box)) return false;
+  if(def.fullSupport)for(const q of objects) {
+    const surface = OBJECTS[q.id]?.surface;
+    if(!surface)continue;
+    const support = pose(q), b = objectBox(support);
+    if(Math.abs(p.y-support.y-surface)>.01||p.x<b[0]||p.x>b[2]||p.z<b[1]||p.z>b[3])continue;
+    if(box[0]<b[0]-.01||box[1]<b[1]-.01||box[2]>b[2]+.01||box[3]>b[3]+.01)return false;
+  }
   // Alle ruter fotavtrykket dekker må være åpne (ikke vegg eller søyle).
   for (let z = Math.floor(box[1] + 0.02); z <= Math.floor(box[3] - 0.02); z++) {
     for (let x = Math.floor(box[0] + 0.02); x <= Math.floor(box[2] - 0.02); x++) {
       const t = getTile(level, x, z);
       if (t === TILE.WALL || t === TILE.PILLAR || (def.floats && t !== TILE.WATER)) return false;
+      if (def.structural && (t !== TILE.FLOOR || Math.abs(floorAt(level, x, z) - p.y) > 0.01 || ceilingAt(level, x, z) < p.y + p.h + 0.05)) return false;
+      if (t === TILE.FLOOR && cornerShape(level, x, z)) return false; // skrått/avrundet hjørne
     }
   }
   for (const q of objects) {
     if (q === o || !OBJECTS[q.id]) continue;
-    const qp = objectPose(lv, q);
+    const qp = pose(q);
     if (!overlaps(box, objectBox(qp))) continue;
     // Den ene oppå den andre (på en flate eller en stabel) er greit; ellers står de i hverandre.
     if (p.y < qp.y + qp.h - 0.01 && qp.y < p.y + p.h - 0.01) return false;
@@ -190,22 +113,25 @@ export function placeObject(level, x, z, id, erase = false) {
   if (same !== undefined) return turn(same);
   if (OBJECTS[id] && objects.length < MAX_OBJECTS) {
     const placed = tryRotations(level, (rot) => {
-      const t = { id, x, z, rot, ...(OBJECTS[id].soft ? { v: (x * 7 + z * 13 + objects.length) % 8 } : {}) };
+      const variants = OBJECTS[id].soft ? 8 : OBJECTS[id].loose?.radius ? 4 : 0;
+      const t = { id, x, z, rot, ...(variants ? { v: (x * 7 + z * 13 + objects.length) % variants } : {}) };
       return { t, objects: [...objects, t] };
     }, autoRotation(level, x, z), 0);
     if (placed) return 1;
   }
-  return hits.length ? turn(hits[0]) : 0;
+  // Stupebrettet (walk) snus ikke av at noe annet settes i en rute det dekker.
+  return hits.length && !OBJECTS[objects[hits[0]].id].walk ? turn(hits[0]) : 0;
 }
 
 /** Kollisjonsbokser { box: [x0, z0, x1, z1], bottom, top } for gjenstander som når inn i ruten. */
 export function objectColliders(level, cx, cz) {
   const out = [];
   const cell = [cx, cz, cx + 1, cz + 1];
+  const pose = poser(level);
   for (const o of list(level)) {
     const def = OBJECTS[o.id];
-    if (!def || def.floats || def.soft || def.loose || Math.abs(o.x - cx) > 3 || Math.abs(o.z - cz) > 3) continue;
-    const p = objectPose(level, o);
+    if (!def || def.floats || def.soft || def.loose || def.walk || Math.abs(o.x - cx) > 3 || Math.abs(o.z - cz) > 3) continue;
+    const p = pose(o);
     const box = objectBox(p);
     if (overlaps(box, cell, 0)) out.push({ box, bottom: p.y, top: p.y + p.h });
   }
@@ -215,10 +141,11 @@ export function objectColliders(level, cx, cz) {
 /** Lyskilder fra skjermer (glow): punktet rett foran skjermen, { x, y, z, power, cx, cz }. */
 export function glowSources(level) {
   const out = [];
+  const pose = poser(level);
   for (const o of list(level)) {
     const def = OBJECTS[o.id];
     if (!def?.glow) continue;
-    const p = objectPose(level, o);
+    const p = pose(o);
     const [fx, fz] = FACING[p.rot];
     const reach = (fx ? p.w : p.d) / 2 + 0.15;
     const x = p.x + fx * reach;

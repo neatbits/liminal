@@ -35,8 +35,10 @@
           </div>
         </div>
         <div class="topbar-right">
+          <button type="button" class="btn" data-feedback>Suggestions</button>
           <span class="room-badge" id="room-badge"></span>
-          <button type="button" class="btn btn-accent" id="btn-walk-top" title="Walk the room in fullscreen">▶ Enter</button>
+          <button type="button" class="btn" id="btn-drift" title="Dream walk: drift slowly through the rooms on your own (fullscreen)">🌙 Drift</button>
+          <button type="button" class="btn btn-accent" id="btn-walk-top" title="Walk through the room in fullscreen – Esc to come back">▶ Walk the room</button>
         </div>
       </header>
 
@@ -59,25 +61,36 @@
         <section class="pane pane-3d">
           <header class="pane-head">
             <span class="pane-title">3D preview</span>
-            <span class="pane-sub">Synced with 2D</span>
             <div class="pane-actions" id="view-actions">
-              <select class="chip mood-select" id="mood-select" title="Mood while walking: how liminal – or how scary – it gets">
+              <button type="button" class="chip" data-view="perspective" title="Look at the room from an angle">3D</button>
+              <button type="button" class="chip" data-view="top" title="Look straight down">Top</button>
+              <button type="button" class="chip" data-view="reset" title="Back to the starting view">Reset</button>
+              <button type="button" class="chip" data-view="photo" title="Take a photo of the 3D view (P while walking)">📷 Photo</button>
+            </div>
+          </header>
+          <div class="pane-body viewport3d" id="viewport3d">
+            <!-- Visningsinnstillinger: stemning, lysfarge og størrelsen på de uendelige nivåene (skjules i gåmodus). -->
+            <div class="view-settings" id="view-settings">
+              <label class="view-setting" title="Mood while walking: how liminal – or how scary – it gets"><span>Mood</span>
+              <select id="mood-select">
                 <option value="normal">Normal</option>
                 <option value="abandoned">Abandoned</option>
                 <option value="liminal">Liminal</option>
                 <option value="uncanny">Uncanny</option>
                 <option value="nightmare">Nightmare</option>
-              </select>
-              <button type="button" class="chip" data-view="perspective">3D</button>
-              <button type="button" class="chip" data-view="top">Top</button>
-              <button type="button" class="chip" data-view="reset">Reset</button>
-              <button type="button" class="chip chip-accent" data-view="walk">🚶 Walk the room</button>
-              <button type="button" class="chip" data-view="drift" title="Dream walk: drift slowly through the rooms on your own">🌙 Drift</button>
-              <button type="button" class="chip" data-view="fullscreen">⛶ Fullscreen</button>
-              <button type="button" class="chip" data-view="photo" title="Take a photo of the 3D view (P while walking)">📷</button>
+              </select></label>
+              <label class="view-setting" title="Light colour: the room's own, or another that overrides it – Shifting glides slowly between colours"><span>Light</span>
+              <select id="light-select"></select></label>
+              <label class="view-setting" title="Size of the new levels you reach through doors to nowhere"><span>New levels</span>
+              <select id="size-select">
+                <option value="small">Small</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
+                <option value="huge">Huge</option>
+              </select></label>
+              <button type="button" class="view-setting view-toggle" id="btn-music" title="Music on/off (N while walking)">♪ Music</button>
             </div>
-          </header>
-          <div class="pane-body viewport3d" id="viewport3d"></div>
+          </div>
         </section>
       </main>
 

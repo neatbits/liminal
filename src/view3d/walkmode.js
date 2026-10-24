@@ -3,7 +3,6 @@
 import { resolveSpawn } from '../core/spawn.js';
 import { LIGHT, cloneLevel } from '../core/level.js';
 import { DOOR, doorInfo, doorInReach, toggleDoor } from '../core/doors.js';
-import { isTyping } from '../ui/dom.js';
 import { groundAt } from '../core/heights.js';
 import { slideEntry } from '../core/slides.js';
 import { Walker } from './walker.js';
@@ -14,6 +13,7 @@ import { Drift } from './drift.js';
 import { Loops, textureRepeats } from '../world/anomalies.js';
 import { glowSources } from '../core/objects.js';
 import { windows } from '../core/windows.js';
+import { WalkSession } from './walk-session.js';
 
 export class WalkMode {
   constructor({ canvas, hud, audio }) {
@@ -34,17 +34,15 @@ export class WalkMode {
     this.mood = null; // stemningen (gen/moods.js), settes av visningen
     this.play = new WaterPlay(this);
     this.drift = new Drift(this); // drømmegange (G)
-    window.addEventListener('keydown', (e) => {
-      if (this.active && e.code === 'KeyE' && !e.repeat && !isTyping(e)) this.useDoor();
-    });
-    document.addEventListener('pointerlockchange', () => {
-      this.input.locked = document.pointerLockElement === this.canvas;
-      this.hud.setLocked(this.input.locked, this.active);
-    });
+    this.session = new WalkSession(this);
   }
 
   get locked() {
     return this.input.locked;
+  }
+
+  get paused() {
+    return this.session.paused;
   }
 
   /** @param extras { objects, balls } fra buildWorld (ender og ballbinger i gåmodus) */
@@ -52,7 +50,7 @@ export class WalkMode {
     const themeChanged = this.theme && this.theme.id !== theme.id;
     this.level = cloneLevel(level);
     this.doors = doors;
-    this.play.setWorld(this.level, extras.objects, extras.balls);
+    this.play.setWorld(this.level, extras.objects, extras.balls, extras.water);
     this.screens = glowSources(this.level);
     this.loops = this._loops(theme); // ganger som er lengre innenfra enn utenfra
     this.windows = windows(this.level);
@@ -63,7 +61,7 @@ export class WalkMode {
       this.rider.path = null; // banen kan ha endret seg
       this.hud.setRiding(false);
       this.walker.settle(this.level);
-      if (themeChanged && this.sound) this.audio.start(theme);
+      if (themeChanged && this.sound && !this.paused) this.audio.start(theme);
     }
   }
 
@@ -76,11 +74,9 @@ export class WalkMode {
     this.play.reset();
     this.rider.path = null;
     this.input.reset();
-    this.input.enabled = true;
     this.active = true;
-    if (this.sound) this.audio.start(this.theme);
     this.hud.setWalking(true);
-    this.hud.setLocked(this.input.locked, true);
+    this.session.syncLock();
     return true;
   }
 
@@ -99,9 +95,11 @@ export class WalkMode {
   }
 
   lock() {
+    this.session.resume();
+    if(this.session.touch)return; // phone controls must retain ordinary touch/pointer events
     const fallback = () => {
       try {
-        this.canvas.requestPointerLock();
+        this.canvas.requestPointerLock()?.catch?.(() => {});
       } catch {
         /* pointer lock støttes ikke (f.eks. mobil) */
       }
@@ -117,7 +115,7 @@ export class WalkMode {
   setSound(on) {
     this.sound = on;
     this.audio.setEnabled(on);
-    if (on && this.active) this.audio.start(this.theme);
+    if (on && this.active && !this.paused) this.audio.start(this.theme);
   }
 
   /** Uendelige ganger – bare når stemningen har avvik (mood.anomalies.loops). */
@@ -133,6 +131,7 @@ export class WalkMode {
 
   /** E: åpner eller lukker døren man står foran – eller går gjennom en dør til ingensteds. */
   useDoor() {
+    if (!this.active || this.paused) return;
     const w = this.walker;
     const door = doorInReach(this.level, w.x, w.z, w.yaw, 1.8, { exits: true });
     if (!door || this.rider.active) return;
@@ -147,7 +146,7 @@ export class WalkMode {
     const w = this.walker;
     const door = this.rider.active ? null : doorInReach(this.level, w.x, w.z, w.yaw, 1.8, { exits: true });
     const verb = door?.info.oneSided ? 'go through' : door?.info.state === DOOR.CLOSED ? 'open' : 'close';
-    this.hud.setPrompt(door ? `E – ${verb} the door` : null);
+    this.hud.setPrompt(door ? `${this.session.touch?'Tap Use to':'E –'} ${verb} the door` : null);
   }
 
   /** Går man framover inn i toppen av en sklie, tar sklien over. */
@@ -165,11 +164,16 @@ export class WalkMode {
     if (this.sound) this.audio.slide(landed ? 0 : this.rider.v);
     if (!landed) return this.rider.applyToCamera(camera);
     this.walker.land(this.level, landed);
-    this.play.splash(landed.x, landed.z);
+    this._splash(landed.x, landed.z, landed.speed);
     this.walker.applyToCamera(camera);
     this.hud.setRiding(false);
-    if (this.theme.pit !== 'balls') this.hud.splashFlash(); // blågrønt glimt bare i vann
-    if (this.sound) this.audio.splash(landed.speed);
+  }
+
+  /** Plask: bølger og ender som dyttes unna, et blågrønt glimt (bare i vann) og lyden. */
+  _splash(x, z, speed) {
+    this.play.splash(x, z);
+    if (this.theme.pit !== 'balls') this.hud.splashFlash();
+    if (this.sound) this.audio.splash(speed);
   }
 
   /** Hvor mye TV-sus man hører her (0..1): nærmeste skjerm. */
@@ -195,7 +199,7 @@ export class WalkMode {
   }
 
   update(dt, camera, flickerValues, changedGroups) {
-    if (!this.active || !this.level) return;
+    if (!this.active || this.paused || !this.level) return;
     if (this.rider.active) {
       this._ride(dt, camera);
     } else {
@@ -203,6 +207,8 @@ export class WalkMode {
       const surface = this.walker.update(dt, this.drift.input(dt) ?? this.input, this.level, this.theme);
       this.loops.update(px, pz, this.walker); // flyttes sømløst én periode tilbake i en uendelig gang
       if (surface && this.sound) this.audio.step(surface);
+      if (this.walker.splash) this._splash(this.walker.x, this.walker.z, this.walker.splash);
+      this.walker.splash = 0;
       this.walker.applyToCamera(camera);
       this._maybeSlide();
     }
@@ -217,7 +223,7 @@ export class WalkMode {
         if (near.length) this.audio.flickerBuzz(Math.min(...near));
       }
       const w = this.walker;
-      this.audio.listen({ level: this.level, x: w.x, z: w.z, y: w.floorY, yaw: w.yaw, windows: this.windows });
+      this.audio.listen({ level: this.level, x: w.x, z: w.z, y: w.floorY, yaw: w.yaw, windows: this.windows, power:this.power });
       this.audio.update(dt, this._humLevel(flickerValues) * this.power);
       this.audio.static(this._staticLevel());
     }

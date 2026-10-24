@@ -101,11 +101,26 @@ const UV = [
  * kanten, uv = tilhørende teksturkoordinater. normals (valgfri) gir lyset per hjørne, for
  * runde flater som skal se glatte ut.
  */
-export function faceQuad(mesh, p, n, uv = UV, normals = null) {
+export function faceQuad(mesh, p, n, uv = UV, normals = null, ao = undefined) {
   const e1 = [p[1][0] - p[0][0], p[1][1] - p[0][1], p[1][2] - p[0][2]];
   const e2 = [p[2][0] - p[0][0], p[2][1] - p[0][1], p[2][2] - p[0][2]];
   const c = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
   const order = c[0] * n[0] + c[1] * n[1] + c[2] * n[2] < 0 ? [0, 3, 2, 1] : [0, 1, 2, 3];
   const v = order.map((k) => [...p[k], ...uv[k]]);
-  mesh.quad(v[0], v[1], v[2], v[3], n, undefined, normals && order.map((k) => normals[k]));
+  mesh.quad(v[0], v[1], v[2], v[3], n, ao && order.map((k) => ao[k]), normals && order.map((k) => normals[k]));
+}
+
+/**
+ * Boks rotert om en loddrett akse. o = [x, z] er hjørnet, u = [ux, uz] enhetsvektor langs
+ * bredden w, t = [tx, tz] enhetsvektor langs tykkelsen (fra t0 til t1). Forsiden får uv 0–1.
+ */
+export function orientedBox(mesh, o, u, w, t, t0, t1, y0, y1) {
+  const P = (s, k, y) => [o[0] + u[0] * s + t[0] * k, y, o[1] + u[1] * s + t[1] * k];
+  const N = (v, sign) => [v[0] * sign, 0, v[1] * sign];
+  faceQuad(mesh, [P(0, t1, y0), P(w, t1, y0), P(w, t1, y1), P(0, t1, y1)], N(t, 1));
+  faceQuad(mesh, [P(0, t0, y0), P(w, t0, y0), P(w, t0, y1), P(0, t0, y1)], N(t, -1));
+  faceQuad(mesh, [P(0, t0, y0), P(0, t1, y0), P(0, t1, y1), P(0, t0, y1)], N(u, -1));
+  faceQuad(mesh, [P(w, t0, y0), P(w, t1, y0), P(w, t1, y1), P(w, t0, y1)], N(u, 1));
+  faceQuad(mesh, [P(0, t0, y1), P(w, t0, y1), P(w, t1, y1), P(0, t1, y1)], [0, 1, 0]);
+  faceQuad(mesh, [P(0, t0, y0), P(w, t0, y0), P(w, t1, y0), P(0, t1, y0)], [0, -1, 0]);
 }

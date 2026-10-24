@@ -12,8 +12,10 @@ import { shootPhoto } from './photo.js';
 import { Explorer } from './explore.js';
 import { getMood, nextMood } from '../gen/moods.js';
 import { setMood } from './mood.js';
-
-const OVERVIEW_BG = new THREE.Color('#d8d6cf');
+import { applyLook, OVERVIEW_BG } from './look.js';
+import { resizeView, frameDue } from './display.js';
+import { Music } from '../audio/music.js';
+import { activeTint, tintFactor } from '../core/tints.js';
 
 export class Viewer {
   /** @param options { settings, onModeChange(mode), onSettingsChange(settings) } */
@@ -39,14 +41,20 @@ export class Viewer {
     this.scene.background = OVERVIEW_BG.clone();
     this.camera = new THREE.PerspectiveCamera(45, 1, 0.05, 500);
     this.postfx = createPostFX(renderer, this.scene, this.camera);
+    this.postfx.setQuality(this.settings.effects !== 'reduced');
     this.overview = new OverviewCamera(this.camera, renderer.domElement);
     this.flicker = new FlickerController();
     this.audio = new AudioEngine();
     this.audio.setVolume(this.settings.volume);
+    this.music = new Music(); // av og på med settings.music (M i gåmodus er lyden, N musikken)
+    this.music.setVolume(this.settings.volume);
+    this.music.setOn(this.settings.music);
     this.hud = new Hud(container, {
       exit: () => this.exitWalk(),
+      resume: () => this.walkFullscreen(),
       vhs: () => this.toggle('vhs'),
       sound: () => this.toggle('sound'),
+      music: () => this.toggle('music'),
       photo: () => this.photo(),
       mood: () => this.setMood(nextMood(this.settings.mood)),
       drift: () => this.walk.drift.toggle(),
@@ -59,11 +67,20 @@ export class Viewer {
     this.walk.onExit = (door) => this.explorer.goDeeper({ door });
     this.hud.setToggles(this.settings);
 
+    // Pause: Esc slipper musa (og i Firefox/Safari også fullskjermen) – menyen står da midt på
+    // skjermen (hud.js). Et klikk eller «Resume» fortsetter i fullskjerm; Esc én gang til går ut.
+    this._pausedAt = 0;
     renderer.domElement.addEventListener('click', () => {
-      if (this.mode === 'walk' && !this.walk.locked) this.walk.lock();
+      if (this.mode === 'walk' && !this.walk.locked) this.walkFullscreen();
     });
     window.addEventListener('keydown', (e) => this._onKey(e));
-    document.addEventListener('fullscreenchange', () => this._resize());
+    document.addEventListener('pointerlockchange', () => {
+      if (!document.pointerLockElement) this._pausedAt = performance.now();
+    });
+    document.addEventListener('fullscreenchange', () => {
+      this._resize();
+      if (!document.fullscreenElement) this._pausedAt = performance.now();
+    });
     new ResizeObserver(() => this._resize()).observe(container);
     this._resize();
     this._timer = new THREE.Timer();
@@ -86,8 +103,9 @@ export class Viewer {
       this.scene.remove(this.world.group);
       this.world.dispose();
     }
-    this.world = buildWorld(level, { anisotropy: this.anisotropy, waterQuality: this.settings.waterReflections });
+    this.world = buildWorld(level, { anisotropy: this.anisotropy, waterQuality: this.settings.waterReflections, waterDetail: this.settings.waterDetail, waterWaves: this.settings.waterWaves });
     this.world.water?.setSize(this._rtW, this._rtH);
+    this.world.floorReflection?.setSize(this._rtW, this._rtH);
     this.scene.add(this.world.group);
     const built = builtBounds(level);
     const b = built ?? { x0: 0, z0: 0, x1: level.w - 1, z1: level.h - 1 };
@@ -127,6 +145,7 @@ export class Viewer {
 
   exitWalk(tween = true) {
     if (this.mode !== 'walk') return;
+    if (document.fullscreenElement) document.exitFullscreen?.();
     const { x, z } = this.walk.walker;
     this.walk.exit();
     this.mode = 'overview';
@@ -138,15 +157,22 @@ export class Viewer {
     this.options.onModeChange?.(this.mode);
   }
 
-  toggleFullscreen() {
-    if (document.fullscreenElement) {
-      document.exitFullscreen?.();
-      return;
+  /**
+   * Gåmodus i fullskjerm; der fullskjerm ikke går (iframe, iPhone), i panelet. Keyboard Lock
+   * (Chrome/Edge) gjør at et kort trykk på Esc bare pauser – hold Esc for å gå ut av fullskjermen.
+   */
+  walkFullscreen() {
+    if (!this.enterWalk()) return false;
+    if (!document.fullscreenElement) {
+      this.container.requestFullscreen?.()?.then(() => navigator.keyboard?.lock?.(['Escape'])).catch(() => {});
     }
-    const request = this.container.requestFullscreen?.();
-    if (request) request.catch(() => this.hud.flash('Fullscreen is not available here.'));
-    else this.hud.flash('This browser does not support fullscreen.');
-    this.enterWalk();
+    return true;
+  }
+
+  /** Esc: med musa låst pauser den (bare med Keyboard Lock); på pause går den ut av gåmodus. */
+  _escape() {
+    if (this.walk.locked) document.exitPointerLock();
+    else if (performance.now() - this._pausedAt > 300) this.exitWalk(); // ikke det samme trykket som pauset
   }
 
   // Fotomodus (P, photo.js) og stemningen i gåmodus (Normal … Nightmare, mood.js).
@@ -156,6 +182,7 @@ export class Viewer {
   toggle(key) {
     this.settings[key] = !this.settings[key];
     if (key === 'sound') this.walk.setSound(this.settings.sound);
+    if (key === 'music') this.music.setOn(this.settings.music);
     this.hud.setToggles(this.settings);
     this._applyLook();
     this.options.onSettingsChange?.(this.settings);
@@ -165,79 +192,48 @@ export class Viewer {
     Object.assign(this.settings, patch);
     this.walk.walker.sensitivity = this.settings.sensitivity;
     this.audio.setVolume(this.settings.volume);
+    this.music.setVolume(this.settings.volume);
     this.world?.water?.setQuality(this.settings.waterReflections);
+    this.world?.water?.setDetail(this.settings.waterDetail);
+    this.world?.water?.setWaves(this.settings.waterWaves);
+    this.postfx.setQuality(this.settings.effects !== 'reduced');
+    this._resize();
     this._applyLook();
   }
 
   _applyLook() {
-    const theme = this.world?.theme;
-    if (!theme) return;
-    const walking = this.mode === 'walk';
-    const fog = this.scene.fog;
-    this.renderer.toneMappingExposure = theme.exposure;
-    if (walking) {
-      fog.color.set(theme.fog.color);
-      // Stemningen: tettere tåke og mørkere bilde jo nærmere Nightmare.
-      const mood = getMood(this.settings.mood);
-      fog.density = theme.fog.density * (this.level.fog ?? 1) * mood.fog;
-      this.renderer.toneMappingExposure = theme.exposure * mood.exposure;
-      this.scene.background.copy(fog.color);
-      this.camera.fov = this.settings.fov;
-      this.world.setBoost(1);
-    } else {
-      fog.density = 0;
-      this.scene.background.copy(OVERVIEW_BG);
-      this.camera.fov = 45;
-      this.world.setBoost(1.15);
-    }
-    this.camera.updateProjectionMatrix();
-    this.world.water?.setMirror(walking);
-    this.postfx.setLook({
-      bloom: walking ? theme.bloom : theme.bloom * 0.5,
-      grain: walking && this.settings.grain ? 0.055 : 0,
-      vignette: walking ? 0.65 : 0.1,
-      aberration: walking ? 0.0025 : 0,
-      vhs: walking && this.settings.vhs,
-    });
-    this.hud.setVhs(walking && this.settings.vhs);
-    this.audio.eerieScale = walking ? getMood(this.settings.mood).eerie : 1;
+    applyLook(this);
   }
 
   _onKey(e) {
     if (this.mode !== 'walk' || e.target?.tagName === 'INPUT' || e.ctrlKey || e.metaKey) return;
     if (e.code === 'KeyV') this.toggle('vhs');
     else if (e.code === 'KeyM') this.toggle('sound');
+    else if (e.code === 'KeyN') this.toggle('music');
     else if (e.code === 'KeyP') this.photo();
     else if (e.code === 'KeyX') this.setMood(nextMood(this.settings.mood));
     else if (e.code === 'KeyG') this.walk.drift.toggle();
-    else if (e.code === 'Escape' && !this.walk.locked && !document.fullscreenElement) this.exitWalk();
+    else if (e.code === 'Escape') this._escape();
   }
 
+  // Størrelse, format i fullskjerm og oppløsning (display.js).
   _resize() {
-    const w = Math.max(1, this.container.clientWidth);
-    const h = Math.max(1, this.container.clientHeight);
-    const pr = Math.min(window.devicePixelRatio || 1, 1.5);
-    this.renderer.setPixelRatio(pr);
-    this.renderer.setSize(w, h, false);
-    this.postfx.setSize(w, h, pr);
-    // Speil- og brytningsbildet for vannet tegnes i halv oppløsning.
-    this._rtW = (w * pr) / 2;
-    this._rtH = (h * pr) / 2;
-    this.world?.water?.setSize(this._rtW, this._rtH);
-    this.camera.aspect = w / h;
-    this.camera.updateProjectionMatrix();
+    resizeView(this);
   }
 
   _tick(timestamp) {
+    if (!frameDue(this, timestamp)) return; // begrenset bildefrekvens
     this._timer.update(timestamp);
-    const dt = Math.min(0.05, this._timer.getDelta());
+    const dt = this.mode === 'walk' && this.walk.paused ? 0 : Math.min(0.05, this._timer.getDelta());
     this.time += dt;
     if (!this.world) return;
     const changed = this.flicker.update(dt);
+    // Lysfargen: visningsinnstillingen eller rommets (core/tints.js).
+    this.world.setTint(tintFactor(activeTint(this.settings.light, this.level), this.time, this.world.field.color));
     this.world.update(this.time, this.flicker.values);
     if (this.mode === 'walk') {
       this.walk.update(dt, this.camera, this.flicker.values, changed);
-      this.explorer.update(dt);
+      if (!this.walk.paused) this.explorer.update(dt);
     }
     else this.overview.update(dt);
     this.hud.tick(dt);

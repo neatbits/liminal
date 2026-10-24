@@ -8,6 +8,7 @@ import {
   rectIndices,
   fillTiles,
   floodFillTile,
+  floodRegion,
   openRegion,
   autoLights,
   clearLights,
@@ -16,9 +17,12 @@ import { yawFromDir } from '../core/spawn.js';
 import { paintZone, fillZone, floodFillZone } from '../core/zones.js';
 import { setDoor } from '../core/doors.js';
 import { placeStairs, removeStairs } from '../core/stairs.js';
+import { placeEscalator } from '../core/escalators.js';
 import { addSlide, removeSlidesAt } from '../core/slides.js';
 import { placeObject } from '../core/objects.js';
 import { paintWindows } from '../core/windows.js';
+import { setCorner } from '../core/corners.js';
+import { paintPillars } from './pillars.js';
 
 // Soneverktøyene (kind 'zone') maler en høyde i meter, og dørverktøyet (kind 'door') setter
 // inn dører med en tilstand (DOOR); editoren gir dem `value` før bruk. Dørverktøyet virker
@@ -40,11 +44,13 @@ export const TOOLS = [
   { id: 'leaf', label: 'Door', key: 'O', kind: 'door' },
   { id: 'raise', label: 'Raise', key: 'H', kind: 'zone', layer: 'floor' },
   { id: 'stairs', label: 'Stairs', key: 'S', kind: 'stairs' },
-  { id: 'tiles', label: 'Tiles', key: 'T', kind: 'zone', layer: 'finish' },
+  { id: 'escalator', label: 'Escalator', key: 'E', kind: 'stairs', escalator: true },
+  { id: 'tiles', label: 'Floor finish', key: 'T', kind: 'zone', layer: 'finish' },
   { id: 'slide', label: 'Slide', key: 'L', kind: 'slide' },
   { id: 'deck', label: 'Deck', key: 'K', kind: 'zone', layer: 'deck' },
   { id: 'object', label: 'Object', key: 'J', kind: 'object' },
   { id: 'window', label: 'Window', key: 'W', kind: 'window' },
+  { id: 'corner', label: 'Corner', key: 'Q', kind: 'corner' }, // skrå/avrundede hjørner (core/corners.js)
 ];
 
 export const SHAPES = [
@@ -57,8 +63,13 @@ export function toolById(id) {
   return TOOLS.find((t) => t.id === id) ?? TOOLS[0];
 }
 
-/** Pensel på én rute. Lysverktøy setter ett lys (penselstørrelse gjelder bare viskelær). */
-export function paintAt(level, tool, x, z, brush, erase) {
+/**
+ * Pensel på én rute. Lysverktøy setter ett lys (penselstørrelse gjelder bare viskelær). (fx, fz):
+ * hvor i ruten man klikket (0–1) – hjørneverktøyet former hjørnet nærmest.
+ */
+export function paintAt(level, tool, x, z, brush, erase, fx = 0.5, fz = 0.5) {
+  if (tool.id === 'pillar') return paintPillars(level, brushCells(x, z, brush), tool.diameter, erase);
+  if (tool.kind === 'corner') return setCorner(level, x, z, erase ? 0 : tool.value, fx, fz);
   if (tool.kind === 'tile') return paintTiles(level, brushCells(x, z, brush), erase ? tool.erase : tool.value);
   if (tool.kind === 'zone') return paintZone(level, tool.layer, brushCells(x, z, brush), erase ? 0 : tool.value);
   if (tool.kind === 'door') return setDoor(level, x, z, tool.value, erase);
@@ -81,6 +92,7 @@ export function paintLine(level, tool, from, to, brush, erase) {
 /** Rektangel: fyller ruter, eller legger lys i jevnt mønster innenfor rektangelet. */
 export function applyRect(level, tool, rect, erase, spacing) {
   const cells = rectIndices(level, rect);
+  if (tool.id === 'pillar') return paintPillars(level, cells.map(i => [i % level.w, Math.floor(i / level.w)]), tool.diameter, erase);
   if (tool.kind === 'tile') return fillTiles(level, cells, erase ? tool.erase : tool.value);
   if (tool.kind === 'zone') return fillZone(level, tool.layer, cells, erase ? 0 : tool.value);
   if (tool.kind === 'window') return paintWindows(level, cells.map((i) => [i % level.w, (i / level.w) | 0]), !erase);
@@ -94,6 +106,10 @@ export function applyRect(level, tool, rect, erase, spacing) {
 
 /** Fyll: bytter sammenhengende flate eller sone, eller fyller et helt rom med lys. */
 export function applyFill(level, tool, x, z, erase, spacing) {
+  if (tool.id === 'pillar') {
+    const t = level.tiles[z * level.w + x], cells = floodRegion(level, x, z, v => v === t);
+    return paintPillars(level, cells.map(i => [i % level.w, Math.floor(i / level.w)]), tool.diameter, erase);
+  }
   if (tool.kind === 'tile') return floodFillTile(level, x, z, erase ? tool.erase : tool.value);
   if (tool.kind === 'zone') return floodFillZone(level, tool.layer, x, z, erase ? 0 : tool.value);
   if (tool.kind === 'window') return paintWindows(level, [[x, z]], !erase);
@@ -106,8 +122,9 @@ export function applyFill(level, tool, x, z, erase, spacing) {
 }
 
 /** Trappeverktøyet: et trappeløp fra a (bunn) til b (topp), `width` ruter bredt. */
-export function applyStairs(level, a, b, width, erase) {
-  return erase ? removeStairs(level, a, b, width) : placeStairs(level, a, b, width);
+export function applyStairs(level, a, b, width, erase, { escalator = false, down = false } = {}) {
+  if (erase) return removeStairs(level, a, b, width);
+  return escalator ? placeEscalator(level, a, b, width, down) : placeStairs(level, a, b, width);
 }
 
 /**

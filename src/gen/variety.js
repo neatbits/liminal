@@ -5,6 +5,7 @@ import { TILE } from '../core/level.js';
 import { floodRegion } from '../core/ops.js';
 import { fillZone } from '../core/zones.js';
 import { getTheme } from '../core/themes.js';
+import { waterCell } from '../core/pillar-water.js';
 
 // Takhøyde (m) per tema; temaer som ikke står her (kjøpesenteret) beholder sin.
 export const HEIGHT_RANGES = {
@@ -33,8 +34,8 @@ export function basins(level) {
   const seen = new Uint8Array(level.tiles.length);
   const out = [];
   for (let i = 0; i < level.tiles.length; i++) {
-    if (seen[i] || level.tiles[i] !== TILE.WATER) continue;
-    const cells = floodRegion(level, i % level.w, Math.floor(i / level.w), (t) => t === TILE.WATER);
+    if (seen[i] || !waterCell(level, i % level.w, Math.floor(i / level.w))) continue;
+    const cells = floodRegion(level, i % level.w, Math.floor(i / level.w), (_, j) => waterCell(level, j % level.w, Math.floor(j / level.w)));
     for (const c of cells) seen[c] = 1;
     out.push(cells);
   }
