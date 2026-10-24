@@ -8,7 +8,8 @@
 // tak); groundAt/headAt tar høyden man står i (y) og gir gulvet/taket i den etasjen.
 import { TILE, DOOR_HEIGHT, getTile, inBounds } from './level.js';
 import { fountainRimAt } from './fountains.js';
-import { submergedPillar, pillarPoolDepth } from './pillar-water.js';
+import { submergedPillar, pillarPoolDepth, waterCell } from './pillar-water.js';
+import { pillarInfo, pillarTouchesBox } from './pillars.js';
 
 export const HEADROOM = DOOR_HEIGHT;
 export const SLAB = 0.3; // tykkelsen på dekkeplaten
@@ -73,6 +74,23 @@ export function floorAt(level, x, z) {
   if (t === TILE.WATER || submergedPillar(level, x, z)) return -depthAt(level, x, z);
   if (t === TILE.STAIRS) return stairSpan(level, x, z).bottom;
   return zoneFloor(level, x, z);
+}
+
+/**
+ * Bunnen av en søyle. I vann går den ned til den dypeste bunnen under fotavtrykket – ellers
+ * svever en bred søyle over dypere trinn rundt søyleruten.
+ */
+export function pillarBottom(level, x, z) {
+  const fy = floorAt(level, x, z);
+  if (!submergedPillar(level, x, z)) return fy;
+  const p = pillarInfo(level, x, z);
+  let bottom = fy;
+  for (let cz = Math.floor(p.z - p.radius); cz <= Math.floor(p.z + p.radius); cz++) {
+    for (let cx = Math.floor(p.x - p.radius); cx <= Math.floor(p.x + p.radius); cx++) {
+      if (waterCell(level, cx, cz) && pillarTouchesBox(p, [cx, cz, cx + 1, cz + 1])) bottom = Math.min(bottom, floorAt(level, cx, cz));
+    }
+  }
+  return bottom;
 }
 
 /** Høyeste gulv i ruten (toppen av en trapp, vannkanten for basseng). */

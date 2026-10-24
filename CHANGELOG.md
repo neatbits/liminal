@@ -6,6 +6,13 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ukommet]
 
+### Fikset
+- Søyler i Poolrooms-vann fikk en firkantet sjakt rundt seg under vannet: nabovannet regnet
+  søyleruten som et gulv nede på bunnen og bygde kantvegger fra bunnen til vannflaten, synlige som
+  løse flislagte plater rundt tynne søyler (`surfaceHeight` bruker nå `waterCell`).
+- Brede søyler i vann går ned til den dypeste bunnen under fotavtrykket (`pillarBottom`), også i
+  fysikken, i stedet for å sveve over dypere trinn ved siden av søyleruten (f.eks. stupegropen).
+
 ## [0.2.0] – 2026-10-24
 
 ### Lagt til

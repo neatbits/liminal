@@ -6,7 +6,7 @@
 import * as CANNON from 'cannon-es';
 import { TILE } from '../core/level.js';
 import { OBJECTS, poser } from '../core/objects.js';
-import { floorAt, ceilingAt, stairSpan } from '../core/heights.js';
+import { floorAt, ceilingAt, stairSpan, pillarBottom } from '../core/heights.js';
 import { pillarInfo } from '../core/pillars.js';
 import { submergedPillar } from '../core/pillar-water.js';
 import { getTheme } from '../core/themes.js';
@@ -107,7 +107,7 @@ export class SoftPhysics {
         if (t !== TILE.WALL && t !== TILE.PILLAR) { x++; continue; }
         let end = x;
         if (t === TILE.WALL) while (end < endX && level.tiles[z * level.w + end + 1] === TILE.WALL) end++;
-        const p = pillarInfo(level, x, z), bottom = p ? floorAt(level, x, z) : 0, height = p ? ceilingAt(level, x, z) - bottom : 4;
+        const p = pillarInfo(level, x, z), bottom = p ? pillarBottom(level, x, z) : 0, height = p ? ceilingAt(level, x, z) - bottom : 4;
         const shape = p ? (p.round ? new CANNON.Cylinder(p.radius, p.radius, height, 32) : new CANNON.Box(new CANNON.Vec3(p.radius, height / 2, p.radius)))
           : new CANNON.Box(new CANNON.Vec3((end - x + 1) / 2, 2, .5));
         const body = new CANNON.Body({ type: CANNON.Body.STATIC, shape });

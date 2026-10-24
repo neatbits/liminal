@@ -3,7 +3,7 @@ import { BufferGeometry, Float32BufferAttribute, Mesh, MeshBasicMaterial, Raycas
 import { createLevel, TILE, setTile } from '../src/core/level.js';
 import { setPillar, pillarInfo, PILLAR_DIAMETERS } from '../src/core/pillars.js';
 import { submergedPillar, waterCell } from '../src/core/pillar-water.js';
-import { floorAt, groundAt, depthAt } from '../src/core/heights.js';
+import { floorAt, groundAt, depthAt, pillarBottom } from '../src/core/heights.js';
 import { buildSurfaces } from '../src/world/surfaces.js';
 import { buildWaterData } from '../src/world/water/geometry.js';
 import { resolveCircle } from '../src/world/collision.js';
@@ -61,6 +61,55 @@ describe('round columns below the waterline', () => {
       }
     },
   );
+  it.each(PILLAR_DIAMETERS)('builds no square shaft around the %sm column cell, facing either way', diameter => {
+    const l = pool();
+    setPillar(l, 7, 7, diameter);
+    const r = diameter / 2;
+    for (const key of ['wall', 'basin', 'floor']) {
+      const { pos, index } = buildSurfaces(l, null)[key];
+      for (let t = 0; t < index.length; t += 3) {
+        const v = [0, 1, 2].map(k => index[t + k] * 3);
+        const ys = v.map(i => pos[i + 1]);
+        if (Math.max(...ys) - Math.min(...ys) < 0.01) continue; // horizontal
+        const cx = v.reduce((s, i) => s + pos[i], 0) / 3 - 7.5,
+          cz = v.reduce((s, i) => s + pos[i + 2], 0) / 3 - 7.5;
+        const d = Math.hypot(cx, cz);
+        if (d < r + 1) expect(d, `${key} face at ${cx.toFixed(2)}, ${cz.toFixed(2)}`).toBeCloseTo(r, 1);
+      }
+    }
+  });
+  it.each([2, 3])('takes the %sm cylinder down to deeper water around its cell, without a square shaft', diameter => {
+    const l = pool();
+    l.depths.fill(30);
+    setPillar(l, 7, 7, diameter);
+    l.depths[7 * l.w + 7] = 14; // the column cell itself is shallower than the water around it
+    expect(floorAt(l, 7, 7)).toBe(-1.4);
+    expect(pillarBottom(l, 7, 7)).toBe(-3);
+    const surfaces = buildSurfaces(l, null),
+      meshes = ['wall', 'basin'].map(k => mesh(surfaces[k]));
+    try {
+      for (let i = 0; i < 16; i++) {
+        const a = (i * Math.PI) / 8,
+          dx = Math.cos(a),
+          dz = Math.sin(a);
+        for (const y of [-2.8, -2, -0.7]) {
+          const ray = new Raycaster(new Vector3(7.5 + dx * 3, y, 7.5 + dz * 3), new Vector3(-dx, 0, -dz));
+          const hit = ray.intersectObjects(meshes)[0];
+          expect(hit, `angle ${i}, height ${y}`).toBeDefined();
+          expect(Math.hypot(hit.point.x - 7.5, hit.point.z - 7.5)).toBeCloseTo(diameter / 2, 5);
+        }
+      }
+    } finally {
+      for (const m of meshes) {
+        m.geometry.dispose();
+        m.material.dispose();
+      }
+    }
+    const dry = createLevel({ theme: 'pool', w: 16, h: 16 });
+    dry.tiles[7 * 16 + 7] = TILE.FLOOR;
+    setPillar(dry, 7, 7, diameter);
+    expect(pillarBottom(dry, 7, 7)).toBe(0);
+  });
   it('recognises columns in older rooms and inherits local pool depth', () => {
     const l = pool();
     setTile(l, 7, 7, TILE.PILLAR);

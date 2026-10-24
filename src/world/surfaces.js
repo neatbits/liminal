@@ -4,7 +4,7 @@
 import { TILE, getTile } from '../core/level.js';
 import { buildPillar } from './pillars.js';
 import { waterCell } from '../core/pillar-water.js';
-import { floorAt, topFloorAt, ceilingAt, edgeHeight } from '../core/heights.js';
+import { floorAt, topFloorAt, ceilingAt, edgeHeight, pillarBottom } from '../core/heights.js';
 import { MeshData } from './mesher.js';
 import { SIDES, addCaps } from './caps.js';
 import { buildSteps, surfaceHeight, stepBreaks } from './stairs.js';
@@ -151,7 +151,10 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
       if (!shape && !roof?.mask[cz*level.w+cx]) horizontal(ceilingMesh, cx, cz, cy, S, false, lower, 0.1, CEILING_GAIN);
       const spans = openSpans(level, cx, cz, vBase);
       if (shape) buildCorner(shape, { floor: floorMesh, ceiling: ceilingMesh, wall: wallMesh }, spans, wallUV);
-      if (t === TILE.PILLAR) for (const sp of spans) buildPillar(wallMesh, level, cx, cz, sp.lo, sp.hi, sp.base);
+      if (t === TILE.PILLAR) {
+        const bottom = pillarBottom(level, cx, cz);
+        spans.forEach((sp, i) => buildPillar(wallMesh, level, cx, cz, i ? sp.lo : Math.min(sp.lo, bottom), sp.hi, sp.base));
+      }
       buildDeck(level, cx, cz, { floorMesh, ceiling: ceilingMesh, wallMesh }, SIDES, S, CEILING_GAIN);
 
       for (const s of SIDES) {

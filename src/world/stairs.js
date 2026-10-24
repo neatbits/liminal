@@ -2,6 +2,7 @@
 // kantene, som surfaces.js bruker til sidene av trapper og hevede gulv. Ren logikk.
 import { TILE, getTile } from '../core/level.js';
 import { STEP_RISE, stairSpan, floorAt } from '../core/heights.js';
+import { waterCell } from '../core/pillar-water.js';
 import { faceQuad } from './mesher.js';
 
 /** Trinnene i en trapperute: n trinn, h(k) = høyden på trinn k (det øverste er toppen). */
@@ -21,7 +22,7 @@ export function alongStair(dir, x, z, px, pz) {
 /** Overflaten i ruten ved punktet: trinnhøyden i trapper, vannkanten (0) for basseng. */
 export function surfaceHeight(level, x, z, px, pz) {
   const t = getTile(level, x, z);
-  if (t === TILE.WATER) return 0;
+  if (waterCell(level, x, z)) return 0; // også søyler i vann: ellers får de en firkantet sjakt rundt seg
   if (t !== TILE.STAIRS) return floorAt(level, x, z);
   const p = stepProfile(level, x, z);
   const a = alongStair(p.dir, x, z, px, pz);
