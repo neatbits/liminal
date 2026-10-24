@@ -66,7 +66,7 @@ describe('tematilpassede vindusutsikter', () => {
     expect(view.groundY+view.height[0]*2).toBeLessThan(-10);
     expect(view.groundY+(view.height[0]+view.height[1])*2).toBeGreaterThan(15);
     expect(view.roof).toBe(0);expect(view.greenery[0]).toBe(0);
-    expect(Object.entries(WINDOW_VIEWS).filter(([,v])=>v.city).map(([id])=>id)).toEqual(['basement']);
+    expect(Object.entries(WINDOW_VIEWS).filter(([,v])=>v.city).map(([id])=>id)).toEqual(['basement','babbdi']);
     const city=landscapeMaterial(SKIES.day,getTheme('basement')),office=landscapeMaterial(SKIES.day,getTheme('office'));
     try {expect(city.fragmentShader).not.toBe(office.fragmentShader);}
     finally {city.dispose();office.dispose();}

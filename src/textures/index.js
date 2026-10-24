@@ -4,6 +4,7 @@ import { mulberry32 } from '../core/rng.js';
 import { wallpaperYellow, carpetDamp, ceilingTiles, levelZeroCeiling } from './yellow.js';
 import { poolTiles, poolTilesBlue, officeWall, officeCarpet, tileWallWhite, tileFloorGrey } from './tiles.js';
 import { concreteWall, concreteFloor, garagePaint } from './concrete.js';
+import { concretePink, concretePinkFloor } from './babbdi.js';
 import { hotelCarpet, hotelWallpaper, hotelWood, plaster } from './hotel.js';
 import { carpetClean, paintBeige } from './basement.js';
 import { doorPanel, doorLouver, doorFlat } from './doors.js';
@@ -36,6 +37,8 @@ const PAINTERS = {
   concreteWall,
   concreteFloor,
   garagePaint,
+  concretePink,
+  concretePinkFloor,
   hotelCarpet,
   hotelWallpaper,
   hotelWood,

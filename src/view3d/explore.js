@@ -155,7 +155,7 @@ export class Explorer {
       const next = nextLevel(this.depth, v.world.theme.id, Math.random, v.level, anomalies, scale);
       const { label, kind } = next;
       // Genererte nivåer gjøres feil etter stemningen (ikke korridorene – de må beholde mønsteret).
-      const level = (kind === 'room' && moodLevel(next.level, v.settings.mood, Math.random)) || next.level;
+      const level = ((kind === 'room' || kind === 'halls') && moodLevel(next.level, v.settings.mood, Math.random)) || next.level;
       // Samme rom igjen: man kommer ut av den samme døren man nettopp gikk inn i.
       const spot = kind === 'again' && door && exitSpots(level).find((s) => s.x === door.info.x && s.z === door.info.z);
       if (spot) level.spawn = { x: spot.fx + 0.5, z: spot.fz + 0.5, a: spot.yaw + Math.PI };

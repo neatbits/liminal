@@ -148,7 +148,8 @@ export const THEMES = {
   ...MORE_THEMES,
 };
 
-export const THEME_IDS = Object.keys(THEMES);
+// Skjulte temaer (hidden) finnes bare i den uendelige utforskingen: ikke i lister eller vanlige nivåer.
+export const THEME_IDS = Object.keys(THEMES).filter((id) => !THEMES[id].hidden);
 export const DEFAULT_THEME = 'backrooms';
 
 export function getTheme(id) {

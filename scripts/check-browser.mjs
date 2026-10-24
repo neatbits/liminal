@@ -19,6 +19,7 @@ import { checkSoftBlocks } from './check-soft-browser.mjs';
 import { checkInteriorPolish } from './check-interior-polish.mjs';
 import { checkGhost } from './check-ghost.mjs';
 import { checkTapeHunt } from './check-tape-hunt.mjs';
+import { checkHalls } from './check-halls.mjs';
 import { checkMobilePlayer } from './check-mobile-player.mjs';
 import { checkMallSelection } from './check-mall-selection.mjs';
 import { checkPoolPillars } from './check-pool-pillars.mjs';
@@ -149,6 +150,7 @@ try {
   await checkInteriorPolish(browser, origin);
   await checkGhost(browser, origin);
   await checkTapeHunt(browser, origin);
+  await checkHalls(browser, origin);
   await checkPoolPillars(browser, origin);
   await checkHalfWalls(browser, origin);
   await checkManualFinishes(browser, origin);

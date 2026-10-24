@@ -183,6 +183,8 @@ src/
   Kassettjakt (`view3d/tape-hunt.js`): på genererte nivåer er dørene til ingensteds låst til alle
   kassettene er funnet (`exitsLocked`), kassettene summer (`audio/tape-hum.js`), og kassetter legges
   bare der man kan gå (`reachableCells`). Fremgang: `loadProgress`/`saveProgress`.
+  Påskeegg: sjeldne betongsaler (`gen/babbdi.js`, nivåtype `halls`, skjult tema `babbdi` utenfor
+  `THEME_IDS`; massive brystninger med `railing.solid`). Skal ikke stå i endringsloggene.
 - **Vinduer** (`core/windows.js`): en veggrute med `meta & 1` er et vindu – fortsatt vegg for
   kollisjon, lys og dører. `level.sky` (SKIES) gir himmel, dagslys (lyskilder med egen farge,
   `rgb`) og solflekker (`sunPatch`). Innfelte Poolrooms-glassfelt, temautsikt og landskapsdetaljer (`core/window-views.js`): `docs/windows.md`; sprosser er eksplisitt tilvalg.

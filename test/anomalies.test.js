@@ -98,6 +98,16 @@ describe('flytting som går opp i teksturene', () => {
 });
 
 describe('neste nivå', () => {
+  it('bytter alltid tema til neste nivå – unntatt avviket «samme rom igjen»', { timeout: 30000 }, () => {
+    const odds = { corridor: 0.25, again: 0.25 };
+    for (const prev of ['backrooms', 'pool', 'office', 'hotel', 'basement', 'school', 'mall', 'babbdi']) {
+      for (let s = 1; s <= 30; s++) {
+        const { level, kind } = nextLevel(3, prev, mulberry32(s), null, odds);
+        expect(level.theme, `${prev} → ${kind} (seed ${s})`).not.toBe(prev);
+      }
+    }
+  });
+
   it('kan være en korridor, eller det samme rommet igjen – med noen små endringer', () => {
     const current = presetById('basement').make();
     const kinds = new Set();
@@ -112,7 +122,7 @@ describe('neste nivå', () => {
         expect(content(level)).not.toBe(content(current)); // noe er annerledes
       }
     }
-    expect([...kinds].sort()).toEqual(['again', 'corridor', 'room']);
+    expect([...kinds].sort()).toEqual(['again', 'corridor', 'halls', 'room']);
     expect(nextLevel(1, 'basement', () => 0.01, current).kind).not.toBe('again'); // ikke på første nivå
   });
 

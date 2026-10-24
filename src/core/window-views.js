@@ -33,6 +33,11 @@ export const WINDOW_VIEWS = Object.freeze({
     firstRow: 42, rowGap: 42, spacing: 34, groundY: -52,
     width: [9, 5], height: [20, 30], depth: [8, 5],
     groundStyle: 4, windows: 1, lit: 0.035, fog: 0.0065 }),
+  // Betongsalene (gen/babbdi.js): samme by, enda lenger ned til gatene.
+  babbdi: view({ city: true, haze: '#c6b2a8', ground: '#86716a', stone: '#c3a89c',
+    firstRow: 40, rowGap: 42, spacing: 34, groundY: -64,
+    width: [9, 5], height: [22, 32], depth: [8, 5],
+    groundStyle: 4, windows: 1, lit: 0.035, fog: 0.0065 }),
 });
 
 export function windowViewFor(theme) {

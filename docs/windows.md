@@ -84,7 +84,12 @@ lar spilleren gå gjennom vinduene. Ikke erstatt det med et bilde som følger ka
   `dispose` frigjør teksturen; prober som kloner materiale deler originalteksturen.
   Ingen nedlasting eller ny rendertekstur. Bildefrekvens må vurderes på fysisk GPU.
 
-## Skjult byutsikt i Basement
+## Skjult byutsikt i Basement (og betongsalene)
+
+Det skjulte temaet `babbdi` (`gen/babbdi.js`) – sjeldne betongsaler i den uendelige utforskingen –
+bruker samme by (`WINDOW_VIEWS.babbdi`, gatene 64 m ned) bak vinduer fra gulvet nesten til
+taket langs begge langveggene. Påskeegg: nevnes ikke i endringsloggene.
+
 
 Basement bruker `basement-city.js` og `basement-city-surfaces.js` som egen shader.
 Gaten ligger 52 m under rommets nullplan. Fem rekker med tre kandidater hver gir

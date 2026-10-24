@@ -7,6 +7,7 @@ import { railSides, RAIL_HEIGHT } from '../core/railings.js';
 import { MeshData, faceQuad } from './mesher.js';
 import { orientedBox } from './mesher.js';
 import { stepProfile, surfaceHeight } from './stairs.js';
+import { getTheme } from '../core/themes.js';
 
 const INSET = 0.05; // vernets senterlinje innenfor kanten
 const WALL_GAP = 0.07; // håndlist på vegg: avstand fra veggen
@@ -14,6 +15,7 @@ const RAIL_W = 0.06;
 const RAIL_H = 0.05;
 const BAR = 0.025;
 const POST = 0.09;
+const PARAPET = 0.16; // tykkelsen på en massiv brystning (temaets railing.solid)
 
 /** Bjelke med tverrsnitt w (vannrett) × h (loddrett) mellom senterpunktene a og b. */
 export function beam(mesh, a, b, w, h) {
@@ -78,6 +80,7 @@ function railing(out, level, x, z, side) {
     }
     return;
   }
+  if (getTheme(level.theme).railing?.solid) return parapet(out.rail, level, x, z, side, E0, E1, foot, g);
   beam(out.rail, top(ends[0], RAIL_HEIGHT), top(ends[1], RAIL_HEIGHT), RAIL_W, RAIL_H);
   const stairs = getTile(level, x, z) === TILE.STAIRS ? stepProfile(level, x, z) : null;
   const count = stairs ? 2 * stairs.n : 4;
@@ -92,6 +95,40 @@ function railing(out, level, x, z, side) {
   ends.forEach((p, end) => {
     if (continues(level, x, z, side, end)) return;
     post(out.rail, p, POST, foot(p), g(p) + RAIL_HEIGHT + 0.08);
+  });
+}
+
+/**
+ * En massiv brystning i stedet for håndlist og spiler: ytterflaten i flukt med kanten (en
+ * sammenhengende vegg med dekkets kantflate under), tykkelsen innover, lokk på toppen og der
+ * løpet slutter. I hjørner forlenges løpet langs x inn i hakket (innvendig hjørne), og løpet
+ * langs z kortes inn (utvendig hjørne), så ingen flater ligger oppå hverandre. Følger trappens
+ * helling. Kollisjonen er den samme (railSides).
+ */
+function parapet(mesh, level, x, z, side, E0, E1, foot, g) {
+  const guard = (cx, cz, dx, dz) => railSides(level, cx, cz).some((r) => r.kind === 'guard' && r.dx === dx && r.dz === dz && r.y === side.y);
+  const dir = [E1[0] - E0[0], E1[1] - E0[1]]; // langs kanten, fra lav til høy koordinat
+  const ext = [0, 1].map((end) => {
+    if (continues(level, x, z, side, end)) return 0;
+    const s = end ? 1 : -1;
+    if (side.dz) return guard(x + s, z + side.dz, -s, 0) ? PARAPET : 0;
+    return guard(x, z, 0, s) ? -PARAPET : 0;
+  });
+  const along = (p, d) => [p[0] + dir[0] * d, p[1] + dir[1] * d];
+  const inward = (p, d) => [p[0] - side.dx * d, p[1] - side.dz * d];
+  const [a, b] = [along(E0, -ext[0]), along(E1, ext[1])];
+  const top = (p) => g(p) + RAIL_HEIGHT;
+  const n = [side.dx, 0, side.dz];
+  const quad = (pts, normal) => faceQuad(mesh, pts.map(([[px, pz], y]) => [px, y, pz]), normal);
+  for (const [d, normal] of [[0, n], [PARAPET, [-n[0], 0, -n[2]]]]) {
+    const [p, q] = [inward(a, d), inward(b, d)];
+    quad([[p, foot(a)], [q, foot(b)], [q, top(b)], [p, top(a)]], normal);
+  }
+  quad([[a, top(a)], [inward(a, PARAPET), top(a)], [inward(b, PARAPET), top(b)], [b, top(b)]], [0, 1, 0]);
+  [a, b].forEach((p, end) => {
+    if (continues(level, x, z, side, end)) return;
+    const q = inward(p, PARAPET), s = end ? 1 : -1;
+    quad([[p, foot(p)], [q, foot(p)], [q, top(p)], [p, top(p)]], [dir[0] * s, 0, dir[1] * s]);
   });
 }
 

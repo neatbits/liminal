@@ -5,11 +5,13 @@ import { THEME_IDS, getTheme } from '../core/themes.js';
 import { cloneLevel } from '../core/level.js';
 import { generateLevel } from './index.js';
 import { corridorLevel, CORRIDOR_THEMES } from './corridors.js';
+import { babbdiLevel, BABBDI_THEME } from './babbdi.js';
 import { makeWrong } from './wrong.js';
 import { levelDims } from './sizes.js';
 import { pickTint } from '../core/tints.js';
 
 const TINT_CHANCE = 0.25; // så ofte et nytt rom får en egen lysfarge (core/tints.js)
+const HALLS_CHANCE = 0.05; // betongsalene (gen/babbdi.js): sjeldne, fra Level 2, aldri to ganger på rad
 
 /** Neste tema: et annet enn det forrige, tilfeldig blant resten. */
 export function nextTheme(prev, rand) {
@@ -23,7 +25,8 @@ export function nextTheme(prev, rand) {
  * endringer. corridor: en lang gang med fast mønster (uendelig i gåmodus). odds = sjansene for de to
  * (fra stemningen, gen/moods.js). scale = størrelsen på nye rom og korridorer
  * (gen/sizes.js, 1 = Medium).
- * @returns {{ level, label, kind: 'room' | 'corridor' | 'again' }}
+ * Sjelden (HALLS_CHANCE, øverst i samme trekning, så de andre sjansene er uendret): betongsalene.
+ * @returns {{ level, label, kind: 'room' | 'corridor' | 'again' | 'halls' }}
  */
 export function nextLevel(depth, prevTheme, rand, current = null, odds = { corridor: 0.2, again: 0.15 }, scale = 1) {
   const r = rand();
@@ -38,6 +41,9 @@ export function nextLevel(depth, prevTheme, rand, current = null, odds = { corri
     const options = CORRIDOR_THEMES.filter((id) => id !== prevTheme);
     const theme = options[Math.floor(rand() * options.length)];
     return { level: corridorLevel(theme, rand, `Level ${depth}`, scale), label: getTheme(theme).label, kind: 'corridor' };
+  }
+  if (depth >= 2 && prevTheme !== BABBDI_THEME && r >= 1 - HALLS_CHANCE) {
+    return { level: babbdiLevel(rand, `Level ${depth}`, scale), label: getTheme(BABBDI_THEME).label, kind: 'halls' };
   }
   const theme = nextTheme(prevTheme, rand);
   const [w, h] = levelDims(theme, scale);

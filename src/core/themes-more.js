@@ -1,6 +1,37 @@
 // Flere temaer (samme format som i themes.js): kjelleren, lekerommet, kjøpesenteret, skolen og
 // sykehuset. `tiles` overstyrer belegget (FINISH.TILES): på skolen er det skapene i korridoren.
 export const MORE_THEMES = {
+  // Skjult tema: bare som et sjeldent nivå i den uendelige utforskingen (gen/babbdi.js), aldri i
+  // temalisten eller blant de vanlige nivåene (THEME_IDS). Vinduene viser betongbyen.
+  babbdi: {
+    id: 'babbdi',
+    label: 'The Concrete Halls',
+    description: 'Pink concrete, tall windows and a city where nobody lives.',
+    hidden: true,
+    surfaces: {
+      wall: { tex: 'concretePink', size: [3, 3] },
+      base: null,
+      floor: { tex: 'concretePinkFloor', size: [3, 3] },
+      ceiling: { tex: 'concretePink', size: [3, 3] },
+      basin: { tex: 'concretePinkFloor', size: [3, 3] },
+    },
+    defaultHeight: 8.4,
+    lightSpacing: 8,
+    light: { color: '#ffe8dc', intensity: 0.5, falloff: 2.6, radius: 10, ambient: '#86736b' },
+    fixture: { shape: 'dome', size: [0.5, 0.14, 0.5], color: '#fff1e6', glow: 2.2, frame: null },
+    door: { frame: '#a88f86', leaf: 'doorSteel', knob: '#9c918c', kick: true },
+    railing: { rail: '#cbb0a5', bars: '#cbb0a5', solid: true }, // massive betongbrystninger
+    window: { sill: 0.15, head: 9, merge: true }, // fra gulvet nesten til taket, sammenhengende glass
+    fog: { color: '#c2ada3', density: 0.016 },
+    exposure: 1.15,
+    bloom: 0.4,
+    water: { tint: '#4a3a34', absorb: [1.3, 1.1, 1.1], wave: 0.2 },
+    sound: { hum: 0.004, buzz: 0.01, room: 0.045, reverb: 0.75, reverbTime: 4.8, step: 'concrete',
+      eerie: ['boom', 'groan', 'footsteps', 'knocks'] },
+    plan: { floor: '#e8d4ca', water: '#a9cbd6' },
+  },
+
+
   basement: {
     id: 'basement',
     label: 'The Basement',
