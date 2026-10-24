@@ -20,7 +20,9 @@ describe('fontener og ferdsel i Mall', () => {
         }
         expect(level.objects.some((o) => o.id === 'plasticpalm')).toBe(false);
       }
-    });
+    },
+    30000, // 114 × 84 genererer seks store rom: over standardgrensen når alt kjører samtidig
+  );
 
   it('beholder fontener i eksempelet og romslige atrier', () => {
     for (const level of [presetById('mall').make({seed:7,layout:'gallery'}), generateLevel({ theme: 'mall', w: 78, h: 57, seed: 3 })]) {
