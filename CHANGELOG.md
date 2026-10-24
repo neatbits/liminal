@@ -50,11 +50,8 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Siktlinjene (`cellHeights`, `lineOfSight`) er flyttet fra `world/lighting.js` til
   `world/sightline.js` (eksporteres fortsatt også fra lighting.js).
 
-- Byen bak manuelt malte vinduer i Basement er mer Babbdi-lik: støvete, rosa-beige betong og
-  sandfarget dis, runde tårn av stablede sylindre med dype vindusbånd, og massive blokker med få,
-  små vinduer (`world/basement-city*.js`).
 - I Uncanny og Nightmare står spøkelset – den samme modellen som monsteret, som et stillbilde –
-  av og til helt stille utenfor ett av vinduene, et stykke ute i kjellerbyen eller landskapet (alle
+  av og til helt stille utenfor ett av vinduene, et stykke ute i utsikten (alle
   temaer med vindusutsikt). Det dukker opp mens man ser en annen vei, og er borte etter et glimt
   (1,5–3,5 s sett mot det) eller etter 25 s om man aldri snur seg
   (`view3d/window-ghost.js`, `view3d/ghost-snapshot.js`, `world/window-ghost.js`,
@@ -92,13 +89,6 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   over topplisten, men stoppes av selve veggen. Hjørneforming beskytter endepilarene.
   Tester dekker begge sider, rotasjon, opphøyet underlag, lagring/deling, angre,
   lys, kollisjon og sammenhengende genererte rom; nettlesersjekken tegner begge sider.
-- Skjult Basement-utsikt: håndbygde vinduer viser en egen, tett betongby fra
-  ca. 52 meter over gatenivå, inspirert av Babbdis stemning. Ulike blokkhøyder,
-  inntrukne tak, tekniske takoppbygg, enkelte gangbroer, mørke vinduer og grågrønn
-  dis. Egen prosedyrell arkitektur og materialer; ingen lånte spillressurser.
-  Perspektiv, parallakse og tid på døgnet følger vinduene. Standardeksemplet og
-  genererte Basement-rom får fortsatt ingen automatiske vinduer. Utsikten krever
-  ingen ny scene, rendertekstur eller endring i romformatet.
 - Den nye CC BY-modellen Office Table fra Konstantin Koretskyi er optimalisert
   til ca. 66 kB og lagt i møbelvelgeren, Mall-utstillinger og kontor-/skoleoppsett.
   PC-utstillinger bruker nå dype bord i stedet for grunne TV-benker. Alle fem PC-er
