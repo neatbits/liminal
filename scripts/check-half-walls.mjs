@@ -28,7 +28,8 @@ export async function checkHalfWalls(browser, origin) {
       panels:v.world.objects.items.map(g => g.children.length),
       textured:v.world.objects.items.every(g => g.children[0].material.uniforms.map.value?.isTexture)};
   })()`);
-  assert.equal(ready.items, 2); assert.deepEqual(ready.panels, [3, 3]); assert.equal(ready.textured, true);
+  // Tapetet, og topplist + sokkel på én palett (object-parts.js slår sammen fargedelene).
+  assert.equal(ready.items, 2); assert.deepEqual(ready.panels, [2, 2]); assert.equal(ready.textured, true);
   for (const [name, z, targetZ] of [['front', 13, 8], ['back', 4, 9]]) {
     const result = await evaluate(`(() => {
       const v = liminal.viewer; v.camera.position.set(10.5, 1.65, ${z});

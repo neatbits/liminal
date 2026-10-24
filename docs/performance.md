@@ -47,9 +47,18 @@ det gis løfter om bildefrekvens. SwiftShader egner seg til funksjonskontroll, i
 - `world/light-grid.js` gjenbruker lyskandidater fra de samme romlige bøttene, med maksimalt
   512 bufrede kandidatsett. `near` gir kandidater, ikke en eksakt sirkulær radius.
   Lysbakingen sjekker fortsatt eksakt avstand, normaler og siktlinje. Behandle listen som skrivebeskyttet.
-- `lightSampleKey` bruker tall bare for eksakt representerbare 5 cm-punkter med aksejustert
-  normal innenfor faste grenser. Tilbakekonvertering må gi identiske koordinater. Alle andre
-  punkter får tapsfri strengnøkkel, også svært små høydeforskjeller. Ikke rund modellpunkter her.
+- `lightSampleKey` bruker tall bare for eksakt representerbare 5 cm-punkter med normal på
+  0,25-gitteret innenfor faste grenser (gjenstandene avrundes dit i `object-light.js`, før
+  nøkkelen). Tilbakekonvertering må gi identiske koordinater. Alle andre punkter får tapsfri
+  strengnøkkel, også svært små høydeforskjeller. Ikke rund punkter inne i selve nøkkelen.
+- `objectSample` (gjenstander) regner siktlinjene fra selve 5 cm-punktet, med start 2 cm mot
+  hvert lys (vannrett), i stedet for 2 cm ut langs normalen som flatene (`sample`) trenger ved
+  rutegrensene. Dermed gjenbrukes de for alle normalene og begge sidene der (i snitt 7 prøver per
+  punkt i Mall). Eget buffer (svaret avhenger ikke av rekkefølgen), frigjort med
+  `releaseObjectSamples` når gjenstandene er bakt. Ikke bruk objectSample for flater.
+  Nærbilder mot gammel baking: møbler høyst 3–19 av 255 nivåer (snitt ≤ 0,11). Halvveggene
+  endres synlig og riktigere: toppen skygget før for seg selv (startpunktet lå inne i veggens
+  skyggeboks), nå får den lys ovenfra. `test/object-light.test.js` dekker selvskyggen.
 - Nabovinduer telles med høyst 29 ruteoppslag per vindu, i stedet for alle par. Dermed
   beholdes dagslysets normalisering også i rom med mange håndmalte vinduer.
 - `createObjects` deler én `poser(level)` mellom modeller. Lag en ny ved endring av rommet.
@@ -119,3 +128,35 @@ fulle oversikter og store mengder modeller, før ytterligere endringer av detalj
 
 Løse baller med begrenset fysikk og mer ujevne ballbinger er dokumentert i `docs/play-balls.md`.
 Den tette ballmassen beholder instansgruppene; hele bassenget skal ikke gis individuell fysikk.
+
+## Måling 24. oktober 2026: modeller, ballbinger og tegnekall
+
+Lastetid varierer mye med varme på en bærbar maskin (samme bygg: 0,6–1,0 s); sammenlign derfor
+vekselvis med og uten en endring i samme økt, ikke med tall fra en annen dag.
+
+Ekte GPU (RTX 5070 Ti Laptop, ANGLE/D3D11), 1600 × 900, Full effekter, faste frø (Mall: frø 7,
+`gallery`). Bildetid måles med `readPixels` etter hvert bilde, så vsync ikke skjuler den. På dette
+kortet er bildetiden 1–8 ms før og etter; gevinsten gjelder svakere GPU-er og mobil (færre
+vertexer og tegnekall), og må bekreftes der.
+
+| Rom / visning | Før | Etter |
+| --- | ---: | ---: |
+| Playroom gåmodus, trekanter | 1 187 341 | 407 419 |
+| Mall gåmodus, trekanter | 3 585 440 | 1 754 218 |
+| Mall gåmodus, tegnekall (alle pass) | 1 420 | 646 |
+| Office gåmodus, trekanter | 199 085 | 119 071 |
+| Mall lastetid, bufrede modeller (A/B, bare lysbakingen) | ~3,0 s | ~1,2 s |
+
+- Ballbinger: grupper lenger unna enn `BALL_LOD_DISTANCE` (6 m fra gruppens kant) bytter til
+  impostorer. Et grovt ikosaeder (20 trekanter) ble forkastet: sekskantet på nært hold.
+- `object-batches.js`: 32 m-grupper ga knapt færre kall (1113 → 1068), men 10 % flere
+  trekanter; 16 m beholdes.
+- `object-parts.js` + `object-atlas.js`: like materialer slås sammen, teksturer med ellers likt
+  utseende (UV innenfor 0–1, flipY = false) får et atlas per modell (maks 4096, 8 px kant) og
+  fargedeler en palett. Piksler mot uten sammenslåing: kassaapparat/TV-benk/kiosk identiske,
+  HiFi 0,05 % og apotekhylle 0,3 % av pikslene med små filtreringsforskjeller ved flisekanter.
+  Skjermstøy (`screen`, UV-områder) og arkadekassene (bytter tekstur per del) holdes utenfor.
+- Gulvspeilingen (Mall) står for omtrent en tredel av kallene; møbler lenger unna enn 12 m og
+  kontaktskygger er utelatt der, uten synlig forskjell i referansebildet.
+- Lysbaking av gjenstander er fortsatt det tyngste ved lasting (~0,9 s i Mall), nå mest selve
+  lysløkken (avstand og vinkel per kandidat). Neste steg kan være å bake i en worker.

@@ -148,10 +148,11 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true, waterDe
     doors,
     objects,
     balls,
-    update(time, flicker) {
+    /** @param camera valgfritt: brukes til detaljnivå (ballbingene) */
+    update(time, flicker, camera) {
       const dt = Math.min(0.1, Math.max(0, time - (lastTime ?? time)));
       doors.update(dt);
-      balls?.update(dt);
+      balls?.update(dt, camera);
       objects.update(dt);
       lastTime = time;
       shared.uTime.value = time;

@@ -6,6 +6,32 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ukommet]
 
+### Endret
+- Raskere 3D i store og møblerte rom, uten synlig forskjell (målt på GPU, frø 7):
+  - Fjerne ballgrupper i ballbingene tegnes som impostorer: en firkant mot kameraet med en rund,
+    belyst kule i fragmentshaderen, 2 i stedet for 80 trekanter per ball (`world/ball-shaders.js`).
+    Playroom i gåmodus: 1,19 mill. → 0,41 mill. trekanter.
+  - Faste gjenstander med samme materiale slås sammen per 16 × 16 m (`world/object-batches.js`),
+    også kontaktskyggene; `items` beholdes med delte, skjulte deler. Gulvspeilingen i Mall tegner
+    ikke kontaktskygger eller møbler lenger unna enn 12 m.
+  - Færre deler per modell (`world/object-parts.js`): deler med likt materiale slås sammen,
+    teksturer med ellers likt utseende samles i et atlas per modell (`world/object-atlas.js`,
+    med utstrakte kanter mot mipmap-blødning) og rene fargedeler på en palett-tekstur. HiFi-
+    anlegget går fra 42 til 2 tegnekall, kiosken fra 24 til 8. Gjenstander med skjermstøy og
+    arkadekassene holdes utenfor. Mall i gåmodus: 1420 → 646 tegnekall.
+  - Tunge modeller er forenklet i modellrørledningen (`simplify`): kafésett 41k → 8k trekanter,
+    kassaapparat 32k → 5k, kontorstol, kaféstol, PC, flamingo, takvifte og laptop. Mall i gåmodus:
+    3,6 → 1,8 mill. trekanter; Office 199k → 119k.
+  - Lysbakingen av gjenstander (`objectSample`) regner siktlinjer én gang per 5 cm-punkt og deler
+    dem mellom alle normalene der og begge sidene av tosidige flater (i snitt 7 prøver per punkt i
+    Mall), og 5 cm-punkter med normal på 0,25-gitteret får tallnøkkel i lysbufferen. Bufferne
+    frigjøres når gjenstandene er bakt. Siktlinjene starter 2 cm mot hvert lys, så flater på
+    halvvegger ikke skygger for seg selv; toppen av halvveggene i Level 0 får nå lys ovenfra.
+    Mall (A/B under like forhold, bufrede modeller): 3,0 → 1,2 s.
+  - Musikken er kodet om til VBR ~120 kbps: 35 → 16 MB.
+- Siktlinjene (`cellHeights`, `lineOfSight`) er flyttet fra `world/lighting.js` til
+  `world/sightline.js` (eksporteres fortsatt også fra lighting.js).
+
 ### Fikset
 - Søyler i Poolrooms-vann fikk en firkantet sjakt rundt seg under vannet: nabovannet regnet
   søyleruten som et gulv nede på bunnen og bygde kantvegger fra bunnen til vannflaten, synlige som

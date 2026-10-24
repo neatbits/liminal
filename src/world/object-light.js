@@ -11,18 +11,27 @@ export function bakeLight(geometry, matrix, field, doubleSided = false) {
   const p = new THREE.Vector3();
   const n = new THREE.Vector3();
   const rot = new THREE.Matrix3().getNormalMatrix(matrix);
-  const q = (v, s) => Math.round(v / s) * s; // nærliggende punkter deler lysprøve (bufret i feltet)
+  // Nærliggende punkter deler lysprøve (bufret i feltet): 5 cm og normaltrinn på 0,25. Delt på
+  // heltall, så verdiene ligger eksakt på gitteret og får tallnøkkel (light-grid.js).
+  const q = (v, s) => Math.round(v * s) / s;
+  // Gjenstandsprøver deler siktlinjer mellom normaler og sider (lighting.js objectSample).
+  const sample = field.objectSample ?? ((x, y, z, a, b, c, both) =>
+    both ? [field.sample(x, y, z, a, b, c), field.sample(x, y, z, -a, -b, -c)] : field.sample(x, y, z, a, b, c));
+  const write = (target, flicker, s, i) => {
+    target[i * 3] = s[0];
+    target[i * 3 + 1] = s[1];
+    target[i * 3 + 2] = s[2];
+    for (let k = 0; k < 4; k++) flicker[i * 4 + k] = s[3 + k];
+  };
   for (let i = 0; i < pos.count; i++) {
     p.fromBufferAttribute(pos, i).applyMatrix4(matrix);
     n.fromBufferAttribute(nor, i).applyMatrix3(rot).normalize();
-    const s = field.sample(q(p.x, 0.05), q(p.y, 0.05), q(p.z, 0.05), q(n.x, 0.25), q(n.y, 0.25), q(n.z, 0.25));
-    light.set([s[0], s[1], s[2]], i * 3);
-    flick.set([s[3], s[4], s[5], s[6]], i * 4);
+    const at = [q(p.x, 20), q(p.y, 20), q(p.z, 20), q(n.x, 4), q(n.y, 4), q(n.z, 4)];
     if (doubleSided) {
-      const b = field.sample(q(p.x, 0.05), q(p.y, 0.05), q(p.z, 0.05), q(-n.x, 0.25), q(-n.y, 0.25), q(-n.z, 0.25));
-      backLight.set([b[0], b[1], b[2]], i * 3);
-      backFlick.set([b[3], b[4], b[5], b[6]], i * 4);
-    }
+      const [s, b] = sample(...at, true);
+      write(light, flick, s, i);
+      write(backLight, backFlick, b, i);
+    } else write(light, flick, sample(...at), i);
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', pos);

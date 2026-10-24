@@ -27,7 +27,8 @@ describe('romlige lysoppslag', () => {
   it('hurtignøkler blander aldri posisjoner eller normaler, heller ikke nesten like modellpunkter', () => {
     const rand = mulberry32(6);
     const seen = new Map();
-    const normals = [[-1, 0, 0], [1, 0, 0], [0, -1, 0], [0, 1, 0], [0, 0, -1], [0, 0, 1], [0.5, 0.5, 0]];
+    const normals = [[-1, 0, 0], [1, 0, 0], [0, -1, 0], [0, 1, 0], [0, 0, -1], [0, 0, 1], [0.5, 0.5, 0],
+      [0.75, -0.25, 0.5], [-0.75, -0.25, 0.5], [0.25, 1, -0.25], [0.3, 0.9, 0.1]];
     for (let i = 0; i < 3000; i++) {
       const x = Math.floor(rand() * 2560) / 20;
       const y = (Math.floor(rand() * 600) - 150) / 20;
@@ -40,6 +41,10 @@ describe('romlige lysoppslag', () => {
       }
     }
     expect(typeof lightSampleKey(1, 0, 2, 0, 1, 0)).toBe('number');
+    expect(typeof lightSampleKey(1, 0, 2, 0.75, -0.25, 0.5)).toBe('number'); // gjenstandenes gitter
     expect(typeof lightSampleKey(1, 1e-16, 2, 0, 1, 0)).toBe('string');
+    expect(typeof lightSampleKey(1, 0, 2, 0.3, 0.9, 0.1)).toBe('string');
+    expect(typeof lightSampleKey(1, 0, 2, 1.25, 0, 0)).toBe('string');
+    expect(lightSampleKey(409.55, 51.15, 409.55, 1, 1, 1)).toBeLessThan(Number.MAX_SAFE_INTEGER);
   });
 });

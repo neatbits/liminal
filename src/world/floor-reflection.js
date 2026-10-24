@@ -20,6 +20,17 @@ vec3 floorReflection(vec3 p, vec3 N, vec3 V, float mask) {
   return clamp(reflected, vec3(0.0), vec3(16.0)) * mask * fres;
 }`;
 
+const MIRROR_OBJECTS = 12; // m: furniture farther away than this is not drawn into the floor mirror
+const sphere = new THREE.Sphere();
+
+/** A piece of furniture (or a batch of it) entirely farther than MIRROR_OBJECTS from the camera. */
+function farObject(o, camera) {
+  if (!o.isMesh || !(o.name === 'objectBatch' || o.parent?.parent?.name === 'objects')) return false;
+  if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere();
+  sphere.copy(o.geometry.boundingSphere).applyMatrix4(o.matrixWorld);
+  return sphere.distanceToPoint(camera.position) > MIRROR_OBJECTS;
+}
+
 export function createFloorReflection(level, shared) {
   if (level.theme !== 'mall') return null;
   const geometry = new THREE.PlaneGeometry(level.w, level.h);
@@ -44,10 +55,17 @@ export function createFloorReflection(level, shared) {
       reflector.updateMatrixWorld(true);
       scene.updateMatrixWorld(true);
       camera.updateMatrixWorld(true);
-      // Hide reflecting surfaces together so water and floors never reflect recursively.
+      // Hide reflecting surfaces together so water and floors never reflect recursively. Contact
+      // shadows lie on the mirror plane itself, and distant furniture is a few dim pixels at half
+      // resolution: leaving both out roughly halves the draw calls of this pass.
       const hidden = [];
       group.traverse(o => {
-        if (o.visible && (['floor', 'shopFloor', 'escalatorFloor', 'water'].includes(o.name) || o.name.startsWith('shopFloor_'))) { hidden.push(o); o.visible = false; }
+        if (!o.visible) return;
+        const shadow = o.name === 'contactShadow' || o.userData.source === 'contactShadow';
+        if (shadow || ['floor', 'shopFloor', 'escalatorFloor', 'water'].includes(o.name) || o.name.startsWith('shopFloor_') || farObject(o, camera)) {
+          hidden.push(o);
+          o.visible = false;
+        }
       });
       shared.uFloorMirrorOn.value = 0;
       try { reflector.onBeforeRender(renderer, scene, camera); }

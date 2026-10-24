@@ -230,7 +230,7 @@ export class Viewer {
     const changed = this.flicker.update(dt);
     // Lysfargen: visningsinnstillingen eller rommets (core/tints.js).
     this.world.setTint(tintFactor(activeTint(this.settings.light, this.level), this.time, this.world.field.color));
-    this.world.update(this.time, this.flicker.values);
+    this.world.update(this.time, this.flicker.values, this.camera);
     if (this.mode === 'walk') {
       this.walk.update(dt, this.camera, this.flicker.values, changed);
       if (!this.walk.paused) this.explorer.update(dt);

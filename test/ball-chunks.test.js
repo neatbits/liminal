@@ -49,6 +49,30 @@ describe('instansgrupper for baller', () => {
     } finally { balls.dispose(); }
   });
 
+  it('tegner fjerne grupper som impostorer (2 trekanter per ball) og nære med full detalj', () => {
+    const balls = createBalls(fixture(), null, {}, getTheme('playroom').pitColors);
+    try {
+      const [near, , , far] = balls.mesh.children;
+      const [fine, sphere] = [near.geometry, near.material];
+      balls.update(0); // uten kamera: full detalj
+      expect(far.geometry).toBe(fine);
+      const camera = new THREE.PerspectiveCamera();
+      camera.position.set(8, 1.6, 7.5);
+      balls.update(0, camera);
+      expect([near.geometry, near.material]).toEqual([fine, sphere]);
+      expect(far.geometry.index.count / 3).toBe(2);
+      expect(fine.attributes.position.count / 3).toBe(80);
+      expect(far.material).not.toBe(sphere);
+      expect(far.material.uniforms).toBe(sphere.uniforms); // samme kjølvann og lys
+      expect(far.material.uniforms.uRadius.value).toBe(BALL_RADIUS);
+      const [quad, impostor] = [far.geometry, far.material];
+      camera.position.set(25.5, 1.6, 18.5);
+      balls.update(0, camera);
+      expect([far.geometry, far.material]).toEqual([fine, sphere]);
+      expect([near.geometry, near.material]).toEqual([quad, impostor]);
+    } finally { balls.dispose(); }
+  });
+
   it('frigjør hver instansgruppe, men delt geometri og materiale bare én gang', () => {
     const balls = createBalls(fixture(), null, {}, getTheme('playroom').pitColors);
     const parts = balls.mesh.children;

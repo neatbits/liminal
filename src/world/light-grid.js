@@ -2,19 +2,24 @@
 // eksakt avstand og siktlinje sjekkes fortsatt i lysfeltet. Ingen DOM eller three.js.
 import { LIGHT } from '../core/level.js';
 
-// Vanlige rutenettpunkter får en eksakt tallnøkkel i stedet for en lang streng.
-// Avrund aldri vilkårlige modellpunkter eller normaler: de bruker tapsfri strengnøkkel.
+// Punkter på 5 cm-rutenettet med normal på 0,25-gitteret (flatene, og gjenstandene som bakes på
+// det gitteret, object-light.js) får en eksakt tallnøkkel i stedet for en lang streng; største
+// nøkkel er ca. 1e14, godt under 2^53. Avrund aldri vilkårlige punkter eller normaler her: de
+// bruker tapsfri strengnøkkel.
+const step = (v) => {
+  const i = v * 4;
+  return Number.isInteger(i) && i / 4 === v && i >= -4 && i <= 4 ? i + 4 : -1;
+};
+
 export function lightSampleKey(x, y, z, nx, ny, nz) {
   const ix = x * 20;
   const iy = y * 20 + 1024;
   const iz = z * 20;
-  const normal = ny === 0 && nz === 0 && Math.abs(nx) === 1 ? (nx + 1) / 2
-    : nx === 0 && nz === 0 && Math.abs(ny) === 1 ? 2 + (ny + 1) / 2
-      : nx === 0 && ny === 0 && Math.abs(nz) === 1 ? 4 + (nz + 1) / 2 : -1;
-  if (normal >= 0 && Number.isInteger(ix) && Number.isInteger(iy) && Number.isInteger(iz)
+  const [a, b, c] = [step(nx), step(ny), step(nz)];
+  if (a >= 0 && b >= 0 && c >= 0 && Number.isInteger(ix) && Number.isInteger(iy) && Number.isInteger(iz)
       && ix / 20 === x && (iy - 1024) / 20 === y && iz / 20 === z
       && ix >= 0 && ix < 8192 && iy >= 0 && iy < 2048 && iz >= 0 && iz < 8192) {
-    return ((ix * 2048 + iy) * 8192 + iz) * 6 + normal;
+    return ((ix * 2048 + iy) * 8192 + iz) * 729 + (a * 9 + b) * 9 + c;
   }
   return `${x},${y},${z},${nx},${ny},${nz}`;
 }

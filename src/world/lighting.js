@@ -1,9 +1,8 @@
 // Bakt lys: hver vertex får lys fra armaturer innenfor en radius, med siktlinje gjennom
 // rutenettet (vegger, lavere tak, bassengkanter og dekkeplater kaster skygge). Blinkende lys
 // bakes i egne grupper. Et lys i en rute med dekke gir én armatur i hver etasje.
-import { TILE, LIGHT, canHaveLight, inBounds } from '../core/level.js';
+import { LIGHT, canHaveLight, inBounds } from '../core/level.js';
 import { ceilingAt, floorAt, deckAt, SLAB } from '../core/heights.js';
-import { closedDoorFaces } from '../core/doors.js';
 import { glowSources } from '../core/objects.js';
 import { windows, skyOf } from '../core/windows.js';
 import { hexToLinear } from './color.js';
@@ -11,14 +10,13 @@ import { openPoint } from '../core/corners.js';
 import { lightGrid, lightSampleKey, windowNeighbours } from './light-grid.js';
 import { mallRoof } from '../core/mall-roof.js';
 import { pillarContains } from '../core/pillars.js';
-import { halfWalls, halfWallOccludes } from '../core/half-walls.js';
+import { cellHeights, lineOfSight, settle } from './sightline.js';
+
+export { cellHeights, lineOfSight }; // samlet her for de mange som allerede importerer dem fra lighting.js
 
 export const FLICKER_GROUPS = 4;
 export const LIGHT_DROP = 0.15; // lyskilden sitter litt under taket
 export const HANG = 8; // i høyere rom henger lampene i en ledning, så høyt over gulvet under
-const EPS = 1e-3;
-const LIP = 0.15; // slingringsmonn mot gulvet, så kanten over vannflaten ikke skygger vannet
-const NUDGE = 1e-4;
 
 export function flickerGroup(x, z) {
   return (((x * 73856093) ^ (z * 19349663)) >>> 0) % FLICKER_GROUPS;
@@ -75,122 +73,13 @@ export function collectLights(level) {
 }
 
 /**
- * Gulv- og takhøyde per rute (vegger er ubegrenset – de stopper siktlinjen uansett), dekkeplater
- * (slab = toppen, 0 = ingen) og rutekanter som stenges av lukkede dører (se closedDoorFaces).
- */
-export function cellHeights(level) {
-  const n = level.w * level.h;
-  const floor = new Float32Array(n);
-  const ceil = new Float32Array(n);
-  const slab = new Float32Array(n);
-  let decks = false;
-  for (let i = 0; i < n; i++) {
-    const x = i % level.w;
-    const z = (i / level.w) | 0;
-    const wall = level.tiles[i] === TILE.WALL;
-    floor[i] = wall ? -Infinity : floorAt(level, x, z);
-    ceil[i] = wall ? Infinity : ceilingAt(level, x, z);
-    slab[i] = wall ? 0 : deckAt(level, x, z);
-    if (slab[i]) decks = true;
-  }
-  return { floor, ceil, slab: decks ? slab : null, faces: closedDoorFaces(level), halfWalls: halfWalls(level) };
-}
-
-const fits = (heights, i, y) => y <= heights.ceil[i] + EPS && y >= heights.floor[i] - LIP;
-
-/** Går linjestykket (høyde ya → yb) inne i ruten gjennom dekkeplaten der? */
-function throughSlab(heights, i, ya, yb) {
-  const top = heights.slab?.[i];
-  if (!top || i < 0) return false;
-  return Math.max(ya, yb) > top - SLAB + EPS && Math.min(ya, yb) < top - EPS;
-}
-
-/**
- * Siktlinje i rutenettet (DDA). Startruten og målruten sjekkes ikke for vegg.
- * Med `heights` (cellHeights) og høydene y0/y1 i endepunktene må linjen dessuten gå under
- * taket og over gulvet i begge ruter der den krysser en rutegrense, og ikke gjennom en
- * lukket dør.
- */
-export function lineOfSight(level, x0, z0, x1, z1, heights = null, y0 = 0, y1 = 0) {
-  if (halfWallOccludes(heights?.halfWalls ?? halfWalls(level), x0, y0, z0, x1, y1, z1)) return false;
-  const { w, h, tiles } = level;
-  let cx = Math.floor(x0);
-  let cz = Math.floor(z0);
-  const ex = Math.floor(x1);
-  const ez = Math.floor(z1);
-  const dx = x1 - x0;
-  const dz = z1 - z0;
-  const stepX = dx > 0 ? 1 : -1;
-  const stepZ = dz > 0 ? 1 : -1;
-  const tdx = dx !== 0 ? Math.abs(1 / dx) : Infinity;
-  const tdz = dz !== 0 ? Math.abs(1 / dz) : Infinity;
-  let tmx = dx !== 0 ? (dx > 0 ? cx + 1 - x0 : x0 - cx) * tdx : Infinity;
-  let tmz = dz !== 0 ? (dz > 0 ? cz + 1 - z0 : z0 - cz) * tdz : Infinity;
-  const slabs = heights?.slab ? heights : null;
-  const yAt = (t) => y0 + (y1 - y0) * t;
-  let tIn = 0; // der linjen gikk inn i ruten den er i nå
-  for (let guard = 0; guard < 4096; guard++) {
-    const prev = inBounds(level, cx, cz) ? cz * w + cx : -1;
-    let t;
-    // Kantene som krysses (se closedDoorFaces): forrige rutes og den nye rutens.
-    let fPrev;
-    let fNext;
-    if (Math.min(tmx, tmz) > 1) return !(slabs && throughSlab(slabs, prev, yAt(tIn), y1));
-    if (tmx < tmz) {
-      t = tmx;
-      cx += stepX;
-      tmx += tdx;
-      fPrev = stepX > 0 ? 8 : 4;
-      fNext = 12 - fPrev;
-    } else {
-      t = tmz;
-      cz += stepZ;
-      tmz += tdz;
-      fPrev = stepZ > 0 ? 2 : 1;
-      fNext = 3 - fPrev;
-    }
-    if (slabs && throughSlab(slabs, prev, yAt(tIn), yAt(t))) return false;
-    tIn = t;
-    const end = cx === ex && cz === ez;
-    if (cx < 0 || cz < 0 || cx >= w || cz >= h) return end;
-    const i = cz * w + cx;
-    if (!end && tiles[i] === TILE.WALL) return false;
-    if (heights) {
-      const y = y0 + (y1 - y0) * t;
-      if (!fits(heights, i, y) || (prev >= 0 && !fits(heights, prev, y))) return false;
-      if (heights.faces[i] & fNext || (prev >= 0 && heights.faces[prev] & fPrev)) return false;
-    }
-    if (end) return !(slabs && throughSlab(slabs, i, yAt(t), y1));
-  }
-  return true;
-}
-
-/**
- * Punkter på en rutegrense (hjørner av gulv og tak) hører til den åpne ruten de faktisk
- * ligger i høydemessig. Skyver punktet et hårsbredd inn i den ruten, så taket i et høyt
- * rom ikke regnes som inne i nabosonen med lavere tak.
- */
-function settle(level, heights, x, z, y) {
-  const fx = Math.floor(x);
-  const fz = Math.floor(z);
-  if (x !== fx && z !== fz) return [x, z];
-  const ox = x === fx ? [0, -1] : [0];
-  const oz = z === fz ? [0, -1] : [0];
-  for (const ax of ox) {
-    for (const az of oz) {
-      const cx = fx + ax;
-      const cz = fz + az;
-      if (!inBounds(level, cx, cz)) continue;
-      const i = cz * level.w + cx;
-      if (level.tiles[i] !== TILE.WALL && fits(heights, i, y)) return [x + ax * NUDGE, z + az * NUDGE];
-    }
-  }
-  return [x, z];
-}
-
-/**
  * Lager en lysfunksjon for rommet.
  * sample(x,y,z,nx,ny,nz) → [r, g, b, f0, f1, f2, f3] (statisk lys + blinkegrupper, skalar).
+ * objectSample(x,y,z,nx,ny,nz, both) → det samme for gjenstander (object-light.js), eller
+ * [forside, bakside] med both. Gjenstandene har mange normaler i hvert 5 cm-punkt: siktlinjene
+ * regnes fra selve punktet, 2 cm mot hvert lys (ikke 2 cm ut langs normalen, som flatene trenger)
+ * og gjenbrukes for alle normalene og begge sidene. Eget buffer, så rekkefølgen ikke betyr noe;
+ * releaseObjectSamples() frigjør det når alle gjenstandene er bakt.
  */
 export function createLightField(level, theme, lights = collectLights(level)) {
   const p = theme.light;
@@ -203,44 +92,93 @@ export function createLightField(level, theme, lights = collectLights(level)) {
   const near = lightGrid(level, lights);
   const heights = cellHeights(level);
 
-  const cache = new Map();
-  function sample(x, y, z, nx, ny, nz) {
-    const key = lightSampleKey(x, y, z, nx, ny, nz);
-    const hit = cache.get(key);
-    if (hit) return hit;
-    const out = [ambient[0], ambient[1], ambient[2], 0, 0, 0, 0];
-    const day = [0, 0, 0]; // dagslys fra vinduer, lagt til til slutt
-    const [sx, sz] = openPoint(level, ...settle(level, heights, x + nx * 0.02, z + nz * 0.02, y));
-    for (const l of near(sx, sz, R)) {
+  /** Startpunkt, lyskandidater og kjente siktlinjer (0 = ukjent, 1 = fri, 2 = stengt). */
+  function origin(x, y, z, toward = false) {
+    const [sx, sz] = openPoint(level, ...settle(level, heights, x, z, y));
+    const candidates = near(sx, sz, R);
+    return { sx, sz, candidates, sight: new Uint8Array(candidates.length), toward };
+  }
+
+  /** Lyset på hver side (sign 1 = normalen, −1 = baksiden) sett fra startpunktet `at`. */
+  function gather(x, y, z, nx, ny, nz, signs, at = origin(x + nx * 0.02, y, z + nz * 0.02)) {
+    const outs = signs.map(() => [ambient[0], ambient[1], ambient[2], 0, 0, 0, 0]);
+    const days = signs.map(() => [0, 0, 0]); // dagslys fra vinduer, lagt til til slutt
+    const { sx, sz, candidates, sight } = at;
+    for (let i = 0; i < candidates.length; i++) {
+      const l = candidates[i];
       const dx = l.x - sx;
       const dy = l.y - y;
       const dz = l.z - sz;
       const d2 = dx * dx + dy * dy + dz * dz;
       if (d2 > R2) continue;
       const d = Math.sqrt(d2) + 1e-6;
-      const wrap = ((nx * dx + ny * dy + nz * dz) / d) * 0.7 + 0.3;
-      if (wrap <= 0) continue;
+      const cos = (nx * dx + ny * dy + nz * dz) / d;
       const win = 1 - d2 / R2;
-      const c = (wrap * intensity * (l.power ?? 1) * win * win) / (1 + d2 * k);
-      if (c < 0.002 || !lineOfSight(level, sx, sz, l.x, l.z, heights, y, l.y)) continue;
-      if (l.state === LIGHT.FLICKER) {
-        out[3 + l.group] += c;
-      } else {
-        const col = l.rgb ?? color;
-        const to = l.rgb ? day : out;
-        to[0] += c * col[0];
-        to[1] += c * col[1];
-        to[2] += c * col[2];
+      for (let j = 0; j < signs.length; j++) {
+        const wrap = signs[j] * cos * 0.7 + 0.3;
+        if (wrap <= 0) continue;
+        const c = (wrap * intensity * (l.power ?? 1) * win * win) / (1 + d2 * k);
+        if (c < 0.002) continue;
+        // Siktlinjen regnes bare når en side faktisk får lys herfra, og bare én gang per punkt.
+        if (!sight[i]) {
+          // Gjenstander: start 2 cm mot lyset (vannrett, som normalforskyvningen for flater), så en
+          // flate på en halvvegg ikke skygger for seg selv – men lys bak den fortsatt stenges.
+          const h = at.toward ? Math.hypot(dx, dz) || 1 : Infinity;
+          sight[i] = lineOfSight(level, sx + (dx / h) * 0.02, sz + (dz / h) * 0.02, l.x, l.z, heights, y, l.y) ? 1 : 2;
+        }
+        if (sight[i] === 2) continue;
+        if (l.state === LIGHT.FLICKER) {
+          outs[j][3 + l.group] += c;
+        } else {
+          const col = l.rgb ?? color;
+          const to = l.rgb ? days[j] : outs[j];
+          to[0] += c * col[0];
+          to[1] += c * col[1];
+          to[2] += c * col[2];
+        }
       }
     }
     // Dagslyset legges til mindre jo lysere det allerede er (ellers blir lyse rom med mange
     // vinduer helt hvite): et mørkt rom får nesten alt, et opplyst rom en liten del.
-    const lit = (out[0] + out[1] + out[2]) / 3;
-    const share = 1 / (1 + lit * lit * 2);
-    for (let c = 0; c < 3; c++) out[c] += day[c] * share;
-    cache.set(key, out);
+    outs.forEach((out, j) => {
+      const lit = (out[0] + out[1] + out[2]) / 3;
+      const share = 1 / (1 + lit * lit * 2);
+      for (let c = 0; c < 3; c++) out[c] += days[j][c] * share;
+    });
+    return outs;
+  }
+
+  const cache = new Map();
+  function sample(x, y, z, nx, ny, nz) {
+    const key = lightSampleKey(x, y, z, nx, ny, nz);
+    let out = cache.get(key);
+    if (!out) cache.set(key, (out = gather(x, y, z, nx, ny, nz, [1])[0]));
     return out;
   }
 
-  return { sample, near, color, lights };
+  const objects = new Map(); // gjenstandsprøver (nøkkel → lys)
+  const origins = new Map(); // 5 cm-punkt → origin(), delt av alle normalene der
+  function objectSample(x, y, z, nx, ny, nz, both = false) {
+    const front = lightSampleKey(x, y, z, nx, ny, nz);
+    const back = both ? lightSampleKey(x, y, z, -nx, -ny, -nz) : null;
+    let f = objects.get(front);
+    let b = both ? objects.get(back) : null;
+    if (!f || (both && !b)) {
+      const point = lightSampleKey(x, y, z, 0, 0, 0);
+      let at = origins.get(point);
+      if (!at) origins.set(point, (at = origin(x, y, z, true)));
+      const [gf, gb] = gather(x, y, z, nx, ny, nz, both ? [1, -1] : [1], at);
+      if (!f) objects.set(front, (f = gf));
+      if (both && !b) objects.set(back, (b = gb));
+    }
+    return both ? [f, b] : f;
+  }
+
+  /** Når gjenstandene er bakt (objects.js): bufferne trengs ikke lenger og kan være store. */
+  function releaseObjectSamples() {
+    objects.clear();
+    origins.clear();
+  }
+
+  return { sample, objectSample, releaseObjectSamples, near, color, lights };
 }

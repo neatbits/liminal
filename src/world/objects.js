@@ -10,6 +10,8 @@ import { buildProp, propKey } from './props.js';
 import { bakeLight } from './object-light.js';
 import { arcadeParts } from './arcade-textures.js';
 import { contactShadows } from './contact-shadows.js';
+import { batchMeshes } from './object-batches.js';
+import { mergeParts } from './object-parts.js';
 
 // Konverterte modeller (npm run models) – Vite gir hver fil en URL med hash.
 const URLS = Object.fromEntries(
@@ -125,11 +127,14 @@ export function createObjects(level, field, shared) {
   const poseOf = poser(level); // del plasseringene mellom modellene, også for stablede klosser
   const makeShadow = contactShadows(level, poseOf, owned);
   const spinners = []; // gjenstander som snurrer (takvifter)
+  const fixed = []; // gjenstander som aldri flyttes: tegnes samlet (object-batches.js)
   const jobs = (level.objects ?? []).map(async (o, index) => {
     const def = OBJECTS[o.id];
     if (!def) return;
     let parts = await (def.build ? loadProp(propKey(def, level, o)) : loadModel(def.file, def.turn));
     if (o.id === 'arcade2') parts = await arcadeParts(parts, o);
+    // Skjermstøy (uScreen) og arkadekassene avhenger av UV-ene og navnene på enkeltdelene.
+    else if (!def.screen) parts = mergeParts(parts);
     if (disposed) return;
     const pose = poseOf(o);
     const s = def.scale ?? 1;
@@ -149,13 +154,22 @@ export function createObjects(level, field, shared) {
     items[index] = item;
     if (def.spin) spinners.push([item, def.spin]);
     group.add(item);
+    if (!def.floats && !def.soft && !def.loose && !def.spin) fixed.push(item);
     const shadow = makeShadow(o);
-    if(!shadow)return;
+    if (!shadow) return;
     item.userData.shadow = shadow; // følger med når fysikken flytter gjenstanden (view3d/softplay.js)
     group.add(shadow);
   });
   const ready = Promise.allSettled(jobs).then((results) => {
     for (const r of results) if (r.status === 'rejected') console.warn(r.reason);
+    field?.releaseObjectSamples?.();
+    if (disposed) return;
+    const shadows = fixed.map((item) => item.userData.shadow).filter(Boolean);
+    // Kontaktskyggene er svarte: overlapp gir samme resultat i hvilken som helst rekkefølge.
+    const orderFree = [...new Set(shadows.map((s) => s.material))];
+    for (const batch of batchMeshes([...fixed.flatMap((item) => item.children), ...shadows], group, { orderFree })) {
+      owned.push(batch.geometry);
+    }
   });
 
   return {

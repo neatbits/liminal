@@ -57,7 +57,8 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
    `src/world/autopilot.js`, `src/world/windows.js`, `src/view3d/flicker.js`,
    `src/view3d/events.js`, `src/audio/acoustics.js`, `src/audio/director.js`,
    `src/world/softphysics.js`, `src/world/anomalies.js`, `src/world/lamp-map.js`,
-   `src/world/shifts.js`, `src/world/ripples.js`, `src/world/light-grid.js`, `src/world/wayfinding.js`, `src/world/chunks.js`) slik at den
+   `src/world/shifts.js`, `src/world/ripples.js`, `src/world/light-grid.js`, `src/world/wayfinding.js`, `src/world/chunks.js`,
+   `src/world/sightline.js`) slik at den
    kan testes i Node.
 5. Brukergrensesnittet er på **engelsk** (all tekst brukeren ser: knapper, menyer,
    dialoger, feilmeldinger, temanavn og eksempler). Kode, identifikatorer og kommentarer
@@ -245,6 +246,8 @@ src/
 - Hodeløs Chrome (SwiftShader) kan bruke 0,5–1,5 s per bilde; vent før skjermbilder.
 - **Ytelse og utseende**: se `docs/performance.md` for målinger, lyscache, renderkontroll og Level 0s renere teksturer (egen himling, ikke den delte).
   Behold tapsfrie lysnøkler og del `poser` mellom modeller. Vinduer/skilt samles per materialgruppe.
+  Faste gjenstander tegnes samlet (`world/object-batches.js`): det som flyttes (fysikk, flyter, snurrer) må holdes utenfor.
+  Modelldeler slås sammen ved lasting (`object-parts.js`, atlas/palett); gjenstander bakes med `objectSample`, flater med `sample`.
   Editorbygging strupes/debounces; three.js har egen cachebar byggpakke (`vite.config.js`).
 - **Ballbinger**: `pit: 'balls'` tegner bassengruter som baller (`world/ball-layout.js`, ren logikk).
-  `world/balls.js` bruker instansgrupper (`chunks.js`); behold bounds/frigjøring. Løse fysikkballer: `docs/play-balls.md`; måling: `docs/performance.md`.
+  `world/balls.js` bruker instansgrupper (`chunks.js`), impostorer lenger unna enn 6 m (`ball-shaders.js`); behold bounds/frigjøring. Løse fysikkballer: `docs/play-balls.md`; måling: `docs/performance.md`.

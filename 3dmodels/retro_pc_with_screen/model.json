@@ -1,1 +1,7 @@
-{ "drop": ["Plane_BakedTable", "Cylinder.000_BakedMouseKeyboard"] }
+{
+  "drop": [
+    "Plane_BakedTable",
+    "Cylinder.000_BakedMouseKeyboard"
+  ],
+  "simplify": 0.25
+}

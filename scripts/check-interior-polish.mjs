@@ -37,10 +37,12 @@ export async function checkInteriorPolish(browser,origin) {
   await open(`${origin}/app/#room=${await encodeLevel(l)}`);
   const pixels=await browser.evaluate(`(()=>{
     const v=liminal.viewer,shadows=v.world.objects.group.getObjectsByProperty('name','contactShadow');
+    // Faste gjenstanders skygger tegnes samlet (object-batches.js): slå av det som faktisk tegnes.
+    const drawn=v.world.objects.group.children.filter(o=>o.visible&&(o.name==='contactShadow'||o.userData.source==='contactShadow'));
     const gl=v.renderer.getContext(),w=gl.drawingBufferWidth,h=gl.drawingBufferHeight;
     v.camera.position.set(9.5,2.8,11);v.camera.lookAt(9.5,.4,6);
     const read=()=>{v.postfx.render(0);const p=new Uint8Array(w*h*4);gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,p);return p;};
-    const visible=read();shadows.forEach(s=>s.visible=false);const hidden=read();shadows.forEach(s=>s.visible=true);
+    const visible=read();drawn.forEach(s=>s.visible=false);const hidden=read();drawn.forEach(s=>s.visible=true);
     let changed=0;for(let i=0;i<visible.length;i+=4)if(hidden[i]+hidden[i+1]+hidden[i+2]-visible[i]-visible[i+1]-visible[i+2]>15)changed++;
     return {changed,count:shadows.length,materials:new Set(shadows.map(s=>s.material.uuid)).size,
       desktop:shadows.some(s=>Math.abs(s.position.y-.804)<.001)};
