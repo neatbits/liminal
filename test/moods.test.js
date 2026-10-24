@@ -61,7 +61,8 @@ describe('stemningsskalaen', () => {
     const before = lit(level);
     const out = moodLevel(level, 'abandoned', mulberry32(3));
     expect(lit(out) / before).toBeLessThan(0.62);
-    expect(lit(out) / before).toBeGreaterThan(0.35);
+    // Level 0 får i tillegg alltid et mørkt område (gen/darkness.js, temaets dark), så litt færre.
+    expect(lit(out) / before).toBeGreaterThan(0.25);
     // Andelen døde lys per område på 12 × 12 m varierer mye: noen deler er nesten mørke.
     const shares = [];
     for (let z0 = 0; z0 < 48; z0 += 12) {

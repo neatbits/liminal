@@ -71,3 +71,48 @@ export function basementCityProbe(viewer) {
     target.dispose();material.dispose();
   }
 }
+
+/**
+ * The motionless ghost outside a window (any theme with a view): marks the pixels where it is drawn, looking out of
+ * the first window. Visible outside that wall direction only, and never while switched off.
+ */
+export function windowGhostProbe(viewer, win, spot) {
+  const source = viewer.world.group.getObjectByName('windowGlass'), material = source.material.clone();
+  material.uniforms.uNoise.value = source.material.uniforms.uNoise.value;
+  material.uniforms.uGhost = { value: new THREE.Vector4() };
+  material.uniforms.uGhostFrame = { value: new THREE.Vector2() };
+  // Et helt dekkende bilde i stedet for stillbildet av modellen: hele flaten skal telle.
+  const opaque = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+  opaque.needsUpdate = true;
+  material.uniforms.uGhostMap = { value: opaque };
+  material.uniforms.uGhostSize = { value: new THREE.Vector2(1, 1.8) };
+  material.fragmentShader = material.fragmentShader
+    .replace('ghostHit(ro, rd, n.xz, hitDistance, col, hitDistance);', 'float ghosted = ghostHit(ro, rd, n.xz, hitDistance, col, hitDistance) ? 1.0 : 0.0;')
+    .replace('gl_FragColor = vec4(col * uGain, 1.0);', 'gl_FragColor = vec4(ghosted, 0.0, 0.0, 1.0);');
+  material.needsUpdate = true;
+  const scene = new THREE.Scene();
+  scene.add(new THREE.Mesh(source.geometry, material));
+  const target = new THREE.WebGLRenderTarget(64, 64, { type: THREE.FloatType, depthBuffer: true });
+  const [nx, nz] = win.n, face = [win.x + 0.5 + nx * 0.5, win.z + 0.5 + nz * 0.5];
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.01, 1000);
+  camera.position.set(face[0] + nx * 1.2, win.floor + 1.6, face[1] + nz * 1.2);
+  camera.lookAt(face[0] - nx * 10, win.floor + 1.6, face[1] - nz * 10);
+  const renderer = viewer.renderer, previous = renderer.getRenderTarget();
+  const clear = renderer.getClearColor(new THREE.Color()), alpha = renderer.getClearAlpha();
+  const count = (visible, frame) => {
+    material.uniforms.uGhost.value.set(spot.along, spot.y, spot.out, visible);
+    material.uniforms.uGhostFrame.value.set(...frame);
+    renderer.setRenderTarget(target); renderer.setClearColor(0, 0); renderer.clear(); renderer.render(scene, camera);
+    const pixels = new Float32Array(64 * 64 * 4);
+    renderer.readRenderTargetPixels(target, 0, 0, 64, 64, pixels);
+    let n = 0;
+    for (let i = 0; i < pixels.length; i += 4) if (pixels[i] > 0.5) n++;
+    return n;
+  };
+  try {
+    return { seen: count(1, spot.frame), otherWall: count(1, [-nz, nx]), hidden: count(0, spot.frame) };
+  } finally {
+    renderer.setRenderTarget(previous); renderer.setClearColor(clear, alpha);
+    target.dispose(); material.dispose(); opaque.dispose();
+  }
+}

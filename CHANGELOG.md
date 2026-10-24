@@ -6,6 +6,24 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ukommet]
 
+## [0.3.0] – 2026-10-24
+
+### Lagt til
+- Et mål i den uendelige utforskingen: på genererte nivåer er dørene til ingensteds låst til alle
+  VHS-kassettene på nivået er funnet («The door is locked · 📼 1/3»). Kassettene summer – båndsus
+  og en lav brumtone, sterkere og panorert mot den nærmeste – og en låst dør rister. Rommet fra
+  editoren og drømmegangen er åpne som før, og noclip slipper alltid gjennom. Kassettene legges bare
+  der man kan gå fra start (`reachableCells`); kan ingen av de gjenværende nås lenger (rommet har
+  endret seg bak ryggen på en), åpnes døren likevel. `view3d/tape-hunt.js`, `audio/tape-hum.js`.
+- Fremgangen huskes i nettleseren: dypeste nivå og kassetter funnet i alt (`liminal.progress.v1`),
+  vist som «Deepest 12» i gålinjen når man er grunnere enn sitt dypeste.
+- Mørke deler av genererte nivåer (`gen/darkness.js`): en fløy av rom bak dører der alle
+  lysrørene er døde, eller et område i en åpen hall der lyset dør ut med blinkende rør i kanten –
+  omtrent 18 % av gulvet, aldri der man starter. Følger stemningen (`dark` i `gen/moods.js`):
+  aldri i Normal eller i rommet fra editoren, halvparten av nivåene i Liminal, alltid og to
+  steder i Nightmare. Genererte Level 0-nivåer får det alltid (unntatt i Normal), og litt større
+  (`dark` i temaet).
+
 ### Endret
 - Raskere 3D i store og møblerte rom, uten synlig forskjell (målt på GPU, frø 7):
   - Fjerne ballgrupper i ballbingene tegnes som impostorer: en firkant mot kameraet med en rund,
@@ -32,7 +50,21 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Siktlinjene (`cellHeights`, `lineOfSight`) er flyttet fra `world/lighting.js` til
   `world/sightline.js` (eksporteres fortsatt også fra lighting.js).
 
+- Byen bak manuelt malte vinduer i Basement er mer Babbdi-lik: støvete, rosa-beige betong og
+  sandfarget dis, runde tårn av stablede sylindre med dype vindusbånd, og massive blokker med få,
+  små vinduer (`world/basement-city*.js`).
+- I Uncanny og Nightmare står spøkelset – den samme modellen som monsteret, som et stillbilde –
+  av og til helt stille utenfor ett av vinduene, et stykke ute i kjellerbyen eller landskapet (alle
+  temaer med vindusutsikt). Det dukker opp mens man ser en annen vei, og er borte etter et glimt
+  (1,5–3,5 s sett mot det) eller etter 25 s om man aldri snur seg
+  (`view3d/window-ghost.js`, `view3d/ghost-snapshot.js`, `world/window-ghost.js`,
+  `world/window-ghost-view.js`).
+
 ### Fikset
+- Gulvet (og taket) i skrå og avrundede hjørner fikk en egen trekantet gradient i teppet: ruten
+  var en grov vifte med mørkere kant også mot nabogulvet. Den deles nå opp som vanlige gulvruter
+  og skygges med de samme reglene, så den glir over i naborutene uten skjøt; inn mot den formede
+  veggen mørkner den som mot en vanlig vegg (`world/corners.js`, test i `corners.test.js`).
 - Søyler i Poolrooms-vann fikk en firkantet sjakt rundt seg under vannet: nabovannet regnet
   søyleruten som et gulv nede på bunnen og bygde kantvegger fra bunnen til vannflaten, synlige som
   løse flislagte plater rundt tynne søyler (`surfaceHeight` bruker nå `waterCell`).

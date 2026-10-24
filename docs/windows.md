@@ -89,9 +89,25 @@ lar spilleren gå gjennom vinduene. Ikke erstatt det med et bilde som følger ka
 Basement bruker `basement-city.js` og `basement-city-surfaces.js` som egen shader.
 Gaten ligger 52 m under rommets nullplan. Fem rekker med tre kandidater hver gir
 tette blokker i ulik høyde, inntrukne toppetasjer, takoppbygg, ventiler og enkelte
-gangbroer. Treffer testes analytisk; materialet beregnes bare for nærmeste flate.
-Egne betongfarger, paneler, flekker, mørke ruter og grågrønn dis gir Babbdi-inspirert
-stemning uten å bruke spillets modeller eller teksturer. Dag/natt følger samme
+gangbroer, og omtrent 40 % runde tårn av to–tre stablede, smalere sylindre
+(`drumHit`) med et dypt vindusbånd i skygge og lys brystning på hver etasje. Rundt
+tårnet er det et helt antall vindusfag, og kantutjevningen regnes fra verdensposisjonen,
+så `atan`-skjøten ikke synes. Blokkene er massive med få, små, firkantede vinduer.
+Treffer testes analytisk; materialet beregnes bare for nærmeste flate. Støvete,
+rosa-beige betong og sandfarget dis gir Babbdi-inspirert stemning uten å bruke
+spillets modeller eller teksturer.
+
+I Uncanny og Nightmare (stemninger med monster) står spøkelset av og til helt stille
+ute i byen, 8–15 m fra veggen med midten omtrent i øyehøyde. Det er den samme modellen som
+monsteret: `view3d/ghost-snapshot.js` tegner den én gang forfra (stillestående, tilfeldig
+kledestilling) til et lite bilde med gjennomsiktig bakgrunn og mipmaps, og
+`world/window-ghost-view.js` setter bildet i et loddrett plan i utsikten, med dis etter avstand.
+UV-ens deriverte tas før alle greiner, og bildet slås opp med `textureGrad`. Det samme gjelder
+alle temaer med vindusutsikt (landskapsshaderen), ikke Level 0, som bare har diffus himmel. `view3d/window-ghost.js` velger et
+vindu man ikke ser mot, og lar det dukke opp mens man ser bort fra den veggretningen
+(`world/window-ghost.js`), siden det synes gjennom alle vinduer i samme retning. Det er bare
+et glimt: borte når man har sett mot det i 1,5–3,5 s (også mens man ser), eller etter 25 s usett.
+`windowGhostProbe` kontrollerer for hvert tema at det tegnes utenfor riktig vegg og ellers ikke. Dag/natt følger samme
 rominnstilling som andre vinduer. Nabovinduer deler koordinater. Profilen endrer
 bare utsikten: `addWindows` lager fortsatt ingen vinduer i Basement, og den skjulte
 utsikten viser seg ved manuelt malte vinduer, også i eldre lagrede rom.

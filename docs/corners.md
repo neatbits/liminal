@@ -22,6 +22,12 @@ til geometri, materialer, draw calls eller arbeid per ramme.
 
 `v = y − gulvhøyde` beholdes, slik at brystning og list følger hevede gulv.
 
+Gulv og tak i en formet rute deles opp med samme `S` som vanlige ruter, og skygges med de samme
+reglene (`cornerShade` i `surfaces.js`). Punktene på kantene mot naborutene bruker bare
+rutenettskyggen, slik naboen gjør; inne i ruten mørkner det i tillegg inn mot den formede veggen,
+like mye som ved en vanlig vegg. Ellers får teppet en egen trekantet gradient i hjørnet.
+`corners.test.js` krever samme lys i alle gulvpunkter som deler plass, for alle fire hjørnetyper.
+
 Kontroller ved endringer:
 
 - `npx vitest run test/corner-texture.test.js test/corners.test.js`: sammenhengende

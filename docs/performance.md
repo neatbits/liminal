@@ -131,6 +131,9 @@ Den tette ballmassen beholder instansgruppene; hele bassenget skal ikke gis indi
 
 ## Måling 24. oktober 2026: modeller, ballbinger og tegnekall
 
+Brukerrapport 24. oktober 2026: flytende på Samsung Galaxy S25+ (toppmodell). Mellomklasse- og
+eldre telefoner er ikke testet ennå – det er der gevinsten bør bekreftes.
+
 Lastetid varierer mye med varme på en bærbar maskin (samme bygg: 0,6–1,0 s); sammenlign derfor
 vekselvis med og uten en endring i samme økt, ikke med tall fra en annen dag.
 

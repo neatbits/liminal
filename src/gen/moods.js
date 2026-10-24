@@ -7,6 +7,7 @@ import { makeWrong } from './wrong.js';
 import { basins } from './variety.js';
 import { fillZone } from '../core/zones.js';
 import { getTheme } from '../core/themes.js';
+import { darkZones } from './darkness.js';
 
 /**
  * fog, exposure: ganges med temaets verdier. broken, flicker: andel av de tente lysene som er
@@ -14,7 +15,9 @@ import { getTheme } from '../core/themes.js';
  * anomalies: sjanse for uendelige ganger (0/1), dør tilbake, korridornivå og samme rom igjen.
  * blackout: tider for strømbrudd (null = aldri). eerie: ganges med tiden mellom skumle lyder
  * (lavere = oftere). shifts: [min, maks] sekunder mellom endringer bak ryggen på spilleren
- * (world/shifts.js), eller null. deep: sjanse for at et basseng i et generert nivå er mørkt og dypt. monster: null, 'lurk' (viser seg, tar deg aldri) eller 'hunt'.
+ * (world/shifts.js), eller null. deep: sjanse for at et basseng i et generert nivå er mørkt og dypt.
+ * dark: { chance, zones } – sjansen for at et generert nivå får mørke deler (gen/darkness.js) og hvor
+ * mange. monster: null, 'lurk' (viser seg, tar deg aldri) eller 'hunt'.
  */
 export const MOODS = {
   normal: {
@@ -32,6 +35,7 @@ export const MOODS = {
     wrong: { home: null, gen: null },
     anomalies: { loops: 0, backDoor: 0, corridor: 0.1, again: 0 },
     blackout: { first: [150, 300], every: [240, 480], dark: [5, 8] }, eerie: 1.6, monster: null, shifts: null,
+    dark: { chance: 0.6, zones: 1 },
   },
   liminal: {
     label: 'Liminal',
@@ -40,6 +44,7 @@ export const MOODS = {
     wrong: { home: null, gen: 'subtle' },
     anomalies: { loops: 1, backDoor: 0.25, corridor: 0.2, again: 0.15 },
     blackout: { first: [70, 140], every: [120, 260], dark: [6, 11] }, eerie: 1, monster: null, shifts: [90, 180],
+    dark: { chance: 0.5, zones: 1 },
   },
   uncanny: {
     label: 'Uncanny',
@@ -48,6 +53,7 @@ export const MOODS = {
     wrong: { home: 'subtle', gen: 'wrong' },
     anomalies: { loops: 1, backDoor: 0.35, corridor: 0.25, again: 0.25 },
     blackout: { first: [40, 80], every: [70, 140], dark: [9, 14] }, eerie: 0.6, monster: 'lurk', deep: 0.15, shifts: [45, 90],
+    dark: { chance: 0.75, zones: 1 },
   },
   nightmare: {
     label: 'Nightmare',
@@ -56,6 +62,7 @@ export const MOODS = {
     wrong: { home: 'wrong', gen: 'very' },
     anomalies: { loops: 1, backDoor: 0.35, corridor: 0.25, again: 0.25 },
     blackout: { first: [20, 40], every: [45, 90], dark: [12, 18] }, eerie: 0.35, monster: 'hunt', deep: 0.3, shifts: [25, 55],
+    dark: { chance: 1, zones: 2 },
   },
 };
 
@@ -122,12 +129,17 @@ export function moodLevel(level, moodId, rand, { home = false } = {}) {
   // Lys brytes bare i egne rom når stemningen er sterkere enn Liminal (ellers er rommet ditt).
   const lights = !home || mood.wrong.home || moodId === 'abandoned';
   const deep = home || getTheme(level.theme).pit ? 0 : mood.deep ?? 0; // ikke ballbinger
-  if (!wrong && !deep && !(lights && (mood.broken || mood.flicker))) return null;
+  const dark = home ? null : mood.dark; // aldri i rommet fra editoren
+  if (!wrong && !deep && !dark && !(lights && (mood.broken || mood.flicker))) return null;
   const out = cloneLevel(level);
   out.objects = [...(level.objects ?? [])];
   if (lights) decayLights(out, mood.broken, mood.flicker, rand, mood.patches);
   // Noen bassenger blir dype (2,4–3 m) – man ser ikke bunnen.
   if (deep) for (const cells of basins(out)) if (rand() < deep) fillZone(out, 'depth', cells, 2.4 + Math.round(rand() * 6) / 10);
   if (wrong) makeWrong(out, wrong, rand);
+  // Sist, så de andre trekningene (og dermed rommene) er de samme som før.
+  // Temaet kan gjøre dem vanligere og større (Level 0).
+  const themed = getTheme(level.theme).dark;
+  if (dark && rand() < (themed?.chance ?? dark.chance)) darkZones(out, rand, dark.zones, out.spawn, themed?.share);
   return out;
 }

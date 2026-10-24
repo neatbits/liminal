@@ -42,16 +42,65 @@ function boundaryWall(mesh, boundary, spans, wallUV) {
   }
 }
 
+/** Korteste avstand fra (x, z) til banen (polylinje). */
+function distanceTo(path, x, z) {
+  let best = Infinity;
+  for (let i = 0; i + 1 < path.length; i++) {
+    const [[ax, az], [bx, bz]] = [path[i], path[i + 1]];
+    const [dx, dz] = [bx - ax, bz - az];
+    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1)));
+    best = Math.min(best, Math.hypot(x - ax - dx * t, z - az - dz * t));
+  }
+  return best;
+}
+
+/**
+ * Som fan, men hver trekant er delt i S × S, og hvert punkt får skyggen fra rutenettet (samme som
+ * nabogulvet, surfaces.js) – mørkere inn mot den formede veggen, like sterkt som mot en vanlig vegg.
+ * Kantene mot naboene får dermed de samme punktene og verdiene som naborutene: ingen skjøt i lyset.
+ * @param shade { ao(x, z), edge, full }: rutenettskyggen, skyggen ved veggen og full styrke
+ */
+function shadedFan(mesh, poly, boundary, y, n, S, shade) {
+  const [c, ...rest] = poly;
+  // Kantene mot naborutene (første og siste side i vifta): bare rutenettskyggen, som naboen bruker.
+  const shared = (x, z) => distanceTo([c, rest[0]], x, z) < 1e-6 || distanceTo([c, rest[rest.length - 1]], x, z) < 1e-6;
+  const ao = ([x, , z]) => {
+    const grid = shade.ao(x, z);
+    if (shared(x, z)) return grid;
+    return Math.min(grid, shade.edge + (shade.full - shade.edge) * Math.min(1, distanceTo(boundary, x, z) / 0.25));
+  };
+  for (let k = 0; k + 1 < rest.length; k++) {
+    const [p, q] = [rest[k], rest[k + 1]];
+    const at = (i, j) => [c[0] + ((p[0] - c[0]) * i + (q[0] - c[0]) * j) / S, y, c[1] + ((p[1] - c[1]) * i + (q[1] - c[1]) * j) / S];
+    const tri = (a, b, d) => {
+      const pts = [a, b, d, d];
+      faceQuad(mesh, pts, n, pts.map(([x, , z]) => [x, z]), null, pts.map(ao));
+    };
+    for (let i = 0; i < S; i++) {
+      for (let j = 0; i + j < S; j++) {
+        tri(at(i, j), at(i + 1, j), at(i, j + 1));
+        if (i + j < S - 1) tri(at(i + 1, j), at(i + 1, j + 1), at(i, j + 1));
+      }
+    }
+  }
+}
+
 /**
  * Bygger en formet rute. Gulvruten (own FLOOR): gulv og tak bare over den åpne delen, og veggkilen
  * vendt mot rommet. Veggruten (own WALL): gulv og tak over hjørnet som er åpnet, og veggen vendt ut.
  * @param meshes { floor, ceiling, wall } MeshData, spans: høydene til veggen (som openSpans)
+ * @param shade { S, floor, ceiling } fra surfaces.js (se shadedFan); uten: enkel vifte
  */
-export function buildCorner(shape, meshes, spans, wallUV) {
+export function buildCorner(shape, meshes, spans, wallUV, shade = null) {
   const { fy, cy } = shape;
   const open = shape.own === TILE.FLOOR ? shape.far : shape.near;
-  fan(meshes.floor, open, fy, UP, 1, FLOOR_EDGE);
-  fan(meshes.ceiling, open, cy, DOWN, CEILING_GAIN, CEILING_EDGE);
+  if (shade) {
+    shadedFan(meshes.floor, open, shape.boundary, fy, UP, shade.S, shade.floor);
+    shadedFan(meshes.ceiling, open, shape.boundary, cy, DOWN, shade.S, shade.ceiling);
+  } else {
+    fan(meshes.floor, open, fy, UP, 1, FLOOR_EDGE);
+    fan(meshes.ceiling, open, cy, DOWN, CEILING_GAIN, CEILING_EDGE);
+  }
   // Snu hele banen for innvendige hjørner, slik at nabosegmentene deler samme UV ved skjøten.
   const boundary = shape.own === TILE.FLOOR ? [...shape.boundary].reverse() : shape.boundary;
   boundaryWall(meshes.wall, boundary, spans, wallUV);

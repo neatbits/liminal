@@ -146,7 +146,8 @@ export class WalkMode {
     const w = this.walker;
     const door = this.rider.active ? null : doorInReach(this.level, w.x, w.z, w.yaw, 1.8, { exits: true });
     const verb = door?.info.oneSided ? 'go through' : door?.info.state === DOOR.CLOSED ? 'open' : 'close';
-    this.hud.setPrompt(door ? `${this.session.touch?'Tap Use to':'E –'} ${verb} the door` : null);
+    const locked = door?.info.oneSided ? this.exitLock?.() : null; // kassettjakten (view3d/tape-hunt.js)
+    this.hud.setPrompt(door ? locked ?? `${this.session.touch ? 'Tap Use to' : 'E –'} ${verb} the door` : null);
   }
 
   /** Går man framover inn i toppen av en sklie, tar sklien over. */

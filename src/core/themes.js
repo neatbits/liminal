@@ -24,6 +24,8 @@ export const THEMES = {
     defaultHeight: 2.7,
     lightSpacing: 3,
     light: { color: '#fff0c4', intensity: 0.62, falloff: 2.6, radius: 9, ambient: '#3d3722' },
+    // Mørke deler (gen/darkness.js) i genererte nivåer: alltid når stemningen har dem, og større.
+    dark: { chance: 1, share: 0.25 },
     fixture: { shape: 'panel', size: [1.2, 0.04, 0.6], color: '#fff6dc', glow: 2.6, frame: '#b9b196' },
     door: { frame: null, leaf: 'doorFlatCream', knob: '#a99a6a' },
     railing: { rail: '#8a7a4c', bars: '#8a7a4c' },

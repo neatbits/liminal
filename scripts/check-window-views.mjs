@@ -67,6 +67,16 @@ try {
       // Treff kan være på front eller side; bruk begge horisontale akser.
       assert.ok(Math.hypot(result.first[1] - result.moved[1], result.first[2] - result.moved[2]) > 0.1, `${theme}: physical parallax`);
       console.log(`PASS ${theme}: GPU distance ${result.first[0].toFixed(1)} m and camera parallax`);
+      const ghost=await evaluate(`(async()=>{const [{windowGhostProbe},{windows},{ghostSpot}]=await Promise.all([
+        import('/scripts/window-probe.js'),import('/src/core/windows.js'),import('/src/world/window-ghost.js')]);
+        const win=windows(liminal.level)[0];
+        return windowGhostProbe(liminal.viewer,win,{...ghostSpot(win,()=>.5),y:win.floor+1.2});})()`);
+      assert.ok(ghost.seen>4&&ghost.otherWall===0&&ghost.hidden===0,`ghost outside the right wall only: ${JSON.stringify(ghost)}`);
+      console.log(`PASS ${theme} ghost: outside the chosen wall only, hidden when off`,ghost);
+      const snap=await evaluate(`import('/src/view3d/ghost-snapshot.js').then(async({GhostSnapshot})=>{
+        const s=new GhostSnapshot(liminal.viewer.renderer),image=await s.take(()=>.3);
+        const out=image&&{width:image.width,height:image.height,texture:image.texture.isTexture};s.dispose();return out;})`);
+      assert.ok(snap?.texture&&snap.height>1.6&&snap.height<2&&snap.width>0.5,`ghost model still image: ${JSON.stringify(snap)}`);
       if(view.city) {
         const city=await evaluate(`import('/scripts/window-probe.js').then(m=>m.basementCityProbe(liminal.viewer))`);
         assert.ok(city.ground>0,'city streets can be seen far below');

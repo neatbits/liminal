@@ -1,8 +1,10 @@
-// An original, analytic city visible only through hand-painted Basement windows.
+// An original, analytic, Babbdi-like city visible only through hand-painted Basement windows:
+// massive concrete blocks and round towers of stacked drums with banded windows, in dusty haze.
 // Like other window views, it needs no exterior scene, downloaded art or render pass.
 import { LANDSCAPE_SHAPES } from './landscape-shapes.js';
 import { LANDSCAPE_SURFACES } from './landscape-surfaces.js';
 import { CITY_SURFACES } from './basement-city-surfaces.js';
+import { WINDOW_GHOST } from './window-ghost-view.js';
 
 export const BASEMENT_CITY_FRAGMENT = /* glsl */ `
 uniform vec3 uSkyTop, uSkyBottom, uGround, uStone, uLeaf;
@@ -14,6 +16,7 @@ varying vec3 vWorld;
 ${LANDSCAPE_SHAPES}
 ${LANDSCAPE_SURFACES}
 ${CITY_SURFACES}
+${WINDOW_GHOST}
 struct CityHit { float distance; vec3 point; vec3 normal; vec3 size; float id; float row; float part; };
 void cityBuilding(float id, float row, out vec3 centre, out vec3 size) {
   vec3 h = vec3(hash(vec2(id + 11.0, row + 5.0)), hash(vec2(id, row + 7.0)), hash(vec2(id + 17.0, row + 3.0)));
@@ -27,6 +30,23 @@ void cityBox(vec3 ro, vec3 rd, vec3 centre, vec3 size, float kind, float id, flo
   hit.distance = t; hit.point = ro + rd * t - centre;
   hit.normal = boxNormal(hit.point / size); hit.size = size;
   hit.id = id; hit.row = row; hit.part = kind;
+}
+// A round tower: two or three stacked drums, each narrower, on the building's plot.
+void cityTower(vec3 ro, vec3 rd, vec3 centre, vec3 size, float id, float row, inout CityHit hit) {
+  float r = min(size.x, size.z) * 1.45 + 3.0, h = size.y * 2.0, y = uLayout.w;
+  float top = y + h * (0.55 + 0.25 * hash(vec2(id + 3.0, row + 1.0)));
+  float tiers = hash(vec2(id + 19.0, row + 4.0)) > 0.5 ? 3.0 : 2.0;
+  vec3 foot = vec3(centre.x, uLayout.w, centre.z);
+  for(int k = 0; k < 3; k++) {
+    if(float(k) >= tiers) break;
+    vec3 normal;
+    float t = drumHit(ro, rd, foot, r, y, top, normal);
+    if(t < hit.distance) {
+      hit.distance = t; hit.point = ro + rd * t - foot; hit.normal = normal;
+      hit.size = vec3(r, h, r); hit.id = id; hit.row = row; hit.part = 3.0;
+    }
+    y = top; top += h * 0.18; r *= 0.8;
+  }
 }
 void main() {
   vec3 n = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
@@ -47,6 +67,7 @@ void main() {
     for(int column = -1; column <= 1; column++) {
       float id = cell + float(column);
       vec3 centre, size; cityBuilding(id, r, centre, size);
+      if(hash(vec2(id + 31.0, r + 9.0)) < 0.42) {cityTower(ro, rd, centre, size, id, r, hit); continue;}
       float stepped = step(0.5, hash(vec2(id + 8.0, r + 2.0)));
       float setback = stepped * 0.16;
       cityBox(ro, rd, centre - vec3(0.0, size.y * setback, 0.0), size * vec3(1.0, 1.0 - setback, 1.0),
@@ -69,8 +90,10 @@ void main() {
     }
   }
   // Shade only the closest surface, regardless of how many candidate boxes were hit.
-  if(hit.part >= 0.0) col = cityFacade(hit.point, hit.size, hit.normal, hit.id, hit.row, hit.part);
+  if(hit.part > 2.5) col = cityDrum(hit.point, hit.size.x, hit.normal, hit.id, hit.row);
+  else if(hit.part >= 0.0) col = cityFacade(hit.point, hit.size, hit.normal, hit.id, hit.row, hit.part);
   float hitDistance = hit.distance;
+  ghostHit(ro, rd, n.xz, hitDistance, col, hitDistance);
   if(hitDistance < 99999.0) col = mix(col, uSkyBottom, 1.0 - exp(-hitDistance * uAtmosphere.x));
   gl_FragColor = vec4(col * uGain, 1.0);
 }`;

@@ -92,4 +92,31 @@ describe('skrå og avrundede hjørner', () => {
     expect(shaped).toBeGreaterThan(10);
     expect(presetById('pools').make().corners.every((v) => v === 0)).toBe(true);
   });
+
+  it.each([['innvendig skrått', 1, 1, CORNER.ANGLED], ['innvendig avrundet', 1, 1, CORNER.ROUND], ['utvendig skrått', 4, 3, CORNER.ANGLED], ['utvendig avrundet', 4, 3, CORNER.ROUND]])(
+    '%s hjørne: gulvet har samme skygge som nabogulvet der de møtes (ingen skjøt)',
+    (_, x, z, kind) => {
+      const level = room();
+      expect(setCorner(level, x, z, kind, x === 1 ? 0.1 : 0.9, x === 1 ? 0.1 : 0.9)).toBe(1);
+      for (const S of [1, 2, 4]) {
+        const { floor } = buildSurfaces(level, null, { subdivide: S });
+        const seen = new Map();
+        for (let v = 0; v < floor.vertexCount; v++) {
+          const key = [floor.pos[v * 3], floor.pos[v * 3 + 2]].map((c) => c.toFixed(4)).join();
+          const light = floor.light[v * 3];
+          if (seen.has(key)) expect(light, `S=${S} at ${key}`).toBeCloseTo(seen.get(key), 6);
+          else seen.set(key, light);
+        }
+        // Ved den formede veggen (mellom endene) mørkner gulvet like mye som ved en vanlig vegg.
+        const { boundary } = cornerShape(level, x, z);
+        const onWall = (px, pz) => boundary.slice(0, -1).some(([ax, az], i) => {
+          const [bx, bz] = boundary[i + 1];
+          const cross = (bx - ax) * (pz - az) - (bz - az) * (px - ax);
+          const along = ((px - ax) * (bx - ax) + (pz - az) * (bz - az)) / ((bx - ax) ** 2 + (bz - az) ** 2);
+          return Math.abs(cross) < 1e-6 && along > 1e-6 && along < 1 - 1e-6;
+        });
+        for (const [key, light] of seen) if (onWall(...key.split(',').map(Number))) expect(light, key).toBeLessThanOrEqual(0.76 + 1e-6);
+      }
+    },
+  );
 });

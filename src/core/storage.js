@@ -6,6 +6,7 @@ import { waveStrength } from './water.js';
 const ROOMS_KEY = 'liminal.rooms.v1';
 const DRAFT_KEY = 'liminal.draft.v1';
 const SETTINGS_KEY = 'liminal.settings.v1';
+const PROGRESS_KEY = 'liminal.progress.v1';
 
 function store() {
   try {
@@ -147,4 +148,16 @@ export function loadSettings() {
 
 export function saveSettings(settings) {
   return writeJSON(SETTINGS_KEY, settings);
+}
+
+/** Fremgangen i den uendelige utforskingen: dypeste nivå og kassetter funnet i alt. */
+export function loadProgress() {
+  const p = readJSON(PROGRESS_KEY, {});
+  const count = (v) => (Number.isFinite(v) && v > 0 ? Math.floor(v) : 0);
+  return { deepest: count(p?.deepest), tapes: count(p?.tapes) };
+}
+
+/** Returnerer false når den ikke ble lagret (fremgangen er ikke kritisk; spillet går videre). */
+export function saveProgress({ deepest, tapes }) {
+  return writeJSON(PROGRESS_KEY, { deepest, tapes });
 }

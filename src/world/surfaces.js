@@ -117,6 +117,17 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
   for (const t of level.tiles) if (t !== TILE.WALL) open++;
   const S = subdivide ?? (open > 5000 ? 1 : 2);
   const isWall = (x, z) => getTile(level, x, z) === TILE.WALL;
+  // Formede hjørner (world/corners.js) skygges med de samme reglene som horizontal() under, så
+  // gulvet og taket i hjørneruten glir over i naborutene uten skjøt.
+  const cornerShade = ({ fy, cy }) => ({
+    S,
+    floor: { ao: (x, z) => cornerAO(x, z, (a, b) => isWall(a, b) || topFloorAt(level, a, b) > fy + 0.01, 0.12), edge: 1 - 2 * 0.12, full: 1 },
+    ceiling: {
+      ao: (x, z) => cornerAO(x, z, (a, b) => isWall(a, b) || ceilingAt(level, a, b) < cy - STEP, 0.1) * CEILING_GAIN,
+      edge: (1 - 2 * 0.1) * CEILING_GAIN,
+      full: CEILING_GAIN,
+    },
+  });
 
   for (let cz = 0; cz < level.h; cz++) {
     for (let cx = 0; cx < level.w; cx++) {
@@ -124,7 +135,7 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
       // Skrå/avrundet hjørne (core/corners.js): veggruten er åpnet mot hjørnet, gulvruten får en kile.
       const shape = t === TILE.WALL || t === TILE.FLOOR ? cornerShape(level, cx, cz) : null;
       if (t === TILE.WALL) {
-        if (shape) buildCorner(shape, { floor: out.floor, ceiling: out.ceiling, wall: out.wall }, [{ lo: shape.fy, hi: shape.cy, base: shape.fy }], wallUV);
+        if (shape) buildCorner(shape, { floor: out.floor, ceiling: out.ceiling, wall: out.wall }, [{ lo: shape.fy, hi: shape.cy, base: shape.fy }], wallUV, cornerShade(shape));
         continue;
       }
       const fy = floorAt(level, cx, cz);
@@ -150,7 +161,7 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
       const lower = (x, z) => isWall(x, z) || ceilingAt(level, x, z) < cy - STEP;
       if (!shape && !roof?.mask[cz*level.w+cx]) horizontal(ceilingMesh, cx, cz, cy, S, false, lower, 0.1, CEILING_GAIN);
       const spans = openSpans(level, cx, cz, vBase);
-      if (shape) buildCorner(shape, { floor: floorMesh, ceiling: ceilingMesh, wall: wallMesh }, spans, wallUV);
+      if (shape) buildCorner(shape, { floor: floorMesh, ceiling: ceilingMesh, wall: wallMesh }, spans, wallUV, cornerShade(shape));
       if (t === TILE.PILLAR) {
         const bottom = pillarBottom(level, cx, cz);
         spans.forEach((sp, i) => buildPillar(wallMesh, level, cx, cz, i ? sp.lo : Math.min(sp.lo, bottom), sp.hi, sp.base));

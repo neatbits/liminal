@@ -58,7 +58,7 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
    `src/view3d/events.js`, `src/audio/acoustics.js`, `src/audio/director.js`,
    `src/world/softphysics.js`, `src/world/anomalies.js`, `src/world/lamp-map.js`,
    `src/world/shifts.js`, `src/world/ripples.js`, `src/world/light-grid.js`, `src/world/wayfinding.js`, `src/world/chunks.js`,
-   `src/world/sightline.js`) slik at den
+   `src/world/sightline.js`, `src/world/window-ghost.js`) slik at den
    kan testes i Node.
 5. Brukergrensesnittet er på **engelsk** (all tekst brukeren ser: knapper, menyer,
    dialoger, feilmeldinger, temanavn og eksempler). Kode, identifikatorer og kommentarer
@@ -180,6 +180,9 @@ src/
   Størrelsen på nye nivåer følger `settings.levelSize` (`gen/sizes.js`: grunnstørrelse per tema × skala).
   Takhøyde og bassengdybder varieres (`gen/variety.js`, eget frø; `vary: false` for eksemplene),
   og `gen/door-space.js` rydder dører og gjenstander som er i veien for hverandre.
+  Kassettjakt (`view3d/tape-hunt.js`): på genererte nivåer er dørene til ingensteds låst til alle
+  kassettene er funnet (`exitsLocked`), kassettene summer (`audio/tape-hum.js`), og kassetter legges
+  bare der man kan gå (`reachableCells`). Fremgang: `loadProgress`/`saveProgress`.
 - **Vinduer** (`core/windows.js`): en veggrute med `meta & 1` er et vindu – fortsatt vegg for
   kollisjon, lys og dører. `level.sky` (SKIES) gir himmel, dagslys (lyskilder med egen farge,
   `rgb`) og solflekker (`sunPatch`). Innfelte Poolrooms-glassfelt, temautsikt og landskapsdetaljer (`core/window-views.js`): `docs/windows.md`; sprosser er eksplisitt tilvalg.
@@ -197,7 +200,7 @@ src/
   midten. Korridornivåer: `gen/corridors.js`; «samme rom igjen» og dør tilbake: `gen/endless.js`
   og `view3d/explore.js`.
 - **Stemningen** (`gen/moods.js`, `settings.mood`): MOODS styrer tåke/eksponering (viewer
-  `_applyLook`), ødelagte lys og «Make it wrong» (`moodLevel`, brukt av `view3d/explore.js` på en
+  `_applyLook`), ødelagte lys, mørke deler (`dark`, `gen/darkness.js`) og «Make it wrong» (`moodLevel`, brukt av `view3d/explore.js` på en
   kopi av rommet), avvik (`walk.mood.anomalies`, `nextLevel`-odds), strømbrudd, skumle lyder og
   monsteret. Nye liminale/skumle effekter skal kobles til skalaen her.
 - **Hendelser bak ryggen** (`world/shifts.js`, ren logikk): `Shifts` husker dører og lys man har

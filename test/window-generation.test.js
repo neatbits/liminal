@@ -3,6 +3,7 @@ import { createLevel, TILE } from '../src/core/level.js';
 import { mulberry32 } from '../src/core/rng.js';
 import { paintWindows, windows } from '../src/core/windows.js';
 import { addWindows } from '../src/gen/windows.js';
+import { generateLevel } from '../src/gen/index.js';
 
 function hall(theme) {
   const level = createLevel({ theme, w: 64, h: 48 });
@@ -33,5 +34,14 @@ describe('sparsomme automatiske vinduer', () => {
     expect(a.meta).toEqual(b.meta);
     expect(a.sky).toBe(b.sky);
     for (const [x, z] of cells) expect(windows(a).some((win) => win.x === x && win.z === z)).toBe(true);
+  });
+
+  it('Basement får aldri automatiske vinduer – byen bak dem er et påskeegg for malte vinduer', () => {
+    for (let seed = 1; seed <= 20; seed++) {
+      const level = hall('basement');
+      expect(addWindows(level, mulberry32(seed))).toBe(0);
+      expect(windows(level)).toHaveLength(0);
+      expect(windows(generateLevel({ theme: 'basement', w: 40, h: 30, seed }))).toHaveLength(0);
+    }
   });
 });

@@ -18,6 +18,7 @@ import { checkArcades } from './check-arcades.mjs';
 import { checkSoftBlocks } from './check-soft-browser.mjs';
 import { checkInteriorPolish } from './check-interior-polish.mjs';
 import { checkGhost } from './check-ghost.mjs';
+import { checkTapeHunt } from './check-tape-hunt.mjs';
 import { checkMobilePlayer } from './check-mobile-player.mjs';
 import { checkMallSelection } from './check-mall-selection.mjs';
 import { checkPoolPillars } from './check-pool-pillars.mjs';
@@ -147,6 +148,7 @@ try {
   await checkSoftBlocks(browser, origin);
   await checkInteriorPolish(browser, origin);
   await checkGhost(browser, origin);
+  await checkTapeHunt(browser, origin);
   await checkPoolPillars(browser, origin);
   await checkHalfWalls(browser, origin);
   await checkManualFinishes(browser, origin);
@@ -161,7 +163,7 @@ try {
       await evaluate(`document.querySelector('a[href="about/#changelog"]').click()`);
       await waitFor(() => evaluate(`location.hash === '#changelog' && Boolean(document.querySelector('#changelog time'))`).catch(() => false), 'public changelog link');
       assert.equal(await evaluate(`document.querySelector('#changelog time').dateTime`), '2026-10-24');
-      assert.equal(await evaluate(`document.querySelectorAll('#changelog .l-release time').length`), 2);
+      assert.equal(await evaluate(`document.querySelectorAll('#changelog .l-release time').length`), 3);
       console.log('PASS public changelog navigation and release status');
     }
   }

@@ -1,5 +1,6 @@
 import { LANDSCAPE_SHAPES } from './landscape-shapes.js';
 import { LANDSCAPE_SURFACES } from './landscape-surfaces.js';
+import { WINDOW_GHOST } from './window-ghost-view.js';
 
 export const LANDSCAPE_FRAGMENT = /* glsl */ `
 uniform vec3 uSkyTop, uSkyBottom, uGround, uStone, uLeaf;
@@ -10,6 +11,7 @@ uniform int uGroundStyle;
 varying vec3 vWorld;
 ${LANDSCAPE_SHAPES}
 ${LANDSCAPE_SURFACES}
+${WINDOW_GHOST}
 void main() {
   // Nabovinduer deler verdenskoordinater. Utsikten følger ikke med kameraet.
   vec3 n = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
@@ -124,6 +126,7 @@ void main() {
     float leaves = grainAt(foliage) * 0.6 + grainAt(foliage * 3.7) * 0.4;
     col = uLeaf * (0.45 + 0.32 * max(0.0, dot(surfaceNormal, uSun)) + leaves * 0.35);
   } else col = uStone * vec3(0.3, 0.27, 0.21);
+  ghostHit(ro, rd, n.xz, hitDistance, col, hitDistance);
   if (hitDistance < 99999.0) col = mix(col, haze, 1.0 - exp(-hitDistance * uAtmosphere.x));
   gl_FragColor = vec4(col * uGain, 1.0);
 }`;

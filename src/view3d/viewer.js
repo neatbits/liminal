@@ -65,6 +65,7 @@ export class Viewer {
     // Kassetter, strømbrudd og uendelige nivåer (dører til ingensteds) i gåmodus.
     this.explorer = new Explorer(this);
     this.walk.onExit = (door) => this.explorer.goDeeper({ door });
+    this.walk.exitLock = () => this.explorer.hunt.lockText();
     this.hud.setToggles(this.settings);
 
     // Pause: Esc slipper musa (og i Firefox/Safari også fullskjermen) – menyen står da midt på

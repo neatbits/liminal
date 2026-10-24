@@ -8,6 +8,8 @@ import { getLevelSize } from '../gen/sizes.js';
 import { exitSpots } from '../world/autopilot.js';
 import { Blackout } from './events.js';
 import { Tapes } from './tapes.js';
+import { TapeHunt } from './tape-hunt.js';
+import { WindowGhost } from './window-ghost.js';
 import { Scary } from './scary.js';
 import { ShiftPlay } from './shifts.js';
 import { waitWhileWalking } from './walk-session.js';
@@ -19,6 +21,8 @@ export class Explorer {
     this.v = viewer;
     this.tapes = new Tapes();
     viewer.scene.add(this.tapes.group);
+    this.hunt = new TapeHunt(this); // låste dører til kassettene er funnet, summing, fremgang
+    this.windowGhost = new WindowGhost(viewer); // spøkelset ute i kjellerbyen (Uncanny/Nightmare)
     this.scary = new Scary(viewer);
     this.shifts = new ShiftPlay(this); // rommet endrer seg bak ryggen på en (world/shifts.js)
     this.blackout = this._newBlackout();
@@ -53,6 +57,7 @@ export class Explorer {
     this.blackout = this._newBlackout();
     this.scary.reset();
     this.shifts.reset();
+    this.windowGhost.reset();
     this._placeTapes();
     if (!this._hinted && this._hasExits()) {
       this._hinted = true;
@@ -64,6 +69,8 @@ export class Explorer {
   exit() {
     this._cancelTransition();
     this.tapes.clear();
+    this.hunt.stop();
+    this.windowGhost.reset();
     this.scary.reset();
     this.v.world?.setPower(1);
     this.v.walk.power = 1;
@@ -101,14 +108,16 @@ export class Explorer {
     const monster = this.mood.monster;
     if (monster && !this.busy) this.scary.update(dt, p, this.blackout.phase === 'dark', monster === 'lurk', () => this.noclip());
     if (!this.busy) this.shifts.update(dt);
+    if (!this.busy) this.windowGhost.update(dt, this.mood);
     const w = v.walk.walker;
     const got = this.tapes.pickUp(w.x, w.floorY, w.z);
     if (got) {
       this.found += got;
       if (v.walk.sound) v.audio.pickup();
-      v.hud.flash(this.tapes.left ? `📼 Tape ${this.found} of ${this.total}` : `📼 Tape ${this.found} of ${this.total} – all tapes on this level found`);
+      this.hunt.pickedUp(got);
     }
-    v.hud.setExtra([this.depth ? `LEVEL ${this.depth}` : null, this.total ? `📼 ${this.found}/${this.total}` : null].filter(Boolean).join(' · '));
+    if (!this.busy) this.hunt.update();
+    v.hud.setExtra([this.depth ? `LEVEL ${this.depth}` : null, this.total ? `📼 ${this.found}/${this.total}` : null, this.hunt.extra()].filter(Boolean).join(' · '));
   }
 
   /** Monsteret tok deg: bildet rives opp, og du våkner et annet sted. */
@@ -125,6 +134,7 @@ export class Explorer {
   async goDeeper({ title = null, wait = 650, door = null } = {}) {
     const v = this.v;
     if (this.busy || v.walk.paused) return;
+    if (door && !this.hunt.tryExit()) return; // låst til kassettene er funnet (noclip slipper gjennom)
     const transition = {};
     this._transition = transition;
     const current = () => this._transition === transition;
@@ -154,7 +164,9 @@ export class Explorer {
       this.blackout = this._newBlackout();
       this.scary.reset();
       this.shifts.reset();
+      this.windowGhost.reset();
       this._placeTapes();
+      this.hunt.reached(this.depth);
       v.hud.title(title ?? `LEVEL ${this.depth}`, title ? `Level ${this.depth} – ${label}` : label);
       await waitWhileWalking(v, 250, current);
     } finally {

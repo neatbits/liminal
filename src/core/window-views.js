@@ -28,8 +28,8 @@ export const WINDOW_VIEWS = Object.freeze({
   hotel: view({ ground: '#a29d95', stone: '#cfbda5', firstRow: 50, rowGap: 45, spacing: 32,
     groundY: -2, width: [4, 3], height: [3, 4], depth: [5, 3],
     groundStyle: 4, windows: 1, lit: 0.25, fog: 0.009, roof: 1.8 }),
-  // A hand-built Basement window reveals an impossible upper-floor city view.
-  basement: view({ city: true, haze: '#a3ada7', ground: '#666d69', stone: '#92968a',
+  // A hand-built Basement window reveals an impossible, Babbdi-like city: dusty pink concrete.
+  basement: view({ city: true, haze: '#c6b2a8', ground: '#86716a', stone: '#c3a89c',
     firstRow: 42, rowGap: 42, spacing: 34, groundY: -52,
     width: [9, 5], height: [20, 30], depth: [8, 5],
     groundStyle: 4, windows: 1, lit: 0.035, fog: 0.0065 }),
