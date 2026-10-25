@@ -82,6 +82,10 @@ samme retning. `pc-support.test.js` dekker alle PC-er/retninger og relevante tem
 
 ## Utsatte modeller
 
+`stop_sign_level_0` har Sketchfab Standard-lisens og er `disabled`; stoppskiltet bygges i stedet av
+enkle former med egen grafikk (`world/props-stop-sign.js`). Trestolen (`wooden_chair`, CC BY) står i
+`object-catalog-chairs.js` med `textureSize: 512`.
+
 `plastic_palm` er tatt ut etter brukerens ønske. `model.json.disabled` markerer den
 som utelatt fra modellbygg, også med `--all`. Ingen GLB eller katalogoppføring
 beholdes. Poolrooms bruker fortsatt `potted_palm_tree`.

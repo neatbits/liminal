@@ -15,6 +15,7 @@ import { ballMaterial, addBallSupport, BALL_GROUP } from './ball-physics.js';
 import { ObjectSplashes } from './object-splashes.js';
 import { addSoftShape } from './soft-shapes.js';
 import { halfWalls } from '../core/half-walls.js';
+import { tipOrigin, tipQuaternion } from '../core/object-tip.js';
 
 const DENSITY = 40; // kg/m³ – skumgummi
 const PLAYER_R = 0.3;
@@ -47,9 +48,13 @@ export class SoftPhysics {
       const [w, h, d] = def.size;
       // Kroppens origo er tyngdepunktet: midt i klossen, eller loose.com over gulvet.
       const com = def.loose ? def.loose.com : h / 2;
+      // Veltede gjenstander (o.tip) starter liggende: tyngdepunktet dreies med (object-tip.js).
+      const turn = new CANNON.Quaternion(...tipQuaternion(p, def.size));
+      const up = turn.vmult(new CANNON.Vec3(0, com, 0));
+      const [ox, oy, oz] = tipOrigin(p, def.size);
       const body = new CANNON.Body({
         mass: def.loose ? def.loose.mass : Math.max(2, w * h * d * DENSITY),
-        position: new CANNON.Vec3(p.x, p.y + com, p.z),
+        position: new CANNON.Vec3(ox + up.x, oy + up.y, oz + up.z),
         linearDamping: radius ? 0.18 : 0.25,
         angularDamping: radius ? 0.12 : 0.35,
         sleepSpeedLimit: 0.15,
@@ -59,7 +64,7 @@ export class SoftPhysics {
       else if (def.loose) {
         for (const [x, y, z, hx, hy, hz] of def.loose.parts) body.addShape(new CANNON.Box(new CANNON.Vec3(hx, hy, hz)), new CANNON.Vec3(x, y - com, z));
       } else addSoftShape(body, def);
-      body.quaternion.setFromEuler(0, (-p.rot * Math.PI) / 2, 0);
+      body.quaternion.copy(turn);
       body.addEventListener('collide', (e) => {
         const v = Math.abs(e.contact.getImpactVelocityAlongNormal());
         if (v > 1.2) this.onImpact?.(Math.min(1, v / 5) * (radius ? 0.12 : 1), body.position.x, body.position.z,

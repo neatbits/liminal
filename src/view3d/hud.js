@@ -106,8 +106,14 @@ export class Hud {
     this.glitchEl.classList.add('go');
   }
 
-  fade(on) {
+  /** Svart over bildet; instant: uten overgang (f.eks. før Game mode viser Level 1). */
+  fade(on, instant = false) {
+    if (instant) this.black.style.transition = 'none';
     this.black.classList.toggle('on', on);
+    if (instant) {
+      void this.black.offsetWidth;
+      this.black.style.transition = '';
+    }
   }
 
   title(main, sub) {

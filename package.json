@@ -4,6 +4,8 @@
   "version": "0.4.0",
   "type": "module",
   "description": "Liminal-simulator: tegn liminale rom i 2D, se dem i 3D og gå i dem.",
+  "main": "desktop/main.mjs",
+  "author": "neatbits",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -13,16 +15,53 @@
     "test:browser": "node scripts/check-browser.mjs",
     "test:feedback": "node scripts/check-feedback.mjs",
     "models": "node scripts/models.mjs",
-    "deploy": "node scripts/deploy.mjs"
+    "deploy": "node scripts/deploy.mjs",
+    "desktop": "vite build && node scripts/desktop.mjs",
+    "desktop:check": "vite build && node scripts/desktop.mjs --check",
+    "desktop:dist": "vite build && electron-builder --win --linux --dir",
+    "steam:capsules": "vite build && node scripts/steam-assets.mjs"
   },
   "dependencies": {
+    "@fontsource/vt323": "^5.3.0",
     "cannon-es": "^0.20.0",
     "three": "0.186.1"
   },
   "devDependencies": {
     "@gltf-transform/cli": "^4.5.1",
+    "electron": "^45.0.0",
+    "electron-builder": "^26.18.0",
     "ssh2-sftp-client": "^12.1.1",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"
+  },
+  "build": {
+    "appId": "com.neatbits.liminal",
+    "productName": "Liminal Simulator",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "!dist/api/**",
+      "!dist/.htaccess",
+      "desktop/**/*",
+      "package.json",
+      "!node_modules/**/*"
+    ],
+    "asar": false,
+    "win": {
+      "target": "dir",
+      "icon": "desktop/icon.png",
+      "signAndEditExecutable": false
+    },
+    "linux": {
+      "target": "dir",
+      "icon": "desktop/icon.png",
+      "category": "Game",
+      "executableName": "liminal-simulator"
+    },
+    "electronLanguages": [
+      "en-US"
+    ]
   }
 }

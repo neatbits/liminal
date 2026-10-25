@@ -1,6 +1,7 @@
 // About-siden: stilene fra forsiden, og krediteringen av modellene rett fra katalogen. Modeller
 // med CC BY-lisens krediteres med tittel, skaper, kilde og lisens (lenket), slik lisensen krever.
 import './styles/landing.css';
+import '@fontsource/vt323/latin-400.css'; // VHS-fonten pakkes med (OFL), ingen henting fra Google
 import './styles/landing-sections.css';
 import './styles/changelog.css';
 import { OBJECTS } from './core/objects.js';

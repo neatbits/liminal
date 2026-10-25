@@ -11,6 +11,7 @@ import { getTheme } from './themes.js';
 import { floorAt, ceilingAt } from './heights.js';
 import { OBJECTS } from './object-catalog.js';
 import { FACING, objectBox, overlaps, poser } from './object-pose.js';
+import { tipFromJSON } from './object-tip.js';
 
 export { OBJECTS, OBJECT_IDS } from './object-catalog.js';
 export { FACING, objectBox, objectPose, poser } from './object-pose.js';
@@ -155,7 +156,7 @@ export function glowSources(level) {
   return out;
 }
 
-/** Gjenstander fra en fil/lenke: kjente id-er innenfor rommet, hele ruter, rot 0–3. */
+/** Gjenstander fra en fil/lenke: kjente id-er innenfor rommet, hele ruter, rot 0–3 (tip/lift/off: object-tip.js). */
 export function objectsFromJSON(level, data) {
   if (data === undefined || data === null) return [];
   if (!Array.isArray(data)) throw new Error('Invalid objects in the room.');
@@ -163,7 +164,7 @@ export function objectsFromJSON(level, data) {
     .slice(0, MAX_OBJECTS)
     .map((o) => {
       const v = Math.trunc(Number(o?.v));
-      return { id: String(o?.id), x: Math.trunc(Number(o?.x)), z: Math.trunc(Number(o?.z)), rot: Math.trunc(Number(o?.rot)) & 3, ...(v >= 0 && v < 16 ? { v } : {}) };
+      return { id: String(o?.id), x: Math.trunc(Number(o?.x)), z: Math.trunc(Number(o?.z)), rot: Math.trunc(Number(o?.rot)) & 3, ...(v >= 0 && v < 16 ? { v } : {}), ...tipFromJSON(o) };
     })
     .filter((o) => OBJECTS[o.id] && inBounds(level, o.x, o.z));
 }

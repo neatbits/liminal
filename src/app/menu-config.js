@@ -1,10 +1,11 @@
 // Innholdet i toppmenyene.
-import { newRoom, openExamples, openMine, save, share, exportFile, importFile, generateInto } from './actions.js';
+import { newRoom, openExamples, openMine, save, share, exportFile, importFile, generateInto, playGame, openShared } from './actions.js';
 import { helpDialog } from '../ui/dialogs.js';
 import { openSettings } from './view-settings.js';
 import { openModal } from '../ui/modal.js';
 import { h } from '../ui/dom.js';
 import { feedbackDialog } from '../ui/feedback.js';
+import { desktop, startMenu } from './start-menu.js';
 
 function about() {
   openModal({
@@ -37,8 +38,11 @@ export function menuConfig(app) {
         { label: 'Save as copy', action: () => save(app, { copy: true }) },
         '-',
         { label: 'Share link …', action: () => share(app) },
+        ...(desktop() ? [{ label: 'Open shared link …', action: () => openShared(app) }] : []),
         { label: 'Export file', action: () => exportFile(app) },
         { label: 'Import file …', action: () => importFile(app) },
+        // Programmet (Electron): tilbake til startmenyen, og avslutt.
+        ...(desktop() ? ['-', { label: 'Main menu', action: () => startMenu(app) }, { label: 'Quit', shortcut: 'Ctrl+Q', action: () => window.liminalDesktop.quit() }] : []),
       ],
     },
     {
@@ -58,6 +62,7 @@ export function menuConfig(app) {
         { label: '2D and 3D', action: () => app.layout.set('split') },
         { label: '2D plan only', action: () => app.layout.set('2d') },
         { label: '3D only', action: () => app.layout.set('3d') },
+        ...(desktop() ? [{ label: 'Fullscreen', shortcut: 'F11', action: () => window.liminalDesktop.toggleFullscreen() }] : []),
         '-',
         { label: 'Fit plan', shortcut: '0', action: () => app.editor.fit() },
         { label: 'Toggle grid', action: () => app.setHelper('grid', !app.settings.grid) },
@@ -66,6 +71,7 @@ export function menuConfig(app) {
         '-',
         { label: 'Walk the room', action: () => app.walk() },
         { label: 'Dream walk (drift)', action: () => app.walk({ drift: true }) },
+        { label: 'Game mode … (find the tapes)', action: () => playGame(app) },
         { label: 'Music on/off', action: () => app.viewer.toggle('music') },
       ],
     },

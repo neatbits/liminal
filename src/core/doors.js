@@ -2,9 +2,10 @@
 //   bit 0–1  tilstand: 0 ingen dør (bare åpning), 1 lukket, 2 på gløtt, 3 åpen
 //   bit 2    slå ut mot den andre siden (bare når begge sider er åpne)
 //   bit 3    hengsler i den andre enden av åpningen
+//   bit 4    bue (DOOR_ARCH, bare uten dørblad): toppen er en bue, ikke flat (world/arches.js)
 // En dør med vegg på baksiden fører ingen steder («dør til ingensteds»); står den på
 // gulvnivå regnes den som en bod (temaet kan gi boddører eget utseende). Ren logikk.
-import { TILE, getTile, inBounds, setTile } from './level.js';
+import { TILE, DOOR_ARCH, getTile, inBounds, setTile } from './level.js';
 import { floorAt } from './heights.js';
 
 export const DOOR = Object.freeze({ NONE: 0, CLOSED: 1, AJAR: 2, OPEN: 3 });
@@ -29,9 +30,9 @@ function roomierSide(level, x, z, pz) {
 /**
  * Døråpningen i (x, z), eller null hvis ruten ikke er en åpning mellom to vegger.
  * Lokale akser: p går gjennom åpningen, a langs veggen (pz = true: p er z, a er x).
- * @returns {{ x, z, pz, a0, p0, state, side, hinge, oneSided, closet, face }}
+ * @returns {{ x, z, pz, a0, p0, state, side, hinge, arch, oneSided, closet, face }}
  *   a0/p0: rutens hjørne langs a/p · side: ±1, retningen dørbladet slår ut mot ·
- *   hinge: 0 = hengsler ved a0, 1 = ved a0 + 1 · oneSided: vegg bak døren ·
+ *   hinge: 0 = hengsler ved a0, 1 = ved a0 + 1 · arch: buet åpning · oneSided: vegg bak døren ·
  *   closet: dør til ingensteds på gulvnivå · face: p-koordinaten til veggflaten dørbladet
  *   sitter i når det er lukket
  */
@@ -56,6 +57,7 @@ export function doorInfo(level, x, z) {
     state: meta & STATE,
     side,
     hinge: meta & HINGE ? 1 : 0,
+    arch: !(meta & STATE) && !!(meta & DOOR_ARCH),
     oneSided: !(lo && hi),
     closet: !(lo && hi) && floorAt(level, x, z) < 0.05,
     face: p0 + (side > 0 ? 1 : 0),

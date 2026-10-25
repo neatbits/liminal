@@ -21,8 +21,6 @@
       // Delte lenker fra før forsiden fantes (liminalsimulator.com/#room=…) går rett til simulatoren.
       if (/^#(room|rom|example)=/.test(location.hash)) location.replace('app/' + location.hash);
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap" />
   </head>
   <body class="landing">
     <header class="l-top">
@@ -45,6 +43,7 @@
         </p>
         <div class="l-cta">
           <a class="l-btn" href="app/">▶ Open the simulator</a>
+          <a class="l-btn l-btn-game" href="app/#play">📼 Game mode</a>
           <a class="l-btn l-btn-ghost" href="#examples">Try an example</a>
         </div>
         <p class="l-note">Free · runs in your browser · nothing to install</p>

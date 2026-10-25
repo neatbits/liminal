@@ -18,6 +18,10 @@ export const MAX_SIZE = 128;
 export const HEIGHT_MIN = 2.2;
 export const HEIGHT_MAX = 20; // høye haller (lampene henger da ned, se world/lighting.js)
 export const DOOR_HEIGHT = 2.1;
+// En åpning uten dørblad (DOOR.NONE) med denne meta-biten er en bue (core/doors.js, world/arches.js):
+// toppen av buen står ARCH_TOP over gulvet, eller like under taket i lavere rom.
+export const DOOR_ARCH = 16;
+export const ARCH_TOP = 2.5;
 export const WATER_DEPTH = 0.7; // standard bassengdybde, fra gulvkanten til bunnen
 export const DEPTH_MIN = 0.3;
 export const DEPTH_MAX = 3;

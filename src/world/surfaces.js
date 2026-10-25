@@ -14,6 +14,7 @@ import { openSpans, clipSpans, buildDeck } from './decks.js';
 import { windowInfo } from '../core/windows.js';
 import { cornerShape, sideOpened } from '../core/corners.js';
 import { buildCorner } from './corners.js';
+import { archShape, buildArch } from './arches.js';
 import { wallTextureMap } from './wall-textures.js';
 import { mallRoof } from '../core/mall-roof.js';
 import { isShopfront, shopfrontNormal } from '../core/shopfronts.js';
@@ -159,7 +160,10 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
       }
       // Taket får mindre direkte lys – ellers blir det overeksponert rundt armaturene.
       const lower = (x, z) => isWall(x, z) || ceilingAt(level, x, z) < cy - STEP;
-      if (!shape && !roof?.mask[cz*level.w+cx]) horizontal(ceilingMesh, cx, cz, cy, S, false, lower, 0.1, CEILING_GAIN);
+      // En bue har ikke flatt tak: det ville ligget skjult inne i buen og flimret mot toppen av den.
+      const arch = t === TILE.DOOR && archShape(level, cx, cz);
+      if (!shape && !arch && !roof?.mask[cz*level.w+cx]) horizontal(ceilingMesh, cx, cz, cy, S, false, lower, 0.1, CEILING_GAIN);
+      if (arch) buildArch(wallMesh, arch);
       const spans = openSpans(level, cx, cz, vBase);
       if (shape) buildCorner(shape, { floor: floorMesh, ceiling: ceilingMesh, wall: wallMesh }, spans, wallUV, cornerShade(shape));
       if (t === TILE.PILLAR) {

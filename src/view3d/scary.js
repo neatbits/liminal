@@ -2,7 +2,8 @@
 // pust og (Nightmare) et brøl når jakten begynner, og «noclip» til et nytt nivå når det tar deg. Styres av view3d/explore.js.
 import { MonsterAI, heardFrom } from '../world/monster-ai.js';
 import { Monster3D } from './monster.js';
-import { heartbeat, breath, caught, roarAt } from '../audio/scary.js';
+import { getMood } from '../gen/moods.js';
+import { heartbeat, breath, caught, roarAt, warmScary } from '../audio/scary.js';
 
 const ROAR_AGAIN = 20; // s: tidligst neste brøl
 const ROAR_FAR = 30; // m: så langt unna høres brølet svakest og mørkest
@@ -25,12 +26,18 @@ export class Scary {
     this.monster.group.visible = false;
   }
 
-  /** Nytt nivå (eller nytt rom): monsteret begynner på nytt. */
-  reset() {
+  /**
+   * Nytt nivå (eller nytt rom): monsteret begynner på nytt. prepare: under overgangen, så modellen
+   * lastes og tegnes usynlig én gang mens skjermen er svart (Monster3D.warm), ikke midt i gåingen.
+   */
+  reset(prepare = false) {
     this.ai = null;
     this.roarIn = null;
     this.roarAgain = 0;
     this.hide();
+    if (!prepare || !getMood(this.v.settings.mood).monster) return;
+    const v = this.v;
+    this.monster.load().then((ok) => ok && !this.ai?.visible && this.monster.warm(v.renderer, v.camera, v.scene));
   }
 
   /**
@@ -47,7 +54,10 @@ export class Scary {
     const player = { x: w.x, z: w.z, y: w.floorY, yaw: w.yaw };
     const event = this.ai.update(dt, player, dark);
     this.monster.update(dt, this.ai, player, power);
+    // Alt det første gangen koster, gjøres på forhånd: tegningen (GPU) og lydene (i små biter).
+    if (!this.ai.visible) this.monster.warm(v.renderer, v.camera, v.scene);
     const sound = v.walk.sound;
+    if (sound) warmScary(v.audio, !!chase.roar);
     if (event === 'caught') {
       if (sound) caught(v.audio);
       onCaught();

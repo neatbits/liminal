@@ -4,10 +4,10 @@ import { h } from './dom.js';
 let current = null;
 
 /**
- * @param o { title, body (Node), actions: [{ label, primary, onClick }] }
- *          onClick kan returnere false for å holde dialogen åpen.
+ * @param o { title, body (Node), actions: [{ label, primary, onClick }], className }
+ *          onClick kan returnere false for å holde dialogen åpen. className: egen stil (startmenyen).
  */
-export function openModal({ title, body, actions = [], onClose }) {
+export function openModal({ title, body, actions = [], onClose, className = '' }) {
   current?.close();
   const previousFocus = document.activeElement;
   let closed = false;
@@ -59,7 +59,7 @@ export function openModal({ title, body, actions = [], onClose }) {
     : null;
   const modal = h(
     'div',
-    { class: 'modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': title, tabindex: '-1' },
+    { class: className ? `modal ${className}` : 'modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': title, tabindex: '-1' },
     h('header', { class: 'modal-head' }, h('h2', { text: title }), h('button', { type: 'button', class: 'modal-close', 'aria-label': 'Close', text: '×', onclick: () => close() })),
     h('div', { class: 'modal-body' }, body),
     foot,

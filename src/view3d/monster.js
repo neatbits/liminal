@@ -33,6 +33,8 @@ export class Monster3D {
     this.model = null;
     this.disposed = false;
     this.shown = false;
+    this.warmed = false;
+    this._warming = false;
   }
 
   /** Load only in a mood that actually uses the ghost; repeated calls share one promise. */
@@ -85,8 +87,32 @@ export class Monster3D {
     return this.ready;
   }
 
+  /**
+   * Draws the ghost once, invisibly, right in front of the camera: the shader compiles and the
+   * 16 morph targets (~3 MB) upload now instead of on the frame the ghost first appears.
+   * The next update() after that frame restores the material (or at once, if the ghost appears).
+   */
+  warm(renderer, camera, scene) {
+    if (!this.model || this.warmed || this.disposed) return;
+    this.warmed = this._warming = true;
+    const ahead = camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(2.5);
+    this.group.position.copy(camera.position).add(ahead);
+    this.group.position.y -= GHOST.height / 2;
+    this.group.visible = true;
+    this.material.colorWrite = this.material.depthWrite = false;
+    this._drawn = false;
+    this.model.traverse(o => o.isMesh && (o.onAfterRender = () => (this._drawn = true)));
+    renderer.compileAsync?.(this.group, camera, scene).catch(() => {});
+  }
+
   update(dt, ai, player, power) {
     if (this.disposed) return;
+    if (this._warming) {
+      if (!this._drawn && !ai.visible) return; // the invisible frame has not been drawn yet
+      this._warming = false;
+      this.material.colorWrite = this.material.depthWrite = true;
+      this.model.traverse(o => o.isMesh && (o.onAfterRender = () => {}));
+    }
     if (ai.visible) this.load();
     this.group.visible = ai.visible && !!this.model;
     if (!this.group.visible) {

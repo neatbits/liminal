@@ -3,13 +3,14 @@
 import { OBJECTS } from '../core/objects.js';
 
 export const OBJECT_GROUPS = [
-  ['Furniture', ['sofa', 'armchair', 'desk', 'desk2', 'moderndesk', 'table', 'officechair', 'dinerchair', 'dinerset', 'plasticchair', 'deckchair', 'tvbench', 'mallbench', 'cafe']],
+  ['Furniture', ['sofa', 'armchair', 'desk', 'desk2', 'moderndesk', 'table', 'officechair', 'dinerchair', 'dinerset', 'plasticchair', 'woodenchair', 'deckchair', 'tvbench', 'mallbench', 'cafe']],
   ['School & office', ['schoolcabinet', 'whiteboard', 'wallboard', 'desklamp', 'mug', 'halfwall']],
   ['Hospital', ['hospitalbed', 'waitingchairs', 'medicalscreen', 'medicalcabinet', 'medicaltrolley']],
   ['Electronics', ['tv', 'pc', 'retropcdesktop', 'retropctower', 'retropccompact', 'retropcterminal', 'laptop', 'console', 'gamepad', 'boombox', 'hifi', 'walkman', 'vhsplayer', 'cassette', 'arcade2', 'register', 'soda', 'clock', 'fan']],
   ['Pool & water', ['divingboard', 'flamingo', 'duck']],
   ['Plants', ['pottedpalm', 'pottedplant', 'pottedtree']],
   ['Play', ['playball', 'playground', 'bouncehouse', 'bouncecombo', 'bouncecourse', 'softcube', 'softblock', 'softpillar', 'softbeam', 'softslab', 'softramp', 'softcylinder', 'softsteps']],
+  ['Street', ['stopsign']],
   ['Shop & food', ['kiosk', 'shelf', 'wallshelf', 'cosmeticsshelf', 'pharmacyshelf', 'vhsshelf', 'minifridge', 'counter']],
 ];
 
@@ -22,7 +23,7 @@ export const OBJECT_ICONS = {
   armchair: '🛋️', moderndesk: '🗄️', mug: '☕', desklamp: '💡', schoolcabinet: '🗃️', whiteboard: '📋', wallboard: '📋',
   hospitalbed: '🛏️', waitingchairs: '💺', medicalscreen: '🏥', medicalcabinet: '🗄️', medicaltrolley: '🏥',
   playball: '🔴',
-  sofa: '🛋️', desk: '🗄️', desk2: '🗄️', officechair: '💺', dinerchair: '🪑', dinerset: '🍽️', plasticchair: '🪑',
+  sofa: '🛋️', desk: '🗄️', desk2: '🗄️', officechair: '💺', dinerchair: '🪑', dinerset: '🍽️', plasticchair: '🪑', woodenchair: '🪑', stopsign: '🛑',
   deckchair: '🏖️', tvbench: '📺', cafe: '☕', tv: '📺', pc: '🖥️', laptop: '💻', console: '🎮', gamepad: '🕹️',
   boombox: '📻', cassette: '📼', arcade2: '👾', register: '💵', soda: '🥤', clock: '🕒', fan: '🌀',
   divingboard: '🤸', flamingo: '🦩', duck: '🦆', playground: '🛝', bouncehouse: '🏰',

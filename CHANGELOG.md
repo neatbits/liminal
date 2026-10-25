@@ -6,6 +6,86 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ukommet]
 
+### Endret
+- Fonten VT323 pakkes med (`@fontsource/vt323`) i stedet for å hentes fra Google Fonts – også på
+  nettsiden. Personvernteksten på About-siden er oppdatert: ingen tredjepart kontaktes for fonter.
+- En dør til ingensteds fører alltid videre til et nytt sted, i alle stemninger: avvikene «samme rom
+  igjen» (neste nivå var en kopi av rommet man gikk fra, og man kom ut av samme dør) og «dør
+  tilbake» (døren førte inn i det samme rommet gjennom en annen dør) er fjernet. Neste nivå har alltid
+  et annet tema enn det forrige. `nextLevel` tar ikke lenger rommet man kom fra; stemningenes
+  `anomalies` har bare `loops` og `corridor`.
+
+### Lagt til
+- Liminal Simulator som program (Electron) for Windows og Linux/Steam Deck – første steg mot Steam.
+  `desktop/main.mjs` serverer bygget under `app://liminal/` (egen opprinnelse, så lagring virker),
+  starter i simulatoren, åpner lenker ut i nettleseren, sender tilbakemeldinger videre til nettstedet
+  med riktig `Origin`, F11 for fullskjerm og det kraftige skjermkortet på bærbare. Ingen reklameplass
+  i programmet. `npm run desktop`, `desktop:check` (selvsjekk: 3D, WebGL, lagring, font, modeller og
+  at nettstedet godtar tilbakemeldinger) og `desktop:dist` (`release/win-unpacked`,
+  `release/linux-unpacked`). `scripts/desktop.mjs` fjerner `ELECTRON_RUN_AS_NODE`. Se `docs/desktop.md`.
+- Startmeny i programmet (i stedet for «New room» ved oppstart): Game mode, Continue, New room,
+  Examples, My rooms, Settings, About & credits og Quit, i forsidens stil og med fokus i menyen.
+  Logoen og File → Main menu åpner den igjen; File → Quit og Ctrl+Q avslutter. Egne sider åpnet
+  med `target=_blank` (About fra dialogen) vises i samme vindu i stedet for å bli stoppet. Ikonet er
+  korridoren fra forsiden. Nettsiden er uendret (`scripts/check-start-menu.mjs` prøver begge);
+  `openModal` har fått `className`.
+- Exe-en blokkeres ikke lenger av Smart App Control i Windows 11 (usignerte, ukjente filer): den er
+  nå Electrons egen exe, helt urørt (`win.signAndEditExecutable: false`, `asar: false`), som Windows
+  kjenner igjen. Exe-filen har dermed Electrons ikon og navn; vinduet har vårt. Datamappen er satt
+  fast til `%APPDATA%/Liminal Simulator`. Se `docs/desktop.md`.
+- Delte lenker fra programmet pekte til `app://liminal/…`, som ikke virker for andre – nå til
+  nettsiden (`core/share-link.js`, `WEB_APP`). Nytt i programmet: File → «Open shared link …» åpner en
+  innlimt lenke (`app/shared-link.js`, spør først om ulagret arbeid). Tester: `share-link.test.js` og
+  i `check-start-menu.mjs`.
+- Steam-bilder: `npm run steam:capsules -- <bredt bilde> [høyt bilde]` lager alle kapslene, biblioteks-
+  helten og logoen i Steams størrelser av egne skjermbilder (`scripts/steam-assets.mjs`,
+  `steam-capsules.mjs`). Bildene går til Chrome via en lokal server og helten hentes ut i biter: CDP-
+  meldinger på flere MB kutter forbindelsen («Browser connection closed»). Fotomodusen (P) i programmet har ikke vannmerke og lagrer rett i
+  `Pictures/Liminal Simulator` (andre nedlastinger spør som før).
+- Programmet starter i fullskjerm. F11 eller View → Fullscreen bytter, og valget huskes
+  (`desktop/window-state.mjs`, `window.json` i brukermappen). Vinduet blir i fullskjerm når man går ut
+  av gåmodus; `desktop:check -- --fullscreen` prøver det synlig.
+- Game mode: knappen «📼 Game mode» på forsiden (`app/#play`) åpner et stemningsvalg i simulatoren
+  og går så rett inn på Level 1 i den uendelige utforskingen – kassettjakt og låste dører – i
+  fullskjerm. Rommet i editoren er hjem når man går ut, og endres ikke. Også i menyen (View → Game
+  mode …) og på telefonen (egen knapp under stemningsvalget, med fokus fra forsiden). Svart med en
+  gang (`hud.fade(on, instant)`), så editorrommet ikke vises før Level 1. `view3d/game-mode.js`,
+  `gameModeDialog`, nettlesersjekken `scripts/check-game-mode.mjs`.
+- Buede døråpninger i genererte Level 0-rom: noen av de smale åpningene mellom veggstykkene blir buer,
+  og noen få slås gjennom rette vegger (gir bare flere veier). Halvsirkel opp til 2,5 m, flatere under
+  lavere tak. Ny meta-bit for åpninger uten dørblad (`DOOR_ARCH`), `ceilingAt` gir toppen av buen,
+  `world/arches.js` bygger undersiden og veggfeltene i veggmaterialet. Undersiden får lyset fra
+  veggfeltene ved begge kanter (ingen mørk søm eller flekk), tekstur fra et rent tapetfelt (ikke
+  gulvlisten), og det skjulte flate taket i åpningen bygges ikke (flimret mot toppen av buen).
+  Bare i genererte rom (`vary`), ikke i eksemplene. Buer holder to ruter avstand til dører.
+- Trestol (Wooden Chair av Manuel López, CC BY 4.0) med fysikk som plaststolen: i Level 0 og i
+  kjellerrommene, og i Level 0 også i hauger – to stoler på siden og én på ryggen oppå beina deres,
+  noen ganger med en stående og en veltet ved siden av. Haugene er prøvd i fysikken i alle fire
+  retninger: toppstolen blir liggende. `object-catalog-chairs.js`, `gen/chair-piles.js`.
+- Veltede gjenstander: `o.tip` (på ryggen eller siden), `o.lift` og `o.off` (flyttet innenfor ruten)
+  lagres i rommet og brukes likt av posituren, 3D og fysikken (`core/object-tip.js`).
+- Stoppskilt i Level 0 (sjeldent) og i parkeringshuset: bygget av enkle former med egen grafikk
+  (`world/props-stop-sign.js`), siden kildemodellen har Sketchfab Standard-lisens.
+
+### Rettet
+- Bratte trapper opp til et galleri (f.eks. i Mall, 1,4–2,1 m stigning per rute): føttene hang
+  opptil 0,5 m etter bakken på grunn av kamerautjevningen, så ved toppen valgte spillet etasjen
+  *under* dekket (`DECK_SNAP`) – man falt gjennom galleriet og satt fast ved trappen. Nå henger
+  føttene høyst 0,12 m etter på vei opp (`MAX_LAG` i `view3d/walker.js`). Test: trapper med 2–8 ruter
+  og bredde 1–3 opp til et dekke i 4,2 m (`climb.test.js`).
+- Romformatet klemte `meta` ned til 15 ved lagring og deling – nå 31 (to hex-tegn), så buene
+  overlever. Eldre rom leses som før.
+- `faceQuad` bestemte omløpet fra trekant 0-1-2 også når den var utartet (to like hjørner), så en
+  firkant som spisser seg til kunne vende feil vei og bli borte. Nå brukes 0-2-3 når 0-1-2 er flat.
+- Hakket i det monsteret dukker opp (målt på ekte GPU): brølet ble syntetisert i hovedtråden (~70 ms
+  0,6–1,8 s etter at jakten begynte), hjertebank/pust ble laget første gang (~15 ms), og spøkelsets
+  shader og 16 formmål (~3 MB) ble lastet opp i det første bildet det var med. Nå lages Nightmare-lydene
+  i små biter i bakgrunnen (`audio/bank.js` `SoundBank`, 8192 prøver per runde, ny variant etter hver
+  bruk), resonatorene regner koeffisienter hver 16. prøve, og spøkelset tegnes usynlig én gang under
+  overgangen til nivået (`Monster3D.warm`: `colorWrite` av, `compileAsync`). Spøkelset utenfor
+  vinduet tar sitt første stillbilde på samme måte når nivået lastes, ikke når det skal vises.
+  Brølet: 71 → 0,5 ms; oppdateringen ved spawn: 28 → 1,6 ms.
+
 ## [0.4.0] – 2026-10-24
 
 ### Endret

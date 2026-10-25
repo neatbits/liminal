@@ -1,0 +1,11 @@
+Model Information:
+* title:	Wooden Chair
+* source:	https://sketchfab.com/3d-models/wooden-chair-75258f5b06534b0fb64e16eb842e3f64
+* author:	Manuel López (https://sketchfab.com/manuelopez)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Wooden Chair" (https://sketchfab.com/3d-models/wooden-chair-75258f5b06534b0fb64e16eb842e3f64) by Manuel López (https://sketchfab.com/manuelopez) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

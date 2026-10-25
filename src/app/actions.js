@@ -5,11 +5,14 @@ import { randomSeed, parseSeed } from '../core/rng.js';
 import { encodeLevel, levelFromJSON, levelToJSON } from '../core/serialize.js';
 import { listRooms, loadRoom, saveRoom, deleteRoom } from '../core/storage.js';
 import { generateLevel, levelFromTemplate } from '../gen/index.js';
-import { newRoomDialog, examplesDialog, myRoomsDialog, shareDialog } from '../ui/dialogs.js';
+import { newRoomDialog, examplesDialog, myRoomsDialog, shareDialog, gameModeDialog } from '../ui/dialogs.js';
+import { startGame } from '../view3d/game-mode.js';
 import { confirmDialog } from '../ui/modal.js';
+import { SHARE_PARAM, WEB_APP, shareUrl } from '../core/share-link.js';
+import { openSharedLinkDialog } from './shared-link.js';
 import { toast } from '../ui/toast.js';
 
-export const SHARE_PARAM = 'room';
+export { SHARE_PARAM };
 const STORAGE_FULL = 'Could not save – browser storage is full, blocked or damaged. Export the room to keep a copy.';
 
 /** Spør før ulagret arbeid erstattes. */
@@ -32,6 +35,14 @@ export function newRoom(app, { startup = false } = {}) {
       app.setLevel(levelFromTemplate(o.template, { ...o, seed, name: 'New room' }));
       if (o.template === 'random') toast(`New random room – seed ${seed}`);
     },
+  });
+}
+
+/** Game mode (forsiden → app/#play, og menyen): velg stemning, så rett inn på Level 1. */
+export function playGame(app) {
+  gameModeDialog({
+    mood: app.settings.mood,
+    onStart: (mood) => startGame(app.viewer, mood, () => (app.walk(), app.viewer.mode === 'walk')),
   });
 }
 
@@ -95,8 +106,18 @@ async function copyText(text) {
 
 export async function share(app) {
   const code = await encodeLevel(app.level);
-  const url = `${location.origin}${location.pathname}#${SHARE_PARAM}=${code}`;
+  // I programmet er adressen app://…, som ikke virker for andre: lenken går til nettsiden.
+  const url = shareUrl(code, window.liminalDesktop ? WEB_APP : `${location.origin}${location.pathname}`);
   shareDialog({ url, onCopy: copyText });
+}
+
+/** Programmet: åpne en delt lenke man har fått (File → Open shared link …). */
+export function openShared(app) {
+  openSharedLinkDialog(async (level) => {
+    if (!(await confirmReplace(app))) return;
+    app.setLevel(level);
+    toast(`Opened “${level.name}”`);
+  });
 }
 
 function slug(name) {

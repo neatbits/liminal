@@ -42,7 +42,7 @@ describe('størrelsen på de uendelige nivåene', () => {
   });
 
   it('nextLevel lager større rom og lengre korridorer med større skala', () => {
-    const room = (scale) => nextLevel(1, 'backrooms', mulberry32(5), null, { corridor: 0, again: 0 }, scale).level;
+    const room = (scale) => nextLevel(1, 'backrooms', mulberry32(5), { corridor: 0 }, scale).level;
     const small = room(LEVEL_SIZES.small.scale);
     const huge = room(LEVEL_SIZES.huge.scale);
     expect(huge.w * huge.h).toBeGreaterThan(4 * small.w * small.h);

@@ -102,10 +102,16 @@ const UV = [
  * runde flater som skal se glatte ut.
  */
 export function faceQuad(mesh, p, n, uv = UV, normals = null, ao = undefined) {
-  const e1 = [p[1][0] - p[0][0], p[1][1] - p[0][1], p[1][2] - p[0][2]];
-  const e2 = [p[2][0] - p[0][0], p[2][1] - p[0][1], p[2][2] - p[0][2]];
-  const c = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
-  const order = c[0] * n[0] + c[1] * n[1] + c[2] * n[2] < 0 ? [0, 3, 2, 1] : [0, 1, 2, 3];
+  // Omløpet fra trekanten 0-1-2, eller 0-2-3 når den første er utartet (to like hjørner, f.eks. en
+  // firkant som spisser seg til en trekant i toppen av en bue).
+  const facing = (i, j, k) => {
+    const e1 = [p[j][0] - p[i][0], p[j][1] - p[i][1], p[j][2] - p[i][2]];
+    const e2 = [p[k][0] - p[i][0], p[k][1] - p[i][1], p[k][2] - p[i][2]];
+    const c = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+    return c[0] * n[0] + c[1] * n[1] + c[2] * n[2];
+  };
+  const d = Math.abs(facing(0, 1, 2)) > 1e-12 ? facing(0, 1, 2) : facing(0, 2, 3);
+  const order = d < 0 ? [0, 3, 2, 1] : [0, 1, 2, 3];
   const v = order.map((k) => [...p[k], ...uv[k]]);
   mesh.quad(v[0], v[1], v[2], v[3], n, ao && order.map((k) => ao[k]), normals && order.map((k) => normals[k]));
 }

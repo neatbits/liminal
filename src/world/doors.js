@@ -86,7 +86,7 @@ export function buildDoors(level, style, field) {
       const info = doorInfo(level, x, z);
       if (!info) continue;
       const fy = floorAt(level, x, z);
-      if (style.frame) trims(out.trim, info, fy);
+      if (style.frame && !info.arch) trims(out.trim, info, fy); // buen har ingen karm (world/arches.js)
       if (info.state === DOOR.NONE) continue;
       if (info.oneSided) {
         leaf(info.closet && style.closet ? out.closet : out.leaf, out.knob, info, fy, style);

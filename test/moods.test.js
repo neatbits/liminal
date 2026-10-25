@@ -84,9 +84,8 @@ describe('stemningsskalaen', () => {
   });
 
   it('uten avvik er neste nivå alltid et vanlig rom', () => {
-    const current = presetById('basement').make();
     for (let s = 1; s <= 30; s++) {
-      expect(nextLevel(3, 'basement', mulberry32(s), current, MOODS.normal.anomalies).kind).toBe('room');
+      expect(nextLevel(3, 'basement', mulberry32(s), MOODS.normal.anomalies).kind).toBe('room');
     }
   });
 });

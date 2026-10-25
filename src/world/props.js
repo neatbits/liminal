@@ -1,5 +1,6 @@
 // Gjenstander som bygges av enkle former i stedet for modellfiler (OBJECTS med `build`):
-// gatekjøkkenkiosken (props-kiosk.js), et kafébord med tre stoler og butikkinnredning (props-shop.js).
+// gatekjøkkenkiosken (props-kiosk.js), et kafébord med tre stoler, butikkinnredning (props-shop.js)
+// og stoppskiltet (props-stop-sign.js).
 // Returnerer deler i samme format som de lastede modellene.
 import * as THREE from 'three';
 import { box, cylinder, parts } from './props-geo.js';
@@ -8,6 +9,7 @@ import { soft, SOFT_COLORS } from './props-soft.js';
 import { kiosk, SIGNS, THEME_SIGNS } from './props-kiosk.js';
 import { playball } from './props-ball.js';
 import { halfwall } from './props-half-wall.js';
+import { stopsign } from './props-stop-sign.js';
 
 /** Hvilken variant en gjenstand får (fast for samme rute): nøkkel til bufferet av ferdige deler. */
 export function propKey(def, level, o) {
@@ -75,7 +77,7 @@ function cafe() {
   ]);
 }
 
-const BUILDERS = { kiosk, cafe, shelf, wallshelf, counter, soft, playball, halfwall };
+const BUILDERS = { kiosk, cafe, shelf, wallshelf, counter, soft, playball, halfwall, stopsign };
 
 /** Delene til en bygget gjenstand (key fra propKey). */
 export function buildProp(key) {

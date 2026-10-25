@@ -5,6 +5,7 @@ import { ccBy } from './object-credit.js';
 import { ELECTRONIC_OBJECTS } from './object-catalog-electronics.js';
 import { INTERIOR_OBJECTS } from './object-catalog-interiors.js';
 import { MALL_OBJECTS } from './object-catalog-mall.js';
+import { CHAIR_OBJECTS } from './object-catalog-chairs.js';
 
 /**
  * Katalogen. size = [bredde, høyde, dybde] i meter slik gjenstanden står i rommet (selve filen
@@ -213,6 +214,7 @@ export const OBJECTS = {
   ...INTERIOR_OBJECTS,
   ...ELECTRONIC_OBJECTS,
   ...MALL_OBJECTS,
+  ...CHAIR_OBJECTS,
   ...BUILT_OBJECTS, // bygget av enkle former (object-catalog-built.js)
 };
 

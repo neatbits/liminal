@@ -22,6 +22,12 @@ export async function checkNightmare(browser, origin) {
     v.enterWalk(); v.walk.session.resume();
     await ex.goDeeper();
     v.walk.session.resume();
+    // Spøkelset ble tegnet usynlig én gang under overgangen (shader og formdata), og vises normalt etterpå.
+    const m = ex.scary.monster;
+    await m.ready;
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    ex.update(0.016);
+    const warm = { warmed: m.warmed, pending: m._warming, colorWrite: m.material.colorWrite };
     const level = v.walk.level, spawn = { ...level.spawn }, total = ex.total;
     const tape = ex.tapes.items[0], base = ex.hunt.progress.tapes; // fremgangen fra sjekkene før
     Object.assign(w, { x: tape.x, z: tape.z, floorY: tape.y });
@@ -46,9 +52,10 @@ export async function checkNightmare(browser, origin) {
       title: document.querySelector('.hud-title')?.textContent ?? '', saved: progress.tapes - base };
     v.exitWalk(false);
     v.updateSettings({ mood: 'normal' });
-    return { total, picked, hunting, roar, busy, after };
+    return { total, warm, picked, hunting, roar, busy, after };
   })()`);
   assert.ok(result.total >= 1, `level 1 has tapes: ${JSON.stringify(result)}`);
+  assert.deepEqual(result.warm, { warmed: true, pending: false, colorWrite: true }, 'the ghost was prepared during the transition');
   assert.deepEqual(result.picked, { found: 1, saved: 1 });
   assert.deepEqual(result.hunting, { state: 'hunt', pending: true }, 'the hunt begins with a roar on the way');
   assert.deepEqual(result.roar, { roared: true, pending: false, sound: true }, 'the roar plays shortly after');

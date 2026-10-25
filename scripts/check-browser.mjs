@@ -21,6 +21,8 @@ import { checkGhost } from './check-ghost.mjs';
 import { checkTapeHunt } from './check-tape-hunt.mjs';
 import { checkHalls } from './check-halls.mjs';
 import { checkNightmare } from './check-nightmare.mjs';
+import { checkGameMode } from './check-game-mode.mjs';
+import { checkStartMenu } from './check-start-menu.mjs';
 import { checkMobilePlayer } from './check-mobile-player.mjs';
 import { checkMallSelection } from './check-mall-selection.mjs';
 import { checkPoolPillars } from './check-pool-pillars.mjs';
@@ -153,6 +155,8 @@ try {
   await checkTapeHunt(browser, origin);
   await checkHalls(browser, origin);
   await checkNightmare(browser, origin);
+  await checkGameMode(browser, origin);
+  await checkStartMenu(browser, origin);
   await checkPoolPillars(browser, origin);
   await checkHalfWalls(browser, origin);
   await checkManualFinishes(browser, origin);

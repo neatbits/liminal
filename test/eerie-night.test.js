@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EERIE_SOUNDS, eerieBuffer, pickEerie } from '../src/audio/eerie.js';
-import { roar } from '../src/audio/eerie-night.js';
+import { nightBuffer, warmNight } from '../src/audio/eerie-night.js';
+import { SoundBank } from '../src/audio/bank.js';
 import { MOODS } from '../src/gen/moods.js';
 import { heardFrom } from '../src/world/monster-ai.js';
 import { roarAt } from '../src/audio/scary.js';
@@ -35,7 +36,7 @@ describe('Nightmare-lydene', () => {
   });
 
   it('brølet er dypt og langt, og skrittene kommer nærmere', () => {
-    const d = roar(ctx).getChannelData(0);
+    const d = nightBuffer(ctx, 'roar').getChannelData(0);
     expect(d.length / ctx.sampleRate).toBeGreaterThan(2.3);
     let crossings = 0;
     for (let i = 1; i < d.length; i++) if (d[i - 1] < 0 !== d[i] < 0) crossings++;

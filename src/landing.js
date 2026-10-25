@@ -1,6 +1,7 @@
 // Forsiden: kort for hvert eksempel med et ekte planbilde av rommet (generert her, uten
 // three.js), og plassen til reklamebanneret.
 import './styles/landing.css';
+import '@fontsource/vt323/latin-400.css'; // VHS-fonten pakkes med (OFL), ingen henting fra Google
 import './styles/landing-sections.css';
 import './styles/landing-hall.css';
 import { PRESETS } from './gen/index.js';
@@ -52,6 +53,7 @@ function fillCards() {
 
 function adSlot() {
   const slot = document.getElementById('ad-slot');
+  if (window.liminalDesktop) return slot.remove(); // ingen reklame i programmet (desktop/preload.cjs)
   if (slot.children.length) return;
   if (import.meta.env.DEV) slot.innerHTML = '<span>Ad space (728 × 90) – paste the ad code into #ad-slot in index.html</span>';
   else slot.hidden = true;

@@ -1,14 +1,16 @@
 // A phone has a room chooser and the walker, with no editor or draft writes.
 import { h } from '../ui/dom.js';
-import { PRESETS } from '../gen/index.js';
+import { PRESETS, presetById } from '../gen/index.js';
 import { MOODS } from '../gen/moods.js';
 import { loadSettings, saveSettings, listRooms, loadRoom } from '../core/storage.js';
 import { createViewer } from '../view3d/create-viewer.js';
 import { TouchControls } from '../view3d/touch-controls.js';
 import { settingsDialog } from '../ui/settings-dialog.js';
+import { startGame } from '../view3d/game-mode.js';
 
 export class MobilePlayer {
-  constructor({ initial = null } = {}) {
+  /** game: kom fra Game mode-knappen på forsiden (#play) – den knappen får fokus. */
+  constructor({ initial = null, game = false } = {}) {
     this.mobile = true;
     this.level = null;
     this.settings = loadSettings();
@@ -40,6 +42,13 @@ export class MobilePlayer {
       this.viewer.notice.style.transform = 'none';
     }
     this._mode('overview');
+    if (game) this.home.querySelector('.mobile-game')?.focus();
+  }
+
+  /** Game mode: stemningen som er valgt over knappen, og rett inn på Level 1 (view3d/game-mode.js). */
+  play() {
+    if (this.viewer.unavailable) return;
+    startGame(this.viewer, this.settings.mood, () => (this.start(presetById('level0').make()), this.viewer.mode === 'walk'));
   }
 
   _chooser(initial) {
@@ -101,6 +110,17 @@ export class MobilePlayer {
       }),
       h('label', { class: 'mobile-mood' }, 'Mood', mood),
       hint,
+      h(
+        'button',
+        { type: 'button', class: 'mobile-room mobile-game', onclick: () => this.play() },
+        h(
+          'span',
+          { class: 'mobile-room-copy' },
+          h('strong', { text: 'Game mode' }),
+          h('span', { text: 'Endless levels in this mood. Find every humming VHS tape to open the doors.' }),
+        ),
+        h('span', { 'aria-hidden': true, text: '▶' }),
+      ),
       initial ? card(`Explore ${initial.name}`, 'Start exploring this room', () => initial, 'current') : null,
       h(
         'section',

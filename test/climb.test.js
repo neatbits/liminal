@@ -61,6 +61,30 @@ describe('klatring', () => {
     expect(walker.x).toBeGreaterThan(11);
     expect(walker.floorY).toBeGreaterThan(1.0);
   });
+
+  it('også bratte trapper opp til et galleri: man havner oppå dekket, ikke under det', () => {
+    // Galleri (dekke) i 4,2 m til høyre; trapper med 2–8 ruter (2,1–0,5 m per rute) opp til det.
+    for (const n of [2, 3, 4, 8]) {
+      for (const width of [1, 3]) {
+        const level = createLevel({ theme: 'mall', w: 30, h: 12, height: 9 });
+        fillTiles(level, rectIndices(level, { x0: 1, z0: 1, x1: 28, z1: 10 }), TILE.FLOOR);
+        fillZone(level, 'deck', rectIndices(level, { x0: 18, z0: 1, x1: 28, z1: 10 }), 4.2);
+        placeStairs(level, [18 - n, 5], [17, 5], width);
+        const walker = new Walker();
+        walker.reset(level, { x: 18 - n - 2.5, z: 5.5, a: -Math.PI / 2 }); // mot +x
+        const input = { forward: 1, strafe: 0, running: false, consumeLook: () => [0, 0] };
+        let lag = 0;
+        for (let i = 0; i < 60 * 20 && walker.x < 21; i++) {
+          walker.update(1 / 60, input, level, getTheme('mall'));
+          lag = Math.max(lag, walker.ground(level).y - walker.floorY);
+        }
+        const at = `${n} ruter, bredde ${width}`;
+        expect(walker.x, at).toBeGreaterThan(21);
+        expect(walker.floorY, at).toBeCloseTo(4.2, 1); // oppe på galleriet
+        expect(lag, at).toBeLessThan(0.25); // føttene henger aldri langt etter bakken
+      }
+    }
+  });
 });
 
 describe('flater med gulvhøyder', () => {

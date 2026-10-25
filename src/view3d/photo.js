@@ -1,5 +1,5 @@
 // Fotomodus: tar et bilde av 3D-visningen slik den ser ut nå (med VHS-filteret), legger på
-// VHS-tekst (▶ PLAY, dato, romnavn) og et lite vannmerke, og lagrer eller deler det.
+// VHS-tekst (▶ PLAY, dato, romnavn) og et lite vannmerke (ikke i programmet), og lagrer eller deler det.
 
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 const pad = (n) => String(n).padStart(2, '0');
@@ -62,9 +62,12 @@ export async function takePhoto(viewer, { width, height, vhs = true, name = '', 
     text(ctx, vhsStamp(), W - u * 0.9, H - u * 0.9, u, 'right');
     if (name) text(ctx, name.toUpperCase(), u * 0.9, H - u * 0.9, u * 0.8);
   }
-  ctx.globalAlpha = 0.55;
-  text(ctx, siteName(), W - u * 0.9, vhs ? H - u * 2.1 : H - u * 0.8, u * 0.6, 'right');
-  ctx.globalAlpha = 1;
+  // Vannmerket er for bilder som deles fra nettsiden; i programmet (Steam-skjermbilder) er det borte.
+  if (!globalThis.liminalDesktop) {
+    ctx.globalAlpha = 0.55;
+    text(ctx, siteName(), W - u * 0.9, vhs ? H - u * 2.1 : H - u * 0.8, u * 0.6, 'right');
+    ctx.globalAlpha = 1;
+  }
   return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not create the photo.'))), type, quality));
 }
 
@@ -78,7 +81,9 @@ export async function shootPhoto(viewer) {
     viewer.hud.photoFlash();
     if (viewer.walk.sound && viewer.mode === 'walk') viewer.audio.shutter();
     const result = await savePhoto(blob, photoName(viewer.level?.name));
-    if (result !== 'cancelled') viewer.hud.flash(result === 'shared' ? 'Photo shared' : 'Photo saved to your downloads');
+    // Programmet lagrer bildene i Pictures/Liminal Simulator (desktop/main.mjs).
+    const saved = globalThis.liminalDesktop ? 'Photo saved to Pictures › Liminal Simulator' : 'Photo saved to your downloads';
+    if (result !== 'cancelled') viewer.hud.flash(result === 'shared' ? 'Photo shared' : saved);
   } catch (e) {
     viewer.hud.flash(e.message);
   } finally {

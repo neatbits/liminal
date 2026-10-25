@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# Programmet (npm run desktop:dist)
+release/
 *.log
 .DS_Store
 # Tilkoblingsdetaljer for publisering (passord) – se deploy.example.env

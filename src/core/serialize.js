@@ -34,7 +34,7 @@ const LAYERS = [
   // Trapper opp til et dekke kan gå høyere enn hevede gulv (FLOOR_MAX).
   { key: 'floors', min: 1, max: Math.round(DECK_MAX * 10) },
   { key: 'finish', min: 1, max: 15 }, // gulv-/veggbelegg (finishes.js; 1 = fliser, 2–5 = butikkbelegg)
-  { key: 'meta', min: 1, max: 15 }, // dørblad, trapperetning + motorretning, søylediameter
+  { key: 'meta', min: 1, max: 31 }, // dørblad og bue (bit 4), trapperetning + motorretning, søylediameter
   { key: 'decks', min: Math.round(DECK_MIN * 10), max: Math.round(DECK_MAX * 10) },
   { key: 'corners', min: 1, max: 8 }, // skrå og avrundede hjørner (core/corners.js): tegnet er verdien
 ];
@@ -122,7 +122,7 @@ export function levelToJSON(level) {
     rows,
     ...Object.fromEntries(LAYERS.map((layer) => [layer.key, layerToRows(level, layer)])),
     slides: level.slides.length ? level.slides.map((s) => ({ points: s.points, ...(s.tube ? { tube: true } : {}), color: s.color })) : undefined,
-    objects: level.objects?.length ? level.objects.map(({ id, x, z, rot, v }) => ({ id, x, z, rot, ...(v !== undefined ? { v } : {}) })) : undefined,
+    objects: level.objects?.length ? level.objects.map(({ id, x, z, rot, v, tip, lift, off }) => ({ id, x, z, rot, ...(v !== undefined ? { v } : {}), ...(tip ? { tip } : {}), ...(lift ? { lift } : {}), ...(off ? { off } : {}) })) : undefined,
   };
 }
 

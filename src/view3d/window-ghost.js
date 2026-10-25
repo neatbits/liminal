@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { windows } from '../core/windows.js';
 import { ghostSpot, facingWall } from '../world/window-ghost.js';
 import { GhostSnapshot } from './ghost-snapshot.js';
+import { getMood } from '../gen/moods.js';
 
 const WAIT = [20, 70]; // s før det dukker opp (igjen)
 const GLANCE = [1.5, 3.5]; // s man ser mot det før det er borte
@@ -33,6 +34,17 @@ export class WindowGhost {
     this.spot = null;
     this.timer = this._range(WAIT);
     this._apply();
+    this._prepare();
+  }
+
+  /**
+   * Første bilde koster (modellen lastes, shaderen kompileres): det tas med en gang – under
+   * overgangen til et nytt nivå – og ikke i det spøkelset skal dukke opp.
+   */
+  _prepare() {
+    if (this.snapshot || !this.v.walk || !getMood(this.v.settings.mood).monster || !this._materials().length) return;
+    this.snapshot = new GhostSnapshot(this.v.renderer);
+    this.snapshot.take(this.rand);
   }
 
   update(dt, mood) {

@@ -5,7 +5,6 @@
 import { nextLevel } from '../gen/endless.js';
 import { getMood, moodLevel } from '../gen/moods.js';
 import { getLevelSize } from '../gen/sizes.js';
-import { exitSpots } from '../world/autopilot.js';
 import { Blackout } from './events.js';
 import { Tapes } from './tapes.js';
 import { TapeHunt } from './tape-hunt.js';
@@ -58,7 +57,7 @@ export class Explorer {
     this.depth = 0;
     this.found = this.total = 0;
     this.blackout = this._newBlackout();
-    this.scary.reset();
+    this.scary.reset(true); // true: lastes og forberedes nå (view3d/scary.js)
     this.shifts.reset();
     this.windowGhost.reset();
     this._placeTapes();
@@ -135,8 +134,8 @@ export class Explorer {
   }
 
   /**
-   * Gjennom en dør til ingensteds: svart, nytt nivå, tittel – og videre. Av og til fører døren
-   * tilbake inn i det samme rommet, gjennom en annen dør (ingen tittel, ingen forklaring).
+   * Gjennom en dør til ingensteds: svart, nytt nivå, tittel – og videre. Alltid et nytt rom, aldri
+   * tilbake til et man har vært i.
    * @param door døren man gikk gjennom ({ info: { x, z } }), eller null (noclip)
    */
   async goDeeper({ title = null, wait = 650, door = null } = {}) {
@@ -152,25 +151,18 @@ export class Explorer {
     if (v.walk.sound && !title) v.audio.door(true);
     try {
       if (!(await waitWhileWalking(v, wait, current))) return;
-      if (door && this._backIntoRoom(door)) {
-        await waitWhileWalking(v, 250, current);
-        return;
-      }
       this.home ??= v.level;
       this.depth++;
       const { anomalies } = this.mood;
       const { scale } = getLevelSize(v.settings.levelSize);
-      const next = nextLevel(this.depth, v.world.theme.id, Math.random, v.level, anomalies, scale);
+      const next = nextLevel(this.depth, v.world.theme.id, Math.random, anomalies, scale);
       const { label, kind } = next;
       // Genererte nivåer gjøres feil etter stemningen (ikke korridorene – de må beholde mønsteret).
       const level = ((kind === 'room' || kind === 'halls') && moodLevel(next.level, v.settings.mood, Math.random)) || next.level;
-      // Samme rom igjen: man kommer ut av den samme døren man nettopp gikk inn i.
-      const spot = kind === 'again' && door && exitSpots(level).find((s) => s.x === door.info.x && s.z === door.info.z);
-      if (spot) level.spawn = { x: spot.fx + 0.5, z: spot.fz + 0.5, a: spot.yaw + Math.PI };
       v.setLevel(level, { explorer: true });
       v.walk.enter();
       this.blackout = this._newBlackout();
-      this.scary.reset();
+      this.scary.reset(true);
       this.shifts.reset();
       this.windowGhost.reset();
       this._placeTapes();
@@ -187,23 +179,6 @@ export class Explorer {
     this.busy = false;
     clearTimeout(this._hint);
     this.v.hud.fade(false);
-  }
-
-  /**
-   * En dør tilbake til det samme rommet (så ofte som stemningen sier, når det finnes en annen dør
-   * til ingensteds): man kommer ut av den andre døren, med ryggen mot den.
-   */
-  _backIntoRoom(door) {
-    if (Math.random() >= this.mood.anomalies.backDoor) return false;
-    const others = exitSpots(this.v.walk.level).filter((s) => s.x !== door.info.x || s.z !== door.info.z);
-    if (!others.length) return false;
-    const s = others[Math.floor(Math.random() * others.length)];
-    const w = this.v.walk.walker;
-    w.x = s.fx + 0.5;
-    w.z = s.fz + 0.5;
-    w.vx = w.vz = 0;
-    w.yaw = s.yaw + Math.PI;
-    return true;
   }
 
   _newBlackout() {

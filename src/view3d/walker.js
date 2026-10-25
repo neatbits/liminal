@@ -20,6 +20,7 @@ const GRAVITY = 9.8;
 const JUMP = 3.4; // m/s opp (ca. 0,6 m hopp)
 const SPRING = 5.4; // fra et stupebrett (ca. 1,5 m)
 const DROP = 0.5; // så mye lavere bakken må være før man faller i stedet for å gå ned
+const MAX_LAG = 0.12; // så langt føttene kan henge etter bakken på vei opp (utjevningen av kameraet)
 const BODY = 1.75;
 
 /** Underlaget for fottrinn. finish = belegget i ruten: fliser (eller temaets eget belegg, tiles.step). */
@@ -73,6 +74,9 @@ export class Walker {
     this._jumpHeld = !!input.jumping;
     if (this.vy === 0 && ground.y >= this.floorY - DROP) {
       this.floorY += (ground.y - this.floorY) * Math.min(1, dt * 6);
+      // Bratte trapper stiger fortere enn utjevningen. Hang føttene langt etter, ville etasjen under
+      // et dekke blitt valgt (groundAt med y, DECK_SNAP) – man falt gjennom galleriet og satt fast.
+      this.floorY = Math.max(this.floorY, ground.y - MAX_LAG);
       if (jump && (ground.object || here !== TILE.WATER)) this.vy = ground.spring ? SPRING : JUMP; // ikke fra bunnen av bassenget
       return;
     }

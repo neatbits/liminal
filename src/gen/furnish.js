@@ -12,6 +12,7 @@ import { scatterPlayBalls } from './play-balls.js';
 import { patient } from './furnish-medical.js';
 import { mallTraffic } from './mall-traffic.js';
 import { addHalfWalls } from './half-walls.js';
+import { chairPile } from './chair-piles.js';
 import { tryPlace, desk, gaming, foodspot, chairs, arcades, tvrow, table, poolside, tvstand } from './furnish-sets.js';
 
 const DIRS = [
@@ -25,20 +26,21 @@ const DIRS = [
  * Per tema: { id | set, every } – én per `every` m² gulv (eller vannruter for ender); en brøkdel
  * blir en sjanse, så store rom får flere og små rom kanskje ingen. min = minst så mange.
  * Oppsett (set): 'desk', 'gaming', 'livingroom' (gaming + sofa), 'tvstand' (TV på TV-benk), 'foodspot', 'chairs', 'arcades',
- * 'tvrow' (furnish-sets.js), 'table' (dinersett eller kafébord) og 'softplay' (lekeklosser).
+ * 'tvrow' (furnish-sets.js), 'table' (dinersett eller kafébord), 'softplay' (lekeklosser) og 'chairpile'
+ * (en haug med trestoler, gen/chair-piles.js).
  * open = midt på gulvet (ikke mot en vegg), ceiling = under taket, unna taklysene (takvifter),
  * rooms = ikke på ruter med belegg (korridorer med skap, bad, butikker med teppe), shore = på
  * gulvet langs bassengkanten ('poolside': plaststoler eller solsenger mot vannet), water = i vannet (flytende).
  * { set: 'diving' }: stupebrett ved noen av bassengene (gen/diving.js).
  */
 const PLANS = {
-  backrooms: [{ set: 'halfwalls' }, { set: 'foodspot', every: 2200 }, { id: 'arcade2', every: 3500 }, { id: 'dinerchair', open: true, every: 2500 }, { id: 'plasticchair', open: true, every: 2500 }, { id: 'clock', every: 1400 }, { id: 'tv', every: 1100 }, { id: 'boombox', every: 1600 }, { id: 'soda', every: 3000 }],
+  backrooms: [{ set: 'halfwalls' }, { set: 'foodspot', every: 2200 }, { id: 'arcade2', every: 3500 }, { id: 'dinerchair', open: true, every: 2500 }, { id: 'plasticchair', open: true, every: 2500 }, { id: 'woodenchair', open: true, every: 1300 }, { set: 'chairpile', open: true, every: 1800 }, { id: 'stopsign', open: true, every: 3200 }, { id: 'clock', every: 1400 }, { id: 'tv', every: 1100 }, { id: 'boombox', every: 1600 }, { id: 'soda', every: 3000 }],
   office: [{ set: 'desk', every: 110 }, { id: 'wallboard', every: 600 }, { id: 'whiteboard', every: 1000 }, { id: 'armchair', every: 1200 }, { id: 'sofa', every: 1600 }, { id: 'soda', every: 1500 }, { id: 'clock', every: 300 }, { id: 'tv', every: 1500 }, { set: 'table', open: true, every: 1500 }, { id: 'pottedplant', every: 650 }, { id: 'minifridge', every: 1600, rooms: true }],
-  basement: [{ set: 'livingroom', every: 1000, min: 1, rooms: true }, { id: 'sofa', every: 1400, rooms: true }, { id: 'fan', ceiling: true, every: 300, rooms: true }, { id: 'clock', every: 500 }, { set: 'tvstand', every: 1600, rooms: true }, { id: 'boombox', every: 900 }, { set: 'desk', every: 700, rooms: true }, { id: 'armchair', every: 1400, rooms: true }, { id: 'hifi', every: 1800, rooms: true }, { id: 'minifridge', every: 1400, rooms: true }],
+  basement: [{ set: 'livingroom', every: 1000, min: 1, rooms: true }, { id: 'sofa', every: 1400, rooms: true }, { id: 'fan', ceiling: true, every: 300, rooms: true }, { id: 'clock', every: 500 }, { set: 'tvstand', every: 1600, rooms: true }, { id: 'boombox', every: 900 }, { set: 'desk', every: 700, rooms: true }, { id: 'woodenchair', every: 1600, rooms: true }, { id: 'armchair', every: 1400, rooms: true }, { id: 'hifi', every: 1800, rooms: true }, { id: 'minifridge', every: 1400, rooms: true }],
   pool: [{ set: 'diving' }, { id: 'flamingo', water: true, every: 260 }, { set: 'poolside', shore: true, every: 150 }, { id: 'duck', water: true, every: 70 }, { id: 'soda', every: 1500 }, { id: 'boombox', every: 1000 }, { id: 'pottedpalm', open: true, every: 550 }],
   playroom: [{ set: 'softplay', open: true, every: 110 }, { id: 'playground', open: true, every: 650 }, { id: 'bouncehouse', open: true, every: 900 }, { id: 'bouncecombo', open: true, every: 1100 }, { id: 'bouncecourse', every: 1500 }, { id: 'plasticchair', every: 700 }, { set: 'gaming', every: 900 }, { id: 'soda', every: 1200 }, { id: 'clock', every: 600 }, { id: 'duck', water: true, every: 110 }, { id: 'tv', every: 700 }, { id: 'boombox', every: 900 }, { set: 'playballs' }],
   hotel: [{ id: 'armchair', every: 700 }, { id: 'sofa', every: 900 }, { set: 'chairs', every: 1200 }, { id: 'fan', ceiling: true, every: 600 }, { id: 'soda', every: 1500 }, { id: 'clock', every: 700 }, { id: 'cassette', every: 1500 }, { set: 'tvstand', every: 1000 }, { id: 'tv', every: 1400 }, { set: 'desk', every: 1500 }, { set: 'table', open: true, every: 1600 }, { id: 'pottedplant', every: 850 }, { id: 'minifridge', every: 1800, rooms: true }],
-  garage: [{ id: 'plasticchair', open: true, every: 1500 }, { id: 'soda', every: 2000 }, { id: 'boombox', every: 1500 }, { id: 'tv', every: 2200 }],
+  garage: [{ id: 'plasticchair', open: true, every: 1500 }, { id: 'stopsign', open: true, every: 900 }, { id: 'soda', every: 2000 }, { id: 'boombox', every: 1500 }, { id: 'tv', every: 2200 }],
   // Butikkene, inkludert importerte kosmetikk-/apotekreoler, innredes av mall-shops.js;
   // her bare gangene og atriet, så butikkmodellene aldri havner i ferdselsårene.
   mall: [{ id: 'mallbench', open: true, every: 350, min: 2, rooms: true }, { id: 'pottedpalm', open: true, every: 650, min: 1, rooms: true }, { id: 'pottedtree', open: true, every: 450, min: 1, rooms: true }, { id: 'pottedplant', every: 600, rooms: true }, { set: 'foodspot', every: 900, min: 1, rooms: true }, { set: 'table', open: true, every: 250, rooms: true }, { id: 'soda', every: 700, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
@@ -96,6 +98,7 @@ const SETS = { desk, foodspot, chairs, arcades, tvrow, poolside, patient, tvstan
 function place(level, rand, item, x, z) {
   if (item.ceiling) return unlit(level, x, z) && !!placeObject(level, x, z, item.id);
   if (item.set === 'softplay') return !!softBuild(level, rand, x, z);
+  if (item.set === 'chairpile') return !!chairPile(level, rand, x, z);
   if (item.open) return !objectsAt(level, x, z).length && !!placeObject(level, x, z, item.set === 'table' ? table(rand) : item.id);
   if (SETS[item.set]) return SETS[item.set](level, rand, x, z);
   return !!tryPlace(level, x, z, item.id, 1);

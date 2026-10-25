@@ -78,6 +78,10 @@
 .mobile-room > [aria-hidden] { font-size: 24px; color: var(--accent); }
 .mobile-room[data-example=current] { background: var(--accent); color: white; border: 0; }
 .mobile-room[data-example=current] span { color: inherit; }
+/* Game mode: mørk som en VHS-kassett, så den skiller seg fra rommene. */
+.mobile-game { background: #2b2618; color: #f6ecc8; border-color: #2b2618; }
+.mobile-game .mobile-room-copy > span { color: #d8cc9f; }
+.mobile-game > [aria-hidden] { color: #e05a4e; }
 .mobile-home h2 { font-size: 18px; }
 .mobile-home-foot {
   display: flex;

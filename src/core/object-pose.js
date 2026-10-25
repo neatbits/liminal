@@ -6,6 +6,7 @@ import { TILE, getTile, WATER_SURFACE } from './level.js';
 import { floorAt, ceilingAt } from './heights.js';
 import { OBJECTS } from './object-catalog.js';
 import { playBallOffset, pitBallSupport } from './play-balls.js';
+import { tipFrame } from './object-tip.js';
 
 const WALL_GAP = 0.03; // avstand fra veggen bak
 const FLOAT_DEPTH = 0.06; // hvor dypt en flytende gjenstand ligger i vannet
@@ -27,11 +28,13 @@ export function objectBox(p) {
 
 /** Plassering uten hensyn til flater: på gulvet (eller i vannet), inntil veggen bak. */
 function basePose(level, o) {
-  const [w, h, d] = OBJECTS[o.id].size;
+  const [w, h, d] = tipFrame(o.tip ?? 0, OBJECTS[o.id].size).size; // veltet: annen utstrekning (object-tip.js)
   const [fx, fz] = FACING[o.rot & 3];
   let x = o.x + 0.5;
   let z = o.z + 0.5;
-  if (!OBJECTS[o.id].structural && !OBJECTS[o.id].loose?.radius && getTile(level, o.x - fx, o.z - fz) === TILE.WALL) {
+  // Gjenstander i en haug (tip/lift/off) ligger der haugen la dem, ikke inntil veggen.
+  const placed = o.tip || o.lift || o.off;
+  if (!placed && !OBJECTS[o.id].structural && !OBJECTS[o.id].loose?.radius && getTile(level, o.x - fx, o.z - fz) === TILE.WALL) {
     // Negativ: dypere enn ruten, skyves fram fra veggen. Veggklokker henger helt inntil; gap
     // trekker gjenstanden ut fra veggen (TV-benken, så et dypt TV står med forkanten i flukt).
     const back = 0.5 - d / 2 - (OBJECTS[o.id].mount === 'wall' ? 0.005 : WALL_GAP + (OBJECTS[o.id].gap ?? 0));
@@ -43,14 +46,14 @@ function basePose(level, o) {
     const [dx, dz] = playBallOffset(o); x += dx; z += dz;
   }
   // shift: står så mange meter fram fra ruten (stupebrettet: foten på kanten, brettet over vannet).
-  x += fx * (def.shift ?? 0);
-  z += fz * (def.shift ?? 0);
+  x += fx * (def.shift ?? 0) + (o.off?.[0] ?? 0); // off: flyttet innenfor ruten (haugene)
+  z += fz * (def.shift ?? 0) + (o.off?.[1] ?? 0);
   const water = getTile(level, o.x, o.z) === TILE.WATER;
   const floor = floorAt(level, o.x, o.z);
   const y = water ? (def.pit ? pitBallSupport(x, z) : WATER_SURFACE - FLOAT_DEPTH) :
-    def.mount === 'ceiling' ? ceilingAt(level, o.x, o.z) - h - 0.01 : floor + (def.lift ?? 0);
+    def.mount === 'ceiling' ? ceilingAt(level, o.x, o.z) - h - 0.01 : floor + (def.lift ?? 0) + (o.lift ?? 0);
   const across = fx === 0; // forsiden mot ±z: bredden ligger langs x
-  return { x, y, z, rot: o.rot & 3, w: across ? w : d, d: across ? d : w, h };
+  return { x, y, z, rot: o.rot & 3, tip: o.tip ?? 0, w: across ? w : d, d: across ? d : w, h };
 }
 
 /**

@@ -107,6 +107,15 @@ body.landing {
   background: rgba(255, 255, 255, 0.85);
 }
 
+/* Game mode: mørk som en VHS-kassett. */
+.l-btn-game {
+  background: #2f2a1c;
+}
+
+.l-btn-game:hover {
+  background: #4a4230;
+}
+
 /* Helten: gul tapet-vegg med lysrør i taket og et svakt VHS-skjær. */
 .l-hero {
   position: relative;

@@ -4,6 +4,7 @@ import { TEMPLATES, PRESETS } from '../gen/index.js';
 import { TOOLS, SHAPES } from '../editor/tools.js';
 import { h, formatDate } from './dom.js';
 import { openModal } from './modal.js';
+import { MOODS } from '../gen/moods.js';
 
 const SIZES = [16, 24, 32, 48, 64, 96, 128];
 
@@ -61,6 +62,38 @@ export function newRoomDialog({ theme, onCreate, startup = false }) {
       { label: 'Create room', primary: true, onClick: () => onCreate({ theme: themeEl.value, w: +wEl.value, h: +hEl.value, template, seed: seedEl.value }) },
     ],
   });
+}
+
+/** Game mode: velg stemning, så rett inn på Level 1 (view3d/game-mode.js). */
+export function gameModeDialog({ mood, onStart }) {
+  let chosen = MOODS[mood] ? mood : 'liminal';
+  const cards = Object.entries(MOODS).map(([id, m]) =>
+    h(
+      'button',
+      {
+        type: 'button',
+        class: id === chosen ? 'card selected' : 'card',
+        'aria-pressed': String(id === chosen),
+        onclick: (e) => {
+          chosen = id;
+          for (const c of list.children) {
+            c.classList.toggle('selected', c === e.currentTarget);
+            c.setAttribute('aria-pressed', String(c === e.currentTarget));
+          }
+        },
+      },
+      h('div', { class: 'card-main' }, h('div', { class: 'card-title', text: m.label }), h('div', { class: 'card-sub', text: m.hint })),
+    ),
+  );
+  const list = h('div', { class: 'card-list' }, cards);
+  const body = h(
+    'div',
+    {},
+    h('p', { text: 'Endless generated levels. The doors stay locked until you find every VHS tape – listen for the hum. How deep can you go?' }),
+    h('div', { class: 'side-label', text: 'Mood' }),
+    list,
+  );
+  openModal({ title: 'Game mode', body, actions: [{ label: 'Cancel' }, { label: 'Start game', primary: true, onClick: () => onStart(chosen) }] });
 }
 
 export function examplesDialog({ onPick }) {

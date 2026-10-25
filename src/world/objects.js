@@ -12,6 +12,7 @@ import { arcadeParts } from './arcade-textures.js';
 import { contactShadows } from './contact-shadows.js';
 import { batchMeshes } from './object-batches.js';
 import { mergeParts } from './object-parts.js';
+import { tipOrigin, tipQuaternion } from '../core/object-tip.js';
 
 // Konverterte modeller (npm run models) – Vite gir hver fil en URL med hash.
 const URLS = Object.fromEntries(
@@ -138,13 +139,13 @@ export function createObjects(level, field, shared) {
     if (disposed) return;
     const pose = poseOf(o);
     const s = def.scale ?? 1;
-    const matrix = new THREE.Matrix4()
-      .makeRotationY((-pose.rot * Math.PI) / 2)
-      .scale(new THREE.Vector3(s, s, s))
-      .setPosition(pose.x, pose.y, pose.z);
+    // Dreid med rot – og veltet (o.tip: stolene i haugene), med bunnpunktet der veltingen legger det.
+    const origin = new THREE.Vector3(...tipOrigin(pose, def.size));
+    const turn = new THREE.Quaternion(...tipQuaternion(pose, def.size));
+    const matrix = new THREE.Matrix4().compose(origin, turn, new THREE.Vector3(s, s, s));
     const item = new THREE.Group();
-    item.position.set(pose.x, pose.y, pose.z);
-    item.rotation.y = (-pose.rot * Math.PI) / 2;
+    item.position.copy(origin);
+    item.quaternion.copy(turn);
     item.scale.setScalar(s);
     for (const part of parts) {
       const geometry = bakeLight(part.geometry, matrix, field, part.side === THREE.DoubleSide);

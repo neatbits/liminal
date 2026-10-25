@@ -13,7 +13,8 @@ Tre sider (Vite multi-page): forsiden `index.html` (`src/landing.js`, eksempelko
 reklameplass `#ad-slot`), simulatoren `app/index.html` (`src/main.js`) og
 `about/index.html` (`src/about.js`, personvern og kreditering). Forhåndsbildet for lenker er
 `public/og-image.jpg` (lag nytt med fotomodus, `view3d/photo.js`, i 1200 × 630). Gamle lenker til
-roten med `#room=`/`#rom=` sendes videre til `app/`; `app/#example=<id>` åpner et eksempel.
+roten med `#room=`/`#rom=` sendes videre til `app/`; `app/#example=<id>` åpner et eksempel, og `app/#play`
+(Game mode-knappen) stemningsvalget og så Level 1 i utforskingen (`view3d/game-mode.js`).
 
 ## Kommandoer
 
@@ -34,6 +35,9 @@ roten med `#room=`/`#rom=` sendes videre til `app/`; `app/#example=<id>` åpner 
   `simplify` (andel trekanter for tunge modeller) og `split` (én fil med flere modeller → én .glb
   per modell; lisensen ligger i kildemappen). `disabled` utelater kilder også ved `--all`. Se `docs/models.md`. Sjekk alltid
   størrelse (`scale`) og retning (`turn`) visuelt – modeller fra Sketchfab har ofte rare enheter.
+- `npm run desktop` / `desktop:check` / `desktop:dist` – programmet (Electron, `desktop/`): åpne, selvsjekk
+  (3D, lagring, font, modeller, tilbakemeldinger) og pakker for Windows/Linux i `release/`. Sidene må
+  virke uten nett (ingen eksterne fonter/skript). Steam og detaljer: `docs/desktop.md`.
 
 Publisering (liminalsimulator.com, neatbits.no/liminal/): last opp *innholdet* i `dist/`
 (`index.html`, `app/`, `assets/` og `.htaccess`), aldri prosjektrotens HTML-filer – de peker
@@ -163,6 +167,9 @@ src/
   fysikk (`world/softphysics.js` med cannon-es, lastet dynamisk av `view3d/softplay.js`).
   `loose` gir lette gjenstander fysikk uten stabling: `parts` = bokser, `radius` = kule. Lekeballer:
   se `docs/play-balls.md` for 48-grense, hybridbinger og tester. Spillerkroppen må aldri sove.
+  Veltede gjenstander: `o.tip` (på ryggen/siden), `o.lift` og `o.off` (`core/object-tip.js`, lagres i rommet);
+  `tipFrame` er felles for pose, 3D og fysikk. Stolhauger i Level 0: `gen/chair-piles.js` – prøv nye
+  oppsett i fysikken (`chair-piles.test.js`); øverst på en liggende stol er det bare beina.
 - **Rekkverk** (`core/railings.js`): reglene for hvilke kanter som får vern/håndlist brukes
   både av geometrien (`world/railings.js`) og kollisjonen – endre dem bare der.
 - **Vannsklier** (`core/slides.js`): `level.slides` er en liste med objekter
@@ -199,8 +206,8 @@ src/
 - **Romlige avvik** (`world/anomalies.js`, ren logikk): `findLoops` finner rette ganger der
   alle lag og gjenstander ±3 ruter gjentar seg med periode L; `Loops` (i `WalkMode`) flytter
   gåeren `loopShift` (multiplum av L som går opp i teksturene, `textureRepeats`) når den krysser
-  midten. Korridornivåer: `gen/corridors.js`; «samme rom igjen» og dør tilbake: `gen/endless.js`
-  og `view3d/explore.js`.
+  midten. Korridornivåer: `gen/corridors.js`. En dør til ingensteds fører alltid til et nytt rom med
+  annet tema (`gen/endless.js`) – aldri det samme rommet igjen eller en dør tilbake, i noen stemning.
 - **Stemningen** (`gen/moods.js`, `settings.mood`): MOODS styrer tåke/eksponering (viewer
   `_applyLook`), ødelagte lys, mørke deler (`dark`, `gen/darkness.js`) og «Make it wrong» (`moodLevel`, brukt av `view3d/explore.js` på en
   kopi av rommet), avvik (`walk.mood.anomalies`, `nextLevel`-odds), strømbrudd, skumle lyder og
@@ -227,6 +234,9 @@ src/
   (`WATER_SURFACE`), så gulvhøyde gjelder ikke vann.
 - **`meta`** tilhører rutetypen og nullstilles av `setTile` når typen endres: dørblad for
   dører og retning for trapper (`STAIR_DIRS`, bit 0–1); rulletrapp = bit 2, nedover = bit 3.
+  Bue = bit 4 (`DOOR_ARCH`) på åpninger uten dørblad: `ceilingAt` gir toppen av buen (`ARCH_TOP`), og
+  `world/arches.js` (ren) bygger buen i surfaces; Level 0 får dem ved generering (`gen/arches.js`, bare
+  med vary). `meta` lagres med maks 31 (`serialize.js`).
   Trappens `floors` er toppen, bunnen kommer fra `stairSpan`. Manuelt Escalator-verktøy (E, opp/ned), motor, GPU-trinn og Mall-dekorbasseng: `docs/escalators.md`.
 - **Lys er bakt per vertex** (`world/lighting.js`) med siktlinje gjennom rutenettet; der
   siktlinjen krysser en rutegrense må den gå under taket og over gulvet i begge ruter, og

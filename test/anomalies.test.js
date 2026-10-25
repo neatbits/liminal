@@ -7,6 +7,7 @@ import { DOOR, doorInfo } from '../src/core/doors.js';
 import { findLoops, Loops, loopShift, textureRepeats } from '../src/world/anomalies.js';
 import { corridorLevel, CORRIDOR_THEMES } from '../src/gen/corridors.js';
 import { nextLevel } from '../src/gen/endless.js';
+import { MOODS } from '../src/gen/moods.js';
 import { presetById } from '../src/gen/index.js';
 import { Walker } from '../src/view3d/walker.js';
 
@@ -98,35 +99,26 @@ describe('flytting som går opp i teksturene', () => {
 });
 
 describe('neste nivå', () => {
-  it('bytter alltid tema til neste nivå – unntatt avviket «samme rom igjen»', { timeout: 30000 }, () => {
-    const odds = { corridor: 0.25, again: 0.25 };
+  it('bytter alltid tema til neste nivå – også i korridorene og betongsalene', { timeout: 30000 }, () => {
+    const odds = { corridor: 0.25 };
     for (const prev of ['backrooms', 'pool', 'office', 'hotel', 'basement', 'school', 'mall', 'babbdi']) {
       for (let s = 1; s <= 30; s++) {
-        const { level, kind } = nextLevel(3, prev, mulberry32(s), null, odds);
+        const { level, kind } = nextLevel(3, prev, mulberry32(s), odds);
         expect(level.theme, `${prev} → ${kind} (seed ${s})`).not.toBe(prev);
       }
     }
   });
 
-  it('kan være en korridor, eller det samme rommet igjen – med noen små endringer', () => {
-    const current = presetById('basement').make();
-    const kinds = new Set();
-    for (let s = 1; s <= 60; s++) {
-      const { level, kind } = nextLevel(4, 'basement', mulberry32(s), current);
-      kinds.add(kind);
-      if (kind === 'again') {
-        expect(level.theme).toBe('basement');
-        expect(level.name).toBe('Level 4');
-        expect(level).not.toBe(current);
-        const content = (l) => JSON.stringify([...['tiles', 'lights', 'ceilings', 'finish', 'meta'].map((k) => Array.from(l[k])), l.objects, l.fog, l.bright]);
-        expect(content(level)).not.toBe(content(current)); // noe er annerledes
-      }
+  it('aldri det samme rommet igjen og ingen dør tilbake, i noen stemning', { timeout: 30000 }, () => {
+    for (const [id, mood] of Object.entries(MOODS)) {
+      expect(Object.keys(mood.anomalies).sort(), id).toEqual(['corridor', 'loops']);
+      const kinds = new Set();
+      for (let s = 1; s <= 40; s++) kinds.add(nextLevel(4, 'basement', mulberry32(s), mood.anomalies).kind);
+      for (const kind of kinds) expect(['room', 'corridor', 'halls'], id).toContain(kind);
     }
-    expect([...kinds].sort()).toEqual(['again', 'corridor', 'halls', 'room']);
-    expect(nextLevel(1, 'basement', () => 0.01, current).kind).not.toBe('again'); // ikke på første nivå
   });
 
-  it('døren tilbake krever en annen dør til ingensteds', () => {
+  it('korridorene har dører videre', () => {
     const level = corridorLevel('hotel', mulberry32(2), 'x');
     const exits = [];
     for (let i = 0; i < level.tiles.length; i++) {

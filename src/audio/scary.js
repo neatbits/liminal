@@ -1,7 +1,7 @@
 // Lyder for Scary mode: hjertebank når monsteret er nær, pust og knurring fra monsteret (fra
 // den siden det står), brølet når jakten begynner (eerie-night.js), og et brak av videostøy når det
 // tar deg. Funksjonene tar lydmotoren.
-import { roar } from './eerie-night.js';
+import { nightBuffer, warmNight } from './eerie-night.js';
 
 const decay = (t, tau) => (t < 0 ? 0 : Math.exp(-t / tau));
 
@@ -75,7 +75,21 @@ export function breath(engine, pan, gain) {
 /** Brølet når jakten begynner (Nightmare): far 0 … 1 gjør det svakere og mørkere. Ny variant hver gang. */
 export function roarAt(engine, pan, gain, far) {
   if (!engine.ctx || !engine.graph) return;
-  playFrom(engine, roar(engine.ctx), pan, gain, { rate: 0.92 + Math.random() * 0.16, lowpass: 6000 - far * 4500 });
+  playFrom(engine, nightBuffer(engine.ctx, 'roar'), pan, gain, { rate: 0.92 + Math.random() * 0.16, lowpass: 6000 - far * 4500 });
+}
+
+/**
+ * Lager lydene på forhånd, hver for seg litt senere, så ingen av dem regnes ut i det monsteret dukker
+ * opp: hjertebank, pust og brak – og med night (Nightmare) brølet og Nightmare-lydene i bakgrunnen.
+ */
+export function warmScary(engine, night) {
+  if (!engine.ctx || !engine.graph) return;
+  if (night) warmNight(engine.ctx);
+  if (engine.scaryWarm) return;
+  engine.scaryWarm = true;
+  for (const [key, make] of [['heartSound', heartbeatBuffer], ['breathSound', breathBuffer], ['caughtSound', caughtBuffer]]) {
+    setTimeout(() => engine.ctx && cache(engine, key, make), 0);
+  }
 }
 
 export function caught(engine) {

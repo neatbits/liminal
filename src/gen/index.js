@@ -16,6 +16,7 @@ import { school, ward } from './building.js';
 import { levelHeight, poolDepths, tallHalls } from './variety.js';
 import { untangleDoors, clearDoorways } from './door-space.js';
 import { shapeCorners } from './corners.js';
+import { archways } from './arches.js';
 
 const BY_THEME = {
   backrooms: styles.backrooms,
@@ -51,6 +52,7 @@ export function generateLevel({ theme = 'backrooms', w = 48, h = 48, seed = 1, n
   // Eget frø, så rommene ellers blir som før.
   addExits(level, mulberry32(seed ^ 0x5eed), 3, level.spawn);
   untangleDoors(level); // dørblad som slår inn i hverandre
+  if (vary) archways(level, mulberry32(seed ^ 0xa4c4)); // buede åpninger i Level 0 (ikke i eksemplene)
   furnish(level, mulberry32(seed ^ 0xf00d), level.spawn, { deepEnds: vary });
   clearDoorways(level); // ingen gjenstander foran døråpningene
   addWindows(level, mulberry32(seed ^ 0x51de));

@@ -1,17 +1,30 @@
 // Lydene som bare hører hjemme i Nightmare (stemningens sounds, gen/moods.js): et skrik langt
 // unna, noe tungt som slepes, tunge skritt som kommer nærmere, klor mot en vegg og knurring – og
-// brølet når monsteret begynner å jakte (roarAt i audio/scary.js). Alt er syntetisert.
+// brølet når monsteret begynner å jakte (roarAt i audio/scary.js). Alt er syntetisert, og lydene
+// lages på forhånd i små biter (bank.js), så de ikke hakker i bildet når de spilles.
 import { rand, make, decay } from './buffers.js';
+import { SoundBank } from './bank.js';
+
+const recipe = (seconds, fn, peak = 0.8) => ({ seconds, fn, peak });
 
 const TAU = 2 * Math.PI;
 
-/** Topolet resonator (formant) med omtrent samme toppforsterkning uansett frekvens. */
+/** Topolet resonator (formant) med omtrent samme toppforsterkning uansett frekvens. Koeffisientene
+ * regnes ut hver 16. prøve – frekvensen glir sakte, og sin/cos per prøve var det meste av tiden. */
 function resonator(sr, r) {
   let y1 = 0;
   let y2 = 0;
+  let n = 0;
+  let gain = 0;
+  let a1 = 0;
+  const a2 = r * r;
   return (x, fc) => {
-    const w = (TAU * fc) / sr;
-    const y = x * (1 - r) * 2 * Math.sin(w) + 2 * r * Math.cos(w) * y1 - r * r * y2;
+    if ((n++ & 15) === 0) {
+      const w = (TAU * fc) / sr;
+      gain = (1 - r) * 2 * Math.sin(w);
+      a1 = 2 * r * Math.cos(w);
+    }
+    const y = x * gain + a1 * y1 - a2 * y2;
     y2 = y1;
     y1 = y;
     return y;
@@ -25,15 +38,14 @@ function wobble() {
 }
 
 /** Brølet: en dyp, ru stemme som stiger og synker, med undertone og rasp. */
-export function roar(ctx, len = rand(2.4, 3.4)) {
-  const sr = ctx.sampleRate;
+function roar(sr, len = rand(2.4, 3.4)) {
   const base = rand(46, 60);
   const wob = wobble();
   const f1 = resonator(sr, 0.985);
   const f2 = resonator(sr, 0.975);
   const f3 = resonator(sr, 0.95);
   let phase = 0;
-  return make(ctx, len, (t) => {
+  return recipe(len, (t) => {
     const u = t / len;
     const open = Math.sin(Math.PI * Math.min(1, u * 1.25)); // stiger fort, synker sakte
     phase += (base * (1 + 0.7 * open) * (1 + 0.05 * wob(t))) / sr;
@@ -48,16 +60,15 @@ export function roar(ctx, len = rand(2.4, 3.4)) {
 }
 
 /** Et skrik langt borte: en stemme som slår opp, holder og knekker nedover. */
-function scream(ctx) {
+function scream(sr) {
   const len = rand(1.3, 2.2);
-  const sr = ctx.sampleRate;
   const top = rand(620, 900);
   const wob = wobble();
   const f1 = resonator(sr, 0.97);
   const f2 = resonator(sr, 0.97);
   const f3 = resonator(sr, 0.96);
   let phase = 0;
-  return make(ctx, len, (t) => {
+  return recipe(len, (t) => {
     const u = t / len;
     const f0 = top * (0.55 + 0.45 * Math.min(1, u * 4)) * (1 - 0.18 * u * u);
     phase += (f0 * (1 + 0.03 * Math.sin(TAU * 6.2 * t) + 0.02 * wob(t))) / sr;
@@ -68,15 +79,14 @@ function scream(ctx) {
 }
 
 /** Noe tungt som slepes over gulvet, i to–tre rykk. */
-function drag(ctx) {
+function drag(sr) {
   const len = rand(2.2, 3.4);
   const pulls = 2 + Math.floor(Math.random() * 2);
-  const sr = ctx.sampleRate;
   const body = resonator(sr, 0.99);
   const grit = resonator(sr, 0.9);
   let phase = 0;
   let lp = 0;
-  return make(ctx, len, (t) => {
+  return recipe(len, (t) => {
     const pull = Math.max(0, Math.sin(Math.PI * (((t / len) * pulls) % 1))) ** 0.8;
     phase += (14 + 20 * pull) / sr;
     const stick = phase % 1 < 0.15 ? 1 : 0.3; // hakker seg fast og slipper
@@ -87,11 +97,11 @@ function drag(ctx) {
 }
 
 /** Tunge, langsomme skritt som kommer nærmere – og stopper. */
-function stalk(ctx) {
+function stalk() {
   const n = 5 + Math.floor(Math.random() * 3);
   const gap = rand(0.8, 1);
   let lp = 0;
-  return make(ctx, n * gap + 0.6, (t) => {
+  return recipe(n * gap + 0.6, (t) => {
     const k = Math.min(n - 1, Math.floor(t / gap));
     const u = t - k * gap;
     lp += 0.03 * (Math.random() * 2 - 1 - lp);
@@ -101,13 +111,12 @@ function stalk(ctx) {
 }
 
 /** Klør som drar nedover en vegg, noen strøk etter hverandre. */
-function scratch(ctx) {
+function scratch(sr) {
   const n = 3 + Math.floor(Math.random() * 3);
   const gap = rand(0.4, 0.6);
-  const sr = ctx.sampleRate;
   const band = resonator(sr, 0.93);
   let phase = 0;
-  return make(ctx, n * gap + 0.2, (t) => {
+  return recipe(n * gap + 0.2, (t) => {
     const k = Math.min(n - 1, Math.floor(t / gap));
     const u = (t - k * gap) / (gap * 0.65);
     if (u > 1) return 0;
@@ -119,6 +128,31 @@ function scratch(ctx) {
 }
 
 /** Knurring: et kort, lavt brøl et sted i mørket. */
-const growl = (ctx) => roar(ctx, rand(1.2, 1.8));
+const growl = (sr) => roar(sr, rand(1.2, 1.8));
 
-export const NIGHT_SOUNDS = { scream, drag, stalk, scratch, growl };
+/** Oppskriftene: navn → (sampleRate) → { seconds, fn, peak }. */
+export const NIGHT_RECIPES = { roar, scream, drag, stalk, scratch, growl };
+
+const banks = new WeakMap(); // én bank per AudioContext
+
+function bank(ctx) {
+  let b = banks.get(ctx);
+  if (!b) banks.set(ctx, (b = new SoundBank(ctx, NIGHT_RECIPES)));
+  return b;
+}
+
+/** Begynner å lage én variant av hver lyd i bakgrunnen (Nightmare), så ingen må lages når den spilles. */
+export function warmNight(ctx) {
+  bank(ctx).prepare(...Object.keys(NIGHT_RECIPES));
+}
+
+/** En ferdig variant fra banken, ellers lages den nå (og banken lager en ny til neste gang). */
+export function nightBuffer(ctx, name) {
+  const ready = bank(ctx).take(name);
+  if (ready) return ready;
+  const { seconds, fn, peak } = NIGHT_RECIPES[name](ctx.sampleRate);
+  return make(ctx, seconds, fn, peak);
+}
+
+/** For lydkatalogen (eerie.js): uten brølet, som bare spilles når jakten begynner. */
+export const NIGHT_SOUNDS = Object.fromEntries(Object.keys(NIGHT_RECIPES).filter((n) => n !== 'roar').map((n) => [n, (ctx) => nightBuffer(ctx, n)]));

@@ -12,7 +12,8 @@ import { darkZones } from './darkness.js';
 /**
  * fog, exposure: ganges med temaets verdier. broken, flicker: andel av de tente lysene som er
  * ødelagte / blinker; patches: de døde lysene samles i områder (hele deler av bygget er mørke). wrong: «Make it wrong»-styrke for egne rom (home) og genererte nivåer (gen).
- * anomalies: sjanse for uendelige ganger (0/1), dør tilbake, korridornivå og samme rom igjen.
+ * anomalies: sjanse for uendelige ganger (0/1) og korridornivå. Aldri samme rom igjen eller en dør
+ * tilbake: etter en dør til ingensteds er man alltid et nytt sted (gen/endless.js).
  * blackout: tider for strømbrudd (null = aldri). eerie: ganges med tiden mellom skumle lyder
  * (lavere = oftere). shifts: [min, maks] sekunder mellom endringer bak ryggen på spilleren
  * (world/shifts.js), eller null. deep: sjanse for at et basseng i et generert nivå er mørkt og dypt.
@@ -29,7 +30,7 @@ export const MOODS = {
     hint: 'Just an empty building. Lights on, nothing strange.',
     fog: 0.8, exposure: 1.05, broken: 0, flicker: 0,
     wrong: { home: null, gen: null },
-    anomalies: { loops: 0, backDoor: 0, corridor: 0, again: 0 },
+    anomalies: { loops: 0, corridor: 0 },
     blackout: null, eerie: 4, monster: null, shifts: null,
   },
   abandoned: {
@@ -37,7 +38,7 @@ export const MOODS = {
     hint: 'Nobody has been here for years. Many lights are dead.',
     fog: 1.1, exposure: 0.95, broken: 0.45, flicker: 0.08, patches: true,
     wrong: { home: null, gen: null },
-    anomalies: { loops: 0, backDoor: 0, corridor: 0.1, again: 0 },
+    anomalies: { loops: 0, corridor: 0.1 },
     blackout: { first: [150, 300], every: [240, 480], dark: [5, 8] }, eerie: 1.6, monster: null, shifts: null,
     dark: { chance: 0.6, zones: 1 },
   },
@@ -46,7 +47,7 @@ export const MOODS = {
     hint: 'Something is wrong here, but you cannot say what.',
     fog: 1, exposure: 1, broken: 0.03, flicker: 0.03,
     wrong: { home: null, gen: 'subtle' },
-    anomalies: { loops: 1, backDoor: 0.25, corridor: 0.2, again: 0.15 },
+    anomalies: { loops: 1, corridor: 0.2 },
     blackout: { first: [70, 140], every: [120, 260], dark: [6, 11] }, eerie: 1, monster: null, shifts: [90, 180],
     dark: { chance: 0.5, zones: 1 },
   },
@@ -55,7 +56,7 @@ export const MOODS = {
     hint: 'The rooms are wrong, the lights fail – and something stands at the far end. It never comes closer.',
     fog: 1.4, exposure: 0.9, broken: 0.08, flicker: 0.08,
     wrong: { home: 'subtle', gen: 'wrong' },
-    anomalies: { loops: 1, backDoor: 0.35, corridor: 0.25, again: 0.25 },
+    anomalies: { loops: 1, corridor: 0.25 },
     blackout: { first: [40, 80], every: [70, 140], dark: [9, 14] }, eerie: 0.6, monster: 'lurk', deep: 0.15, shifts: [45, 90],
     dark: { chance: 0.75, zones: 1 },
   },
@@ -64,7 +65,7 @@ export const MOODS = {
     hint: 'Dark rooms, constant blackouts – and something hunts you in the dark. When the lights go out, run.',
     fog: 2.3, exposure: 0.72, broken: 0.25, flicker: 0.15,
     wrong: { home: 'wrong', gen: 'very' },
-    anomalies: { loops: 1, backDoor: 0.35, corridor: 0.25, again: 0.25 },
+    anomalies: { loops: 1, corridor: 0.25 },
     blackout: { first: [10, 20], every: [25, 50], dark: [20, 35] }, eerie: 0.35, monster: 'hunt', deep: 0.3, shifts: [25, 55],
     dark: { chance: 1, zones: 3 },
     chase: { speed: 2.9, near: [8, 16], inDarkness: true, caught: 'restart', roar: [0.6, 1.8] }, // bare løping redder deg
