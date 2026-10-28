@@ -17,6 +17,7 @@ const DECK_SNAP = 0.5; // står man høyere enn dekket minus dette, står man p�
 export const STAIR_RISE = 0.6; // stigning per rute når trappen ikke ender på et høyere gulv
 export const STEP_RISE = 0.18; // ønsket opptrinn
 /** Retningene en trapp kan gå oppover (meta-verdien for TILE.STAIRS): N, Ø, S, V. */
+export const STAIR_THROUGH = 16; // meta-bit: trappen går opp til etasjen over (core/stairwells.js)
 export const STAIR_DIRS = [
   [0, -1],
   [1, 0],

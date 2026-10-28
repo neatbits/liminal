@@ -164,7 +164,7 @@ export function generateInto(app, seed = null) {
   const s = parseSeed(seed) ?? randomSeed();
   const fresh = generateLevel({ theme, w, h, seed: s });
   app.editor.checkpoint();
-  applySnapshot(app.level, fresh);
+  applySnapshot(app.editor.level, fresh); // etasjen som tegnes
   app.mutated();
   toast(`Generated from seed ${s} – Ctrl+Z to undo`);
 }

@@ -3,6 +3,7 @@ import { TOOLS, SHAPES } from '../editor/tools.js';
 import { helpDialog } from '../ui/dialogs.js';
 import { isTyping } from '../ui/dom.js';
 import { save } from './actions.js';
+import { goStorey } from './storey-actions.js';
 
 export function bindShortcuts(app) {
   window.addEventListener('keydown', (e) => {
@@ -29,6 +30,10 @@ export function bindShortcuts(app) {
     const walking = app.viewer.mode === 'walk';
     const tool = TOOLS.find((t) => t.key.toLowerCase() === key);
     if (tool && !(walking && /[a-z]/i.test(tool.key))) return app.setTool(tool.id);
+    if ((e.key === 'PageUp' || e.key === 'PageDown') && !walking) {
+      e.preventDefault();
+      return goStorey(app, app.editor.storey + (e.key === 'PageUp' ? 1 : -1));
+    }
     const shape = SHAPES.find((s) => s.key.toLowerCase() === key);
     if (shape && !walking) return app.setShape(shape.id);
     if (e.key === '[') return app.setBrush(app.editor.brush - 1);

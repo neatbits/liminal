@@ -2,6 +2,17 @@
 
 Copy each section into Steamworks → Edit Store Page. Character limits are Steam's.
 
+**Før innsending (fra Steams dokumentasjon, partner.steamgames.com/doc/store):**
+- Alt under «Your Store Presence» i sjekklisten må være gjort; deretter «Mark as ready for review».
+- Gjennomgangen tar vanligvis 3–5 virkedager – send minst 7 virkedager før siden skal bli synlig.
+  Etter godkjenning: «Post as Coming Soon». Siden må være oppe i minst to uker før lansering.
+- Bare det som finnes ved lansering skal stå på siden; skjermbildene skal vise spillet (ingen
+  konseptkunst eller reklametekst); kapslene må ha lesbar tittel. Ingen lenker i beskrivelsen.
+- Bygget må starte på alle operativsystemer som er oppgitt: oppgi bare Windows til Linux-bygget er
+  prøvd (Steam Deck kjører Windows-bygget via Proton).
+- Navnet kan ikke endres etter første gjennomgang.
+- Bildene: `release/steam/` (`npm run steam:capsules`, se `docs/desktop.md`).
+
 ## Short description (max 300 characters)
 
 Draw empty rooms on a grid and walk through them seconds later. Yellow rooms, still pools, ball
@@ -65,7 +76,8 @@ Retro.
 | Graphics | WebGL 2 capable, e.g. Intel UHD 620 / GeForce GTX 750 | GeForce GTX 1060 / Radeon RX 580 or better |
 | Storage | 500 MB | 500 MB |
 
-Linux / SteamOS: same requirements (Steam Linux Runtime, launched with `--no-sandbox`).
+Linux / SteamOS: same requirements (Steam Linux Runtime, launched with `--no-sandbox`). List it
+only once the Linux build has been tested – until then, Windows only (Steam Deck via Proton).
 
 ## Content survey
 

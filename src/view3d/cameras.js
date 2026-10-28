@@ -14,6 +14,7 @@ export class OverviewCamera {
     this.controls.screenSpacePanning = false;
     this.tween = null;
     this.bounds = { cx: 24, cz: 24, size: 48 };
+    this.floorY = 0; // gulvet i etasjen som vises (core/storeys.js)
   }
 
   set enabled(on) {
@@ -33,10 +34,21 @@ export class OverviewCamera {
   /** Kamera- og målposisjon for en forhåndsinnstilling. */
   preset(name) {
     const { cx, cz, size } = this.bounds;
-    const target = new THREE.Vector3(cx, 0, cz);
+    const target = new THREE.Vector3(cx, this.floorY, cz);
     if (name === 'top') return { target, position: target.clone().add(new THREE.Vector3(0, size * 1.25, 0.01)) };
     const dir = new THREE.Vector3(-0.42, 0.8, 0.72).normalize();
     return { target, position: target.clone().addScaledVector(dir, size * 1.05) };
+  }
+
+  /** Løfter kameraet og målet til gulvet i en annen etasje, med samme vinkel og avstand. */
+  raise(y) {
+    const dy = y - this.floorY;
+    this.floorY = y;
+    if (!dy) return;
+    this.camera.position.y += dy;
+    this.controls.target.y += dy;
+    if (this.tween) this.tween = { ...this.tween, to: this.preset('perspective') };
+    this.controls.update();
   }
 
   /** Flytter kameraet mykt (eller umiddelbart) til en forhåndsinnstilling. */

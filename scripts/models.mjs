@@ -12,6 +12,8 @@
 //   modellen (noder med navn som begynner slik), f.eks. et bord eller et gulv modellen kom med,
 //   og "textureSize": 512 gir mindre teksturer (for store filer). "simplify": 0.15 forenkler
 //   geometrien til ca. 15 % av trekantene (tunge modeller; "simplifyError" = tillatt feil).
+//   "join": true slår sammen delene først – modeller som er kuttet i biter på 65k hjørner kan
+//   ellers ikke forenkles, fordi kantene mellom bitene er låst.
 //   "split": { "<navn>": "<nodeprefiks>", … } deler en fil med flere modeller i hver sin
 //   models/<navn>.glb (bare noden som starter med prefikset, og det under den, beholdes).
 // Bare modeller som er nyere enn sin .glb (eller mangler den) bygges; --all bygger alle.
@@ -21,7 +23,7 @@ import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
-import { metalRough, prune, weld, simplify } from '@gltf-transform/functions';
+import { metalRough, prune, weld, simplify, flatten, join as joinParts } from '@gltf-transform/functions';
 import { MeshoptSimplifier } from 'meshoptimizer';
 import { retailArt } from './retail-art.mjs';
 import { electronicsArt } from './electronics-art.mjs';
@@ -97,6 +99,7 @@ async function build(dir, file, config, name, keep) {
   // Tunge modeller (f.eks. AI-genererte): færre trekanter, med liten synlig feil.
   if (config.simplify) {
     await MeshoptSimplifier.ready;
+    if (config.join) await doc.transform(flatten(), joinParts({ keepNamed: false }));
     await doc.transform(weld(), simplify({ simplifier: MeshoptSimplifier, ratio: config.simplify, error: config.simplifyError ?? 0.004 }));
   }
   const tmp = join(tmpdir(), `liminal-model-${name}.glb`);

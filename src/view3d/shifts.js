@@ -3,6 +3,7 @@
 // annen vei. Og av og til, når man stopper etter å ha gått en stund, går noen et par skritt til.
 // Bare i gåmodus; rommet i editoren røres ikke (Explorer setter det tilbake når man går ut).
 import { cloneLevel, getTile } from '../core/level.js';
+import { storeyLevel } from '../core/storeys.js';
 import { Shifts } from '../world/shifts.js';
 import { surfaceFor } from './walker.js';
 
@@ -35,11 +36,15 @@ export class ShiftPlay {
     if (walk.rider.active || walk.play.soft.disturbed() || this._inLoop(walk, w)) return;
     const s = this.shifts.pick(walk.level, { x: w.x, z: w.z, yaw: w.yaw });
     if (!s) return;
-    const copy = cloneLevel(walk.level);
-    copy.objects = [...(walk.level.objects ?? [])];
-    s.apply(copy);
+    // Med etasjer gjøres endringen i den lagrede etasjen man står i, i en kopi av hele bygget
+    // (walk.level er etasjen slik den gås i, med trapperommene – core/stairwells.js).
+    const multi = v.storeys.all.length > 1;
+    const copy = cloneLevel(multi ? v.level : walk.level);
+    const target = multi ? storeyLevel(copy, v.storeys.current) : copy;
+    target.objects = [...(target.objects ?? [])];
+    s.apply(target);
     this.ex.home ??= v.level;
-    v.setLevel(copy, { explorer: true });
+    v.setLevel(copy, { explorer: true }); // man blir i samme etasje (Storeys.rebuilt)
   }
 
   /** Stopper man etter å ha gått en stund, kan det komme et par trinn til – ikke ens egne. */

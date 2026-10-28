@@ -134,7 +134,7 @@ describe('level', () => {
 
   it('kopierer verdiene i alle lag og spawn uten delte mutable referanser', () => {
     const level = createLevel({ w: 8, h: 8 });
-    const values = { tiles: TILE.WATER, lights: LIGHT.FLICKER, ceilings: 40, depths: 20, floors: 10, finish: 1, meta: 2, decks: 40, corners: 1 };
+    const values = { tiles: TILE.WATER, lights: LIGHT.FLICKER, ceilings: 40, depths: 20, floors: 10, finish: 1, meta: 2, decks: 40, corners: 1, leds: 2, panels: 2 };
     for (const key of LAYERS) level[key][9] = values[key];
     const copy = cloneLevel(level);
     expect(copy.spawn).toEqual(level.spawn);
@@ -155,7 +155,7 @@ describe('level', () => {
     [13, 17, 10, 12, 6, 8, 4, 5],
   ])('flytter alle lag og spawn fra %s × %s til %s × %s', (w, h, nw, nh, x, z, nx, nz) => {
     const level = createLevel({ w, h });
-    const values = { tiles: TILE.FLOOR, lights: LIGHT.ON, ceilings: 40, depths: 20, floors: 10, finish: 1, meta: 2, decks: 40, corners: 1 };
+    const values = { tiles: TILE.FLOOR, lights: LIGHT.ON, ceilings: 40, depths: 20, floors: 10, finish: 1, meta: 2, decks: 40, corners: 1, leds: 2, panels: 2 };
     for (const key of LAYERS) level[key][z * w + x] = values[key];
     level.spawn = { x: x + 0.5, z: z + 0.5, a: 1.2 };
     const resized = resizeLevel(level, nw, nh);

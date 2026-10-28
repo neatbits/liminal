@@ -23,6 +23,8 @@ export class UnavailableViewer {
 
   setLevel(level) { this.level = level; return null; }
 
+  showStorey() {} // etasjene finnes bare i 2D uten 3D
+
   updateSettings(patch) {
     Object.assign(this.settings, patch);
     this.options.onSettingsChange?.(this.settings);

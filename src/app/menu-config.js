@@ -6,6 +6,7 @@ import { openModal } from '../ui/modal.js';
 import { h } from '../ui/dom.js';
 import { feedbackDialog } from '../ui/feedback.js';
 import { desktop, startMenu } from './start-menu.js';
+import { addStorey, removeCurrentStorey } from './storey-actions.js';
 
 function about() {
   openModal({
@@ -54,6 +55,11 @@ export function menuConfig(app) {
         { label: 'Fill with lights', action: () => app.fillLights() },
         { label: 'Remove all lights', action: () => app.clearLights() },
         { label: 'Generate random room', action: () => generateInto(app) },
+        '-',
+        { label: 'Add floor', action: () => addStorey(app) },
+        { label: 'Add floor below', action: () => addStorey(app, { below: true }) },
+        { label: 'Duplicate floor', action: () => addStorey(app, { copy: true }) },
+        { label: 'Remove floor', action: () => removeCurrentStorey(app) },
       ],
     },
     {

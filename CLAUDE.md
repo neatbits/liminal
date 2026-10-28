@@ -31,8 +31,8 @@ roten med `#room=`/`#rom=` sendes videre til `app/`; `app/#example=<id>` åpner 
   `.env.deploy`, se `deploy.example.env`; `--dry-run`, `--clean`, `--env <fil>`)
 - `npm run models` – gjør kildemodellene i `3dmodels/<navn>/` (glTF) om til komprimerte
   `models/<navn>.glb` (bare endrede; `--all` for alle; mappenavn velger bestemte). Forbehandler spec/gloss → metal/rough,
-  emissive-teksturer uten fargetekstur, og `model.json` med `drop` (fjern deler), `textureSize` og
-  `simplify` (andel trekanter for tunge modeller) og `split` (én fil med flere modeller → én .glb
+  emissive-teksturer uten fargetekstur, og `model.json` med `drop` (fjern deler), `textureSize`,
+  `simplify` (andel trekanter for tunge modeller; `join` slår sammen biter først) og `split` (én fil med flere modeller → én .glb
   per modell; lisensen ligger i kildemappen). `disabled` utelater kilder også ved `--all`. Se `docs/models.md`. Sjekk alltid
   størrelse (`scale`) og retning (`turn`) visuelt – modeller fra Sketchfab har ofte rare enheter.
 - `npm run desktop` / `desktop:check` / `desktop:dist` – programmet (Electron, `desktop/`): åpne, selvsjekk
@@ -83,8 +83,8 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
   Nettlesersjekken bygger selv. I Windows PowerShell kan `npm.cmd` brukes hvis `npm.ps1` er blokkert.
 - Bekreft hva som er testet og hva som gjenstår. Blokkert WebGL må bevare 2D/lagring (`docs/graphics-recovery.md`). Shaderfeil/konteksttap skal feile nettlesersjekken; bruk flyttall i GLSL-vektorer. Node-tester og SwiftShader sier ikke hva
   bildefrekvensen blir på en fysisk GPU eller hvordan native fullskjerm virker på mobil/Safari.
-- **Romformat v3**: sonelag er rå byteverdier som to heksadesimale tegn per rute (`00` = standard).
-  Les fortsatt v1/v2 med ett tegn per rute. Endre `VERSION` ved inkompatible formatendringer;
+- **Romformat v4**: sonelag er rå byteverdier som to heksadesimale tegn per rute (`00` = standard),
+  og `storeys` holder etasjene over (v4). Les fortsatt v1/v2 med ett tegn per rute og v3 uten etasjer. Endre `VERSION` ved inkompatible formatendringer;
   behold gamle innlesere. Test hele lovlige høydeområdet via JSON, delingslenke og lokal lagring
   (`serialize-heights.test.js`, `storage.test.js`), særlig når høydegrenser eller lag endres.
 - **Lagring**: suksess krever en faktisk skriving. Manglende/blokkert/full lagring skal gi
@@ -125,9 +125,17 @@ src/
 ```
 
 - **Romformat** (`core/level.js`): alle lag i `LAYERS` (`tiles`, `lights`, `ceilings`,
-  `depths`, `floors`, `finish`, `meta`, `decks`, `corners`) er `Uint8Array(w*h)`, indeks `z*w+x`. Utenfor kartet regnes
+  `depths`, `floors`, `finish`, `meta`, `decks`, `corners`, `leds`, `panels`) er `Uint8Array(w*h)`, indeks `z*w+x`. Utenfor kartet regnes
   som vegg. Verdensenhet = meter, x = kolonne, z = rad. Nye lag legges i `LAYERS` (da
   følger kopiering, størrelsesendring og angre med) og i `LAYERS` i `serialize.js`.
+- **Etasjer** (`core/storeys.js`): rommet er etasje 0, `level.storeys` etasjene over (samme størrelse,
+  delt tema/himmel/lysfarge via `storeyLevel`). Høyden regnes ut så bassenger får plass. Editoren tegner
+  i `editor.level` (= etasjen), `editor.room` er hele rommet; angre per etasje eller `'all'`.
+  Trapp opp (meta-bit `STAIR_THROUGH`) binder etasjene sammen: `core/stairwells.js` lager etasjene slik de
+  bygges og gås i (`walkLevels`, med `seams`); bytte midt på reposet. 3D og gåing: `view3d/storeys.js`
+  (eier alle etasjeverdenene; `walk.base` = etasjehøyden). Glasstaket i Mall bare i øverste etasje. Bassenger henger ned
+  som kasse i rommet under (`storeyGap`). `room.spawnStorey` = startetasjen. Sklier ned fra etasjen over:
+  `slide.drop` (`core/slide-drops.js`). Se `docs/storeys.md`.
 - **Skrå og avrundede hjørner** (`core/corners.js`, laget `corners`): en gulvrute med vegg på to sider som
   møtes (innvendig hjørne) eller en veggrute med gulv på to slike sider (utvendig) kan formes; grensen går
   mellom nabohjørnene (rett eller kvart sirkel), og delen mot hjørnet får naboenes type. Bruk alltid
@@ -241,8 +249,10 @@ src/
 - **Lys er bakt per vertex** (`world/lighting.js`) med siktlinje gjennom rutenettet; der
   siktlinjen krysser en rutegrense må den gå under taket og over gulvet i begge ruter, og
   ikke gjennom en lukket dør.
-  Armaturen sitter i høyden `top` = min(tak, gulvet under + `HANG`): i høye rom henger den i en ledning
-  (`world/fixtures.js`); `ceil` er fortsatt taket.
+  Armaturen sitter alltid i taket (`top` = `ceil`). I rom høyere enn `HANG` over gulvet får lyskilden `low`:
+  den bakes som en søyle fra taket ned til `HANG`, så gulvet får lys som fra en lampe der nede (ingen hengende lamper).
+  LED-striper (`core/leds.js`) og lyspaneler (`core/panels.js`) er fargede lyskilder uten armatur; 2D, 3D
+  og bakingen bruker samme `ledFaces`/`panelCells`. Flatene ganges med strømmen (`update(power)`).
   Blinkende lys bakes i egne kanaler (`aFlick`, 4 grupper) som animeres via uniforms.
   Lysfargen (`level.tint` / `settings.light`, `core/tints.js`) bakes ikke: den ganges inn i `vLight`
   via den delte uniformen `uTint` (og armaturene/glansen), regnet ut hver ramme i viewer. Nye shadere

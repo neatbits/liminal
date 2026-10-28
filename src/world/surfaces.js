@@ -7,10 +7,13 @@ import { waterCell } from '../core/pillar-water.js';
 import { floorAt, topFloorAt, ceilingAt, edgeHeight, pillarBottom } from '../core/heights.js';
 import { MeshData } from './mesher.js';
 import { SIDES, addCaps } from './caps.js';
-import { buildSteps, surfaceHeight, stepBreaks } from './stairs.js';
+import { buildSteps, surfaceHeight, stepBreaks, stairWallSpans } from './stairs.js';
+import { shaftWall, buildShaftWall, buildEntrance } from './shaft-walls.js';
+import { getTheme } from '../core/themes.js';
 import { isEscalator } from '../core/escalators.js';
 import { FINISH } from '../core/zones.js';
 import { openSpans, clipSpans, buildDeck } from './decks.js';
+import { seamSpans, hasFloor, hasCeiling } from './seams.js';
 import { windowInfo } from '../core/windows.js';
 import { cornerShape, sideOpened } from '../core/corners.js';
 import { buildCorner } from './corners.js';
@@ -102,6 +105,8 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
   const roof = mallRoof(level);
   const shops = shopInteriorMap(level);
   const wallUV = wallTextureMap(level);
+  const { wall2, base } = getTheme(level.theme).surfaces;
+  const look = { split: !!wall2, skirt: base?.h ?? 0 }; // vegg langs trapper (stairWallSpans)
   const out = {
     ...Object.fromEntries(SHOP_INTERIORS.flatMap((_, style) =>
       ['Floor', 'Wall', 'Ceiling'].map(surface => [`shop${surface}_${style}`, new MeshData(field)]))),
@@ -154,7 +159,7 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
         horizontal(out.basin, cx, cz, fy, S, true, (x, z) => floorAt(level, x, z) > fy + STEP, 0.1);
       } else if (t === TILE.STAIRS) {
         if (!isEscalator(level, cx, cz)) buildSteps(floorMesh, level, cx, cz);
-      } else if (!shape) {
+      } else if (!shape && hasFloor(level, cz * level.w + cx)) {
         const closes = (x, z) => isWall(x, z) || topFloorAt(level, x, z) > fy + 0.01;
         horizontal(floorMesh, cx, cz, fy, S, true, closes, 0.12);
       }
@@ -162,13 +167,14 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
       const lower = (x, z) => isWall(x, z) || ceilingAt(level, x, z) < cy - STEP;
       // En bue har ikke flatt tak: det ville ligget skjult inne i buen og flimret mot toppen av den.
       const arch = t === TILE.DOOR && archShape(level, cx, cz);
-      if (!shape && !arch && !roof?.mask[cz*level.w+cx]) horizontal(ceilingMesh, cx, cz, cy, S, false, lower, 0.1, CEILING_GAIN);
+      if (!shape && !arch && !roof?.mask[cz*level.w+cx] && hasCeiling(level, cz * level.w + cx)) horizontal(ceilingMesh, cx, cz, cy, S, false, lower, 0.1, CEILING_GAIN);
       if (arch) buildArch(wallMesh, arch);
-      const spans = openSpans(level, cx, cz, vBase);
-      if (shape) buildCorner(shape, { floor: floorMesh, ceiling: ceilingMesh, wall: wallMesh }, spans, wallUV, cornerShade(shape));
+      const cellSpans = stairWallSpans(level, cx, cz, openSpans(level, cx, cz, vBase), look);
+      buildEntrance(wallMesh, level, cx, cz); // inngangen til en sjakt i etasjen over
+      if (shape) buildCorner(shape, { floor: floorMesh, ceiling: ceilingMesh, wall: wallMesh }, cellSpans, wallUV, cornerShade(shape));
       if (t === TILE.PILLAR) {
         const bottom = pillarBottom(level, cx, cz);
-        spans.forEach((sp, i) => buildPillar(wallMesh, level, cx, cz, i ? sp.lo : Math.min(sp.lo, bottom), sp.hi, sp.base));
+        cellSpans.forEach((sp, i) => buildPillar(wallMesh, level, cx, cz, i ? sp.lo : Math.min(sp.lo, bottom), sp.hi, sp.base));
       }
       buildDeck(level, cx, cz, { floorMesh, ceiling: ceilingMesh, wallMesh }, SIDES, S, CEILING_GAIN);
 
@@ -179,12 +185,18 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
         const R = [cx + s.R[0], cz + s.R[1]];
         const originalU = L[0] * s.ux + L[1] * s.uz;
         const [uL, uR] = wallUV(L, R) ?? [originalU, originalU + 1];
+        const spans = seamSpans(level, cz * level.w + cx, s, cellSpans); // trapperom mellom etasjer
         if (isWall(nx, nz)) {
           if (isShopfront(level, nx, nz) && shopfrontNormal(level, nx, nz)) continue;
           // Siden ligger i veggkilen, eller naboveggen er åpnet mot oss: ingen vegg her.
           if (sideOpened(shape, s.dx, s.dz) || sideOpened(cornerShape(level, nx, nz), -s.dx, -s.dz)) continue;
           const left = isWall(cx - s.ux, cz - s.uz) ? 0.8 : 1;
           const right = isWall(cx + s.ux, cz + s.uz) ? 0.8 : 1;
+          const thick = shaftWall(level, cx, cz, s);
+          if (thick) {
+            buildShaftWall(wallMesh, thick, s, spans, uL, uR, [left, right]);
+            continue;
+          }
           const win = windowInfo(level, nx, nz);
           if (win && win.n[0] === -s.dx && win.n[1] === -s.dz) {
             // Vindu: vegg under og over åpningen, og smale stykker på sidene av den (karmen).

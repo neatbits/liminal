@@ -19,10 +19,13 @@ import { SLIDE, SLIDE_COLORS, DEFAULT_SLIDE_COLOR } from './slides.js';
 import { objectsFromJSON } from './objects.js';
 import { SKIES } from './windows.js';
 import { TINTS } from './tints.js';
+import { storeysToJSON, storeysFromJSON, spawnStoreyFromJSON } from './serialize-storeys.js';
 
 export const FORMAT = 'liminal-room';
 const LEGACY_FORMATS = ['liminal-rom']; // første versjon brukte norsk formatnavn
-export const VERSION = 3; // v3: sonelag som to heksadesimale tegn per rute (hele Uint8-området)
+// v3: sonelag som to heksadesimale tegn per rute (hele Uint8-området); v4: etasjer (`storeys`), som
+// eldre versjoner ellers ville mistet uten å si fra.
+export const VERSION = 4;
 const CHAR0 = 48; // '0'. Verdi = tile | light << 3 → tegn '0'..'O'
 
 // v3 lagrer rå desimeter/metadata som to heksadesimale tegn; 00 = standard.
@@ -37,6 +40,8 @@ const LAYERS = [
   { key: 'meta', min: 1, max: 31 }, // dørblad og bue (bit 4), trapperetning + motorretning, søylediameter
   { key: 'decks', min: Math.round(DECK_MIN * 10), max: Math.round(DECK_MAX * 10) },
   { key: 'corners', min: 1, max: 8 }, // skrå og avrundede hjørner (core/corners.js): tegnet er verdien
+  { key: 'leds', min: 1, max: 8 },    // LED-strip farge på veggruter (core/leds.js)
+  { key: 'panels', min: 1, max: 3 },  // lyspaneler i tak på åpne ruter (core/panels.js)
 ];
 
 const clamp = (v, lo, hi, fallback) => {
@@ -68,7 +73,7 @@ function slidesFromJSON(level, list) {
     const raw = Array.isArray(s?.points) ? s.points.slice(0, SLIDE.MAX_POINTS) : [];
     const points = raw.map((p) => [Math.trunc(Number(p?.[0])), Math.trunc(Number(p?.[1]))]);
     if (points.length < 2 || points.some(([x, z]) => !inBounds(level, x, z))) throw bad();
-    return { points, tube: !!s.tube, color: SLIDE_COLORS[s.color] ? s.color : DEFAULT_SLIDE_COLOR };
+    return { points, tube: !!s.tube, color: SLIDE_COLORS[s.color] ? s.color : DEFAULT_SLIDE_COLOR, ...(s.drop ? { drop: true } : {}) };
   });
 }
 
@@ -121,8 +126,10 @@ export function levelToJSON(level) {
     spawn: [round3(s.x), round3(s.z), round3(s.a)],
     rows,
     ...Object.fromEntries(LAYERS.map((layer) => [layer.key, layerToRows(level, layer)])),
-    slides: level.slides.length ? level.slides.map((s) => ({ points: s.points, ...(s.tube ? { tube: true } : {}), color: s.color })) : undefined,
+    slides: level.slides.length ? level.slides.map((s) => ({ points: s.points, ...(s.tube ? { tube: true } : {}), color: s.color, ...(s.drop ? { drop: true } : {}) })) : undefined,
     objects: level.objects?.length ? level.objects.map(({ id, x, z, rot, v, tip, lift, off }) => ({ id, x, z, rot, ...(v !== undefined ? { v } : {}), ...(tip ? { tip } : {}), ...(lift ? { lift } : {}), ...(off ? { off } : {}) })) : undefined,
+    storeys: storeysToJSON(level, levelToJSON),
+    spawnStorey: level.spawnStorey || undefined,
   };
 }
 
@@ -170,6 +177,8 @@ export function levelFromJSON(data) {
   for (const layer of LAYERS) rowsToLayer(level, data[layer.key], layer, version);
   slidesFromJSON(level, data.slides);
   level.objects = objectsFromJSON(level, data.objects);
+  storeysFromJSON(level, data.storeys, levelFromJSON, { format: FORMAT, v: version });
+  spawnStoreyFromJSON(level, data.spawnStorey);
   const [sx, sz, sa] = Array.isArray(data.spawn) ? data.spawn : [];
   level.spawn = {
     x: clamp(sx, 0.5, w - 0.5, w / 2),

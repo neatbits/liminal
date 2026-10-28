@@ -8,9 +8,9 @@ describe('historikk', () => {
     const history = new History();
     history.push(level);
     setTile(level, 1, 1, TILE.FLOOR);
-    expect(history.undo(level)).toBe(true);
+    expect(history.undo(level)).toEqual({ storey: 0 });
     expect(level.tiles[9]).toBe(TILE.WALL);
-    expect(history.redo(level)).toBe(true);
+    expect(history.redo(level)).toEqual({ storey: 0 });
     expect(level.tiles[9]).toBe(TILE.FLOOR);
     expect(history.canRedo).toBe(false);
   });
@@ -48,9 +48,9 @@ describe('historikk', () => {
       history.dropIfUnchanged(level);
     }
     expect(history.canUndo).toBe(false);
-    expect(history.redo(level)).toBe(true);
+    expect(history.redo(level)).toEqual({ storey: 0 });
     expect(level.tiles[9]).toBe(TILE.FLOOR);
-    expect(history.redo(level)).toBe(true);
+    expect(history.redo(level)).toEqual({ storey: 0 });
     expect(level.tiles[9]).toBe(TILE.WATER);
   });
 
@@ -64,7 +64,7 @@ describe('historikk', () => {
     setTile(level, 2, 1, TILE.WATER);
     history.dropIfUnchanged(level);
     expect(history.redo(level)).toBe(false);
-    expect(history.undo(level)).toBe(true);
+    expect(history.undo(level)).toEqual({ storey: 0 });
     expect(level.tiles[10]).toBe(TILE.WALL);
   });
 
@@ -75,7 +75,7 @@ describe('historikk', () => {
     setTile(level, 1, 1, TILE.FLOOR);
     history.push(level);
     history.dropIfUnchanged(level);
-    expect(history.undo(level)).toBe(true);
+    expect(history.undo(level)).toEqual({ storey: 0 });
     expect(level.tiles[9]).toBe(TILE.WALL);
   });
 
@@ -124,7 +124,7 @@ describe('frøet i angrehistorikken', () => {
     history.push(level);
     level.seed = 2;
     history.dropIfUnchanged(level);
-    expect(history.undo(level)).toBe(true);
+    expect(history.undo(level)).toEqual({ storey: 0 });
     expect(level.seed).toBe(1);
   });
 

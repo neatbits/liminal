@@ -18,6 +18,8 @@ import { bindShortcuts } from './shortcuts.js';
 import { hoverText, toolText, renderBadge } from './status.js';
 import { sidebarActions, bindButtons } from './wiring.js';
 import { DraftSaver } from './draft.js';
+import { toolMethods } from './tool-methods.js';
+import { storeyCount } from '../core/storeys.js';
 
 export class App {
   constructor() {
@@ -27,7 +29,8 @@ export class App {
     this.drafts = new DraftSaver(() => this.level, () => toast('Could not autosave – export your room to keep a copy.', { error: true, ms: 6000 }));
     this.editor = new Editor($('#editor-canvas'), {
       onChange: (kind) => this.changed(kind),
-      onHover: (cell) => ($('#hover-info').textContent = hoverText(this.level, cell)),
+      onHover: (cell) => ($('#hover-info').textContent = hoverText(this.editor.level, cell)),
+      onStorey: () => this._refreshUI(),
       onHint: (text) => toast(text, { ms: 4500 }),
     });
     this.editor.grid = this.settings.grid;
@@ -85,56 +88,6 @@ export class App {
     this._saveDraftSoon();
   }
 
-  setTool(id) {
-    this.editor.setTool(id);
-    this._syncTool();
-  }
-
-  setShape(id) {
-    this.editor.setShape(id);
-    this._syncTool();
-  }
-
-  setBrush(n) {
-    this.editor.setBrush(n);
-    this._syncTool();
-  }
-
-  setZoneValue(layer, metres) {
-    this.editor.setZoneValue(layer, metres);
-    this._syncTool();
-  }
-
-  setDoorState(state) {
-    this.editor.setDoorState(state);
-    this._syncTool();
-  }
-
-  setSlideTube(tube) {
-    this.editor.setSlideTube(tube);
-    this._syncTool();
-  }
-
-  setEscalatorDown(down) {
-    this.editor.escalatorDown = down;
-    this._syncTool();
-  }
-
-  setSlideColor(color) {
-    this.editor.setSlideColor(color);
-    this._syncTool();
-  }
-
-  setObjectId(id) {
-    this.editor.setObjectId(id);
-    this._syncTool();
-  }
-
-  setCornerKind(kind) {
-    this.editor.setCornerKind(kind);
-    this._syncTool();
-  }
-
   rename(name) {
     this.level.name = name.trim() || 'Untitled';
     this.dirty = true;
@@ -149,8 +102,10 @@ export class App {
 
   setSize(w, h) {
     if (w === this.level.w && h === this.level.h) return;
-    this.editor.checkpoint();
-    applySnapshot(this.level, resizeLevel(this.level, w, h));
+    this.editor.checkpoint(true); // alle etasjene endrer størrelse
+    const resized = resizeLevel(this.level, w, h);
+    applySnapshot(this.level, resized);
+    if (resized.storeys) this.level.storeys = resized.storeys;
     this.mutated();
     this.editor.fit();
   }
@@ -160,9 +115,9 @@ export class App {
     this.changed('live');
   }
 
-  /** Takhøyde/vanndybde for hele rommet: også skissen må tegnes på nytt (soner, farger). */
+  /** Takhøyde/vanndybde for etasjen, himmel/lysfarge for bygget: også skissen må tegnes på nytt. */
   setRoomProp(key, value) {
-    this.level[key] = value;
+    (key === 'height' || key === 'waterDepth' ? this.editor.level : this.level)[key] = value;
     this.editor.refresh();
     this.changed('live');
   }
@@ -177,20 +132,20 @@ export class App {
 
   fillLights() {
     this.editor.checkpoint();
-    autoLights(this.level, { spacing: getTheme(this.level.theme).lightSpacing, flicker: 0.04, broken: 0.03 });
+    autoLights(this.editor.level, { spacing: getTheme(this.level.theme).lightSpacing, flicker: 0.04, broken: 0.03 });
     this.mutated();
   }
 
   clearLights() {
     this.editor.checkpoint();
-    clearLights(this.level);
+    clearLights(this.editor.level);
     this.mutated();
   }
 
   /** «Make it wrong»: små endringer som gjør rommet litt feil; stedene vises en kort stund i skissen. */
   makeWrong(strength) {
     this.editor.checkpoint();
-    const changes = makeWrong(this.level, strength);
+    const changes = makeWrong(this.editor.level, strength);
     this.mutated();
     this.editor.highlight(changeMarkers(changes), 6000);
     toast(`${changes.length} small things are now wrong. Can you find them? (Ctrl+Z undoes)`, { ms: 5000 });
@@ -238,13 +193,18 @@ export class App {
   }
 
   _refreshUI() {
-    this.sidebar.syncLevel(this.level);
-    this.sidebar.syncStats(levelStats(this.level));
+    const floor = this.editor.level; // etasjen som tegnes: egen takhøyde, vanndybde, frø og tall
+    this.sidebar.syncLevel({ ...this.level, height: floor.height, waterDepth: floor.waterDepth, seed: floor.seed });
+    this.sidebar.syncStats(levelStats(floor));
+    this.storeyBar?.sync(this.editor.storey, storeyCount(this.level));
+    this.viewer.showStorey(this.editor.storey);
     this._refreshBadge();
     $('#btn-undo').disabled = !this.editor.history.canUndo;
     $('#btn-redo').disabled = !this.editor.history.canRedo;
     // Ruten under pekeren kan ha endret seg uten at pekeren har flyttet seg.
     const hover = this.editor.hover;
-    $('#hover-info').textContent = hover ? hoverText(this.level, hover.map(Math.floor)) : '';
+    $('#hover-info').textContent = hover ? hoverText(floor, hover.map(Math.floor)) : '';
   }
 }
+
+Object.assign(App.prototype, toolMethods);

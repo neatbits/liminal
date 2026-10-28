@@ -34,7 +34,8 @@ export class TapeHunt {
     const { v, tapes } = this.ex;
     const w = v.walk.walker, level = v.walk.level;
     const reach = reachableCells(level, w.x, w.z);
-    if (!tapes.items.some((t) => reach[Math.floor(t.z) * level.w + Math.floor(t.x)])) return true;
+    // Kassetter i andre etasjer (view3d/storeys.js) regnes som mulige å nå via trappene.
+    if (!tapes.items.some((t) => t.storey !== v.storeys.current || reach[Math.floor(t.z) * level.w + Math.floor(t.x)])) return true;
     if (v.walk.sound) lockedDoor(v.audio);
     v.hud.flash(`The door won't open. 📼 ${this.ex.found} of ${this.ex.total} tapes found. Listen for the rest.`, 3500);
     return false;
@@ -74,7 +75,7 @@ export class TapeHunt {
     const v = this.ex.v, w = v.walk.walker;
     let best = null, d = Infinity;
     for (const t of this.ex.tapes.items) {
-      const dist = Math.hypot(t.x - w.x, t.z - w.z, (t.y - w.floorY) * 0.5);
+      const dist = Math.hypot(t.x - w.x, t.z - w.z, (t.base + t.y - w.floorY - v.walk.base) * 0.5); // høyden i bygget
       if (dist < d) [best, d] = [t, dist];
     }
     const level = best && v.walk.sound ? Math.max(0, 1 - d / HEAR) ** 2 : 0;

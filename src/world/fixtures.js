@@ -70,20 +70,6 @@ export function buildFixtures(lights, theme) {
     group.add(instanced(frameGeo, frameMat, lights, (l) => l.top - 0.012 - drop));
   }
 
-  // Lamper som henger ned i høye rom (top under taket): en tynn ledning opp til taket.
-  const hanging = lights.filter((l) => l.ceil - l.top > 0.05);
-  if (hanging.length) {
-    const cordGeo = new THREE.CylinderGeometry(0.008, 0.008, 1, 4).translate(0, 0.5, 0);
-    const cordMat = new THREE.MeshBasicMaterial({ color: '#1c1b18' });
-    disposables.push(cordGeo, cordMat);
-    const cords = new THREE.InstancedMesh(cordGeo, cordMat, hanging.length);
-    const m = new THREE.Matrix4();
-    hanging.forEach((l, i) => cords.setMatrixAt(i, m.makeScale(1, l.ceil - l.top + drop, 1).setPosition(l.x, l.top - drop, l.z)));
-    cords.instanceMatrix.needsUpdate = true;
-    cords.computeBoundingSphere();
-    group.add(cords);
-  }
-
   return {
     group,
     /** values: blinkegruppene (0..1), power: strømmen (0..1, under strømbrudd), tint: lysfargen ([r, g, b]). */

@@ -21,12 +21,15 @@ const VAULT_V = 1; // teksturhøyden undersiden får (m): ren tapet, ikke gulvli
 export function archShape(level, x, z) {
   const info = doorInfo(level, x, z);
   if (!info?.arch || info.oneSided) return null;
-  const fy = floorAt(level, x, z);
-  const top = ceilingAt(level, x, z);
+  return { info, ...archCurve(floorAt(level, x, z), ceilingAt(level, x, z)) };
+}
+
+/** Buen i en 1 m bred åpning fra gulvet fy til toppen top (også inngangen til et trapperom, world/shaft-walls.js). */
+export function archCurve(fy, top) {
   const spring = Math.min(fy + SPRING, top - MIN_RISE);
   const rise = top - spring;
   const radius = (0.25 + rise * rise) / (2 * rise);
-  return { info, fy, spring, top, rise, radius, cy: top - radius, half: Math.asin(Math.min(1, 0.5 / radius)) };
+  return { fy, spring, top, rise, radius, cy: top - radius, half: Math.asin(Math.min(1, 0.5 / radius)) };
 }
 
 /** Punkter langs buen fra a0 til a0 + 1: [a, y, na, ny], der (na, ny) er normalen inn mot åpningen. */
@@ -42,9 +45,12 @@ export function archPoints(shape, n = SEGMENTS) {
   return out;
 }
 
-/** Buens underside og veggfeltene over den, i lokale akser (a langs veggen, p gjennom åpningen). */
+/**
+ * Buens underside og veggfeltene over den, i lokale akser (a langs veggen, p gjennom åpningen).
+ * `depth`: veggens tykkelse (1 m i en døråpning).
+ */
 export function buildArch(mesh, shape) {
-  const { info, fy, top } = shape;
+  const { info, fy, top, depth = 1 } = shape;
   const { p0, pz } = info;
   const at = (a, y, p) => (pz ? [a, y, p] : [p, y, a]);
   const dir = (na, ny, np) => (pz ? [na, ny, np] : [np, ny, na]);
@@ -56,9 +62,9 @@ export function buildArch(mesh, shape) {
   const vault = field && {
     sample(x, y, z) {
       const a = pz ? x : z;
-      const t = (pz ? z : x) - p0;
+      const t = ((pz ? z : x) - p0) / depth;
       const A = field.sample(...at(a, y, p0), ...dir(0, 0, -1));
-      const B = field.sample(...at(a, y, p0 + 1), ...dir(0, 0, 1));
+      const B = field.sample(...at(a, y, p0 + depth), ...dir(0, 0, 1));
       const k = VAULT_SHADE + (1 - VAULT_SHADE) * Math.abs(2 * t - 1);
       return A.map((v, i) => (v * (1 - t) + B[i] * t) * k);
     },
@@ -72,7 +78,7 @@ export function buildArch(mesh, shape) {
     mesh.field = vault;
     for (let j = 0; j < STRIPS; j++) {
       const [t0, t1] = [j / STRIPS, (j + 1) / STRIPS];
-      const quad = [at(a1, y1, p0 + t0), at(a2, y2, p0 + t0), at(a2, y2, p0 + t1), at(a1, y1, p0 + t1)];
+      const quad = [at(a1, y1, p0 + t0 * depth), at(a2, y2, p0 + t0 * depth), at(a2, y2, p0 + t1 * depth), at(a1, y1, p0 + t1 * depth)];
       // v midt på veggen (VAULT_V): nederst i veggteksturen er gulvlisten malt.
       faceQuad(mesh, quad, mid, [[arc, VAULT_V + t0], [arc + len, VAULT_V + t0], [arc + len, VAULT_V + t1], [arc, VAULT_V + t1]]);
     }
@@ -80,7 +86,7 @@ export function buildArch(mesh, shape) {
     arc += len;
     // Veggfeltet mellom buen og toppen, på begge sider. u følger nabovegens retning (SIDES i caps.js).
     for (const s of [-1, 1]) {
-      const p = s < 0 ? p0 : p0 + 1;
+      const p = s < 0 ? p0 : p0 + depth;
       const u = (a) => a * (pz ? s : -s);
       const face = [at(a1, y1, p), at(a2, y2, p), at(a2, top, p), at(a1, top, p)];
       faceQuad(mesh, face, dir(0, 0, s), [[u(a1), y1 - fy], [u(a2), y2 - fy], [u(a2), top - fy], [u(a1), top - fy]]);

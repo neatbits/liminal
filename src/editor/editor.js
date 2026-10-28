@@ -1,40 +1,31 @@
-// 2D-skissen: håndterer canvas, verktøy, angre/gjør om og tegning. Peker-input ligger i
-// pointer.js.
+// 2D-skissen: håndterer canvas, etasjer, angre/gjør om og tegning. Peker-input ligger i
+// pointer.js, verktøytilstanden i tool-state.js.
 import { History } from '../core/history.js';
+import { storeyCount, storeyLevel, spawnStorey } from '../core/storeys.js';
+import { throughRuns } from '../core/stairwells.js';
+import { dropTarget } from '../core/slide-drops.js';
 import { getTheme } from '../core/themes.js';
-import { ZONES, zoneLabels } from '../core/zones.js';
-import { DOOR } from '../core/doors.js';
-import { CORNER } from '../core/corners.js';
+import { zoneLabels } from '../core/zones.js';
 import { stairCells } from '../core/stairs.js';
-import { DEFAULT_SLIDE_COLOR } from '../core/slides.js';
-import { OBJECT_IDS } from '../core/objects.js';
 import { normRect } from '../core/ops.js';
 import { Viewport } from './viewport.js';
 import { drawPlan, RULER_LEFT, RULER_TOP } from './render.js';
 import { planImage } from './plan-image.js';
-import { toolById } from './tools.js';
 import { bindPointer } from './pointer.js';
+import { ToolState } from './tool-state.js';
 
-export class Editor {
-  /** @param options { onChange(kind) – 'live' under strøk, 'commit' etter, onHover(cell|null), onHint(tekst) } */
+export class Editor extends ToolState {
+  /** @param options { onChange(kind) – 'live' under strøk, 'commit' etter, onHover(cell|null), onHint(tekst), onStorey(k) } */
   constructor(canvas, options = {}) {
+    super();
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.options = options;
     this.view = new Viewport();
     this.history = new History();
+    this.room = null; // hele rommet (etasje 0, med room.storeys over)
+    this.storey = 0; // etasjen som tegnes – this.level er den (core/storeys.js)
     this.level = null;
-    this.tool = toolById('floor');
-    this.shape = 'brush';
-    this.brush = 1;
-    this.pillarDiameter = .5;
-    this.zone = { ceiling: 4, depth: 1.5, floor: 1.2, finish: 1, deck: 4 }; // høyden soneverktøyene maler (m)
-    this.doorState = DOOR.CLOSED; // dørene dørverktøyet setter inn
-    this.cornerKind = CORNER.ANGLED; // skrått eller avrundet (hjørneverktøyet)
-    this.slideTube = false; // nye sklier: åpen renne eller lukket rør …
-    this.escalatorDown = false;
-    this.slideColor = DEFAULT_SLIDE_COLOR; // … og fargen (SLIDE_COLORS)
-    this.objectId = OBJECT_IDS[0]; // gjenstanden objektverktøyet setter inn
     this.grid = true;
     this.rulers = true;
     this.hover = null;
@@ -47,85 +38,56 @@ export class Editor {
     new ResizeObserver(() => this._resize()).observe(canvas.parentElement);
   }
 
-  setLevel(level, { keepView = false } = {}) {
-    this.level = level;
+  setLevel(room, { keepView = false } = {}) {
+    this.room = this.level = room;
+    this.storey = 0;
     this.history.clear();
     this.stroke = null;
     if (!keepView) this.fit();
     this.refresh();
+    this.options.onStorey?.(0);
   }
 
   /** Kalles når rommet er endret utenfra (tema, størrelse, generering). */
   refresh() {
+    if (this.room) this.level = storeyLevel(this.room, (this.storey = Math.min(this.storey, storeyCount(this.room) - 1)));
     this._image = null;
     this._zones = null;
+    this._wells = null;
     this.invalidate();
   }
 
-  /** Aktivt verktøy; sone- og dørverktøy får høyden/dørtilstanden de skal bruke som `value`. */
-  get activeTool() {
-    const t = this.tool;
-    if (t.id === 'pillar') return { ...t, diameter: this.pillarDiameter };
-    if (t.kind === 'zone') return { ...t, value: this.zone[t.layer] };
-    if (t.kind === 'door') return { ...t, value: this.doorState };
-    if (t.kind === 'corner') return { ...t, value: this.cornerKind };
-    if (t.kind === 'object') return { ...t, value: this.objectId };
-    if (t.kind === 'slide') return { ...t, value: this.slideTube };
-    if (t.escalator) return { ...t, down: this.escalatorDown };
-    return t;
-  }
-
-  setTool(id) {
-    this.tool = toolById(id);
-    this.invalidate();
-  }
-
-  setShape(id) {
-    this.shape = id;
-    this.invalidate();
-  }
-
-  setBrush(n) {
-    this.brush = Math.max(1, Math.min(9, n));
-    this.invalidate();
-  }
-
-  setZoneValue(layer, metres) {
-    this.zone[layer] = ZONES[layer].clamp(metres);
-    this.invalidate();
-  }
-
-  setSlideTube(tube) {
-    this.slideTube = tube;
-  }
-
-  setSlideColor(color) {
-    this.slideColor = color;
-  }
-
-  setDoorState(state) {
-    this.doorState = state;
-  }
-
-  setObjectId(id) {
-    this.objectId = id;
-  }
-
-  setCornerKind(kind) {
-    this.cornerKind = kind;
+  /** Tegner i etasje k (0 = nederst). */
+  setStorey(k) {
+    this.storey = Math.max(0, k);
+    this.stroke = null;
+    this.refresh();
+    this.options.onStorey?.(this.storey);
   }
 
   undo() {
-    if (this.history.undo(this.level)) this.changed('commit');
+    this._went(this.history.undo(this.room));
   }
 
   redo() {
-    if (this.history.redo(this.level)) this.changed('commit');
+    this._went(this.history.redo(this.room));
   }
 
-  /** Lagrer et angre-punkt før en endring som gjøres utenfra (f.eks. «Fyll med lys»). */
-  checkpoint() {
-    this.history.push(this.level);
+  /** Angre/gjør om viser etasjen som ble endret. */
+  _went(step) {
+    if (!step) return;
+    if (!step.all && step.storey !== this.storey) this.setStorey(step.storey);
+    this.changed('commit');
+  }
+
+  /** Angre-punkt før en endring i etasjen som tegnes – eller i hele bygget (all: størrelse, etasjer). */
+  checkpoint(all = false) {
+    this.history.push(this.room, all ? 'all' : this.storey);
+  }
+
+  /** Etter endringen: fjerner angre-punktet hvis ingenting endret seg. */
+  settle() {
+    this.history.dropIfUnchanged(this.room);
   }
 
   /** Markerer steder i skissen en stund: [{ x, z, r }] (f.eks. det «Make it wrong» endret). */
@@ -186,8 +148,13 @@ export class Editor {
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this._image ??= planImage(this.level);
     this._zones ??= zoneLabels(this.level);
+    const below = this.storey ? storeyLevel(this.room, this.storey - 1) : null;
+    this._wells ??= { runs: this.storey < storeyCount(this.room) - 1 ? throughRuns(this.level) : [], below: below ? throughRuns(below) : [] };
     drawPlan(this.ctx, {
       level: this.level,
+      below,
+      wells: this._wells,
+      spawn: this.storey === spawnStorey(this.room),
       theme: getTheme(this.level.theme),
       view: this.view,
       width,
@@ -197,7 +164,7 @@ export class Editor {
       hover: this.stroke?.type === 'pan' ? null : this.hover,
       preview: this.stroke?.type === 'rect' ? normRect(...this.stroke.a, ...this.stroke.b) : null,
       stairs: this.stroke?.type === 'stairs' ? { ...stairCells(this.stroke.a, this.stroke.b, this.brush), erase: this.stroke.erase, down: this.stroke.escalator && this.stroke.down } : null,
-      slide: this.stroke?.type === 'slide' && !this.stroke.erase ? { points: this.stroke.points, tube: this.slideTube, color: this.slideColor } : null,
+      slide: this.stroke?.type === 'slide' && !this.stroke.erase ? { points: this.stroke.points, tube: this.slideTube, color: this.slideColor, drop: !!dropTarget(this.room, this.storey, this.stroke.points) } : null,
       tool: this.activeTool,
       brush: this.brush,
       erase: this.stroke?.erase ?? false,

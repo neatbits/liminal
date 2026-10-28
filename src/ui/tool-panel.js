@@ -4,7 +4,8 @@
 import { TOOLS, SHAPES } from '../editor/tools.js';
 import { h } from './dom.js';
 import { section, unitInput } from './fields.js';
-import { SWATCH, HINT, HINTS, ZONE, DOOR_STATES, SLIDE_SHAPES, SLIDE_COLOR_CHOICES, TOOL_GROUPS, CORNER_KINDS, ESCALATOR_DIRECTIONS } from './tool-info.js';
+import { SWATCH, HINT, HINTS, ZONE, DOOR_STATES, SLIDE_SHAPES, SLIDE_COLOR_CHOICES, TOOL_GROUPS, CORNER_KINDS, ESCALATOR_DIRECTIONS, PANEL_TYPE_CHOICES } from './tool-info.js';
+import { LED_NAMES } from '../core/leds.js';
 import { objectPicker } from './object-picker.js';
 import { PILLAR_DIAMETERS } from '../core/pillars.js';
 import { FINISHES } from '../core/finishes.js';
@@ -17,7 +18,7 @@ function choices(options, pick) {
 }
 
 export class ToolPanel {
-  /** @param a handlinger: tool(id), shape(id), brush(delta), zoneValue(layer, metres), doorState(state), slideTube(bool), slideColor(name), objectId(id) */
+  /** @param a handlinger: tool(id), shape(id), brush(delta), zoneValue(layer, metres), doorState(state), slideTube(bool), slideColor(name), objectId(id), ledColor(index), panelType(index) */
   constructor(a) {
     this.toolButtons = new Map(
       TOOLS.map((t) => [
@@ -53,6 +54,12 @@ export class ToolPanel {
     this.escalator.row.setAttribute('aria-label', 'Escalator direction');
     this.escalator.row.setAttribute('role', 'group');
     this.object = objectPicker((id) => a.objectId(id));
+    this.ledSelect = h('select', { 'aria-label': 'LED color', onchange: (e) => a.ledColor(+e.target.value) },
+      LED_NAMES.slice(1).map((name, i) => h('option', { value: i + 1, text: name })));
+    this.ledRow = h('label', { class: 'brush-row', hidden: true }, h('span', { text: 'Color' }), this.ledSelect);
+    this.panelTypeSelect = h('select', { 'aria-label': 'Panel type', onchange: (e) => a.panelType(+e.target.value) },
+      PANEL_TYPE_CHOICES.map(([v, label]) => h('option', { value: v, text: label })));
+    this.panelRow = h('label', { class: 'brush-row', hidden: true }, h('span', { text: 'Type' }), this.panelTypeSelect);
     this.shapeRow = h('div', { class: 'segmented' }, [...this.shapeButtons.values()]);
     this.brushRow = h(
       'div',
@@ -71,7 +78,7 @@ export class ToolPanel {
       'Tools',
       true,
       ...this._groups(),
-      h('div', { class: 'tool-options' }, this.shapeRow, this.brushRow, this.zoneRow, this.finishRow, this.door.row, this.corner.row, this.pillar.row, this.slide.row, this.slideColor.row, this.escalator.row, this.object.row),
+      h('div', { class: 'tool-options' }, this.shapeRow, this.brushRow, this.zoneRow, this.finishRow, this.door.row, this.corner.row, this.pillar.row, this.slide.row, this.slideColor.row, this.escalator.row, this.ledRow, this.panelRow, this.object.row),
       this.hint,
     );
   }
@@ -86,8 +93,8 @@ export class ToolPanel {
     });
   }
 
-  /** @param s editorens verktøytilstand: { tool, shape, brush, zone, doorState, slideTube, slideColor } */
-  sync({ tool, shape, brush, zone, doorState, cornerKind, pillarDiameter, slideTube, slideColor, objectId, escalatorDown }) {
+  /** @param s editorens verktøytilstand: { tool, shape, brush, zone, doorState, slideTube, slideColor, ledColor, panelType } */
+  sync({ tool, shape, brush, zone, doorState, cornerKind, pillarDiameter, slideTube, slideColor, objectId, escalatorDown, ledColor, panelType }) {
     for (const [id, b] of this.toolButtons) b.classList.toggle('active', id === tool.id);
     for (const [id, b] of this.shapeButtons) b.classList.toggle('active', id === shape);
     this.door.select(doorState);
@@ -110,6 +117,10 @@ export class ToolPanel {
     this.object.row.hidden = kind !== 'object';
     this.door.row.hidden = kind !== 'door';
     this.slide.row.hidden = this.slideColor.row.hidden = kind !== 'slide';
+    this.ledRow.hidden = kind !== 'led';
+    if (document.activeElement !== this.ledSelect) this.ledSelect.value = String(ledColor ?? 1);
+    this.panelRow.hidden = kind !== 'panel';
+    if (document.activeElement !== this.panelTypeSelect) this.panelTypeSelect.value = String(panelType ?? 1);
     const z = tool.kind === 'zone' ? ZONE[tool.layer] : null;
     this.layer = z ? tool.layer : null;
     this.zoneRow.hidden = !z?.label; // Belegg har egen meny i stedet for meterfelt.

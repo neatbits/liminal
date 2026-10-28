@@ -1,0 +1,11 @@
+Model Information:
+* title:	Palm
+* source:	https://sketchfab.com/3d-models/palm-b439280ad2d449b083f6e5277d713658
+* author:	FreeLov9 (https://sketchfab.com/Freelov9)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Palm" (https://sketchfab.com/3d-models/palm-b439280ad2d449b083f6e5277d713658) by FreeLov9 (https://sketchfab.com/Freelov9) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

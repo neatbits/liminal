@@ -65,3 +65,26 @@ export function buildSteps(mesh, level, x, z) {
     prev = y;
   }
 }
+
+/**
+ * Veggspennene i en trapperute (openSpans), med v regnet fra foten av trappen: da går flisene og
+ * tapeten i ett langs hele trappen (og opp gjennom et trapperom) i stedet for å hoppe på hvert trinn.
+ * Gulvlisten (`skirt`, m) følger fortsatt trinnene. Temaer med brystning (wall2) beholder v fra
+ * ruten, så delelinjen følger trinnene.
+ */
+export function stairWallSpans(level, x, z, spans, { split, skirt }) {
+  if (split || getTile(level, x, z) !== TILE.STAIRS) return spans;
+  const { dir } = stairSpan(level, x, z);
+  let [fx, fz] = [x, z];
+  for (let k = 0; k < level.w + level.h; k++) {
+    const [bx, bz] = [fx - dir[0], fz - dir[1]];
+    if (getTile(level, bx, bz) !== TILE.STAIRS || stairSpan(level, bx, bz).dir !== dir) break;
+    [fx, fz] = [bx, bz];
+  }
+  const foot = stairSpan(level, fx, fz).bottom;
+  return spans.flatMap((sp, k) => {
+    if (k) return [sp];
+    const cut = Math.min(sp.hi, sp.lo + skirt);
+    return [...(skirt > 0 ? [{ lo: sp.lo, hi: cut, base: sp.base }] : []), { lo: cut, hi: sp.hi, base: foot }].filter((p) => p.hi - p.lo > 1e-4);
+  });
+}

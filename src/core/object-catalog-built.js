@@ -12,8 +12,6 @@ export const BUILT_OBJECTS = {
   shelf: { label: 'Shop shelf', build: 'shelf', size: [2.1, 1.62, 0.9] },
   wallshelf: { label: 'Wall shelf', build: 'wallshelf', size: [2, 2, 0.45] },
   counter: { label: 'Shop counter', build: 'counter', size: [1.86, 1.0, 0.72], surface: 1.0 },
-  // Et vanlig trafikkskilt (egen grafikk) som står der det ikke hører hjemme: Level 0, parkeringshuset.
-  stopsign: { label: 'Stop sign', build: 'stopsign', size: [0.62, 2.26, 0.3] },
   // Polstrede lekeklosser i vinyl (lekerommet), i lyse farger etter variant (v).
   softcube: { label: 'Soft cube', build: 'soft', size: [0.6, 0.6, 0.6], soft: true },
   softblock: { label: 'Soft platform', build: 'soft', size: [1.2, 0.6, 1.2], soft: true },

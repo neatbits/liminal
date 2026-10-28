@@ -38,6 +38,7 @@ export async function checkTapeHunt(browser, origin) {
     const stayed = ex.depth;
     // Gå til hver kassett.
     for (const t of [...ex.tapes.items]) {
+      v.storeys.enter(t.storey); // nivåer med flere etasjer har kassetter i hver etasje (view3d/storeys.js)
       Object.assign(v.walk.walker, { x: t.x, z: t.z, floorY: t.y });
       ex.update(0.016);
     }

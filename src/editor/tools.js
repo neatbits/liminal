@@ -1,5 +1,5 @@
 // Verktøyene i 2D-skissen og hva de gjør med rommet. Ren logikk (testbar).
-import { TILE, LIGHT, setLight, canHaveLight } from '../core/level.js';
+import { TILE, LIGHT, setLight, canHaveLight, inBounds, getTile } from '../core/level.js';
 import {
   brushCells,
   lineCells,
@@ -16,12 +16,16 @@ import {
 import { yawFromDir } from '../core/spawn.js';
 import { paintZone, fillZone, floodFillZone } from '../core/zones.js';
 import { setDoor } from '../core/doors.js';
-import { placeStairs, removeStairs } from '../core/stairs.js';
+import { placeStairs, removeStairs, stairCells } from '../core/stairs.js';
+import { STAIR_THROUGH } from '../core/heights.js';
+import { clearObjects } from '../core/object-pose.js';
 import { placeEscalator } from '../core/escalators.js';
 import { addSlide, removeSlidesAt } from '../core/slides.js';
 import { placeObject } from '../core/objects.js';
 import { paintWindows } from '../core/windows.js';
 import { setCorner } from '../core/corners.js';
+import { paintLeds, ledFillCells } from '../core/leds.js';
+import { paintPanels } from '../core/panels.js';
 import { paintPillars } from './pillars.js';
 
 // Soneverktøyene (kind 'zone') maler en høyde i meter, og dørverktøyet (kind 'door') setter
@@ -44,6 +48,7 @@ export const TOOLS = [
   { id: 'leaf', label: 'Door', key: 'O', kind: 'door' },
   { id: 'raise', label: 'Raise', key: 'H', kind: 'zone', layer: 'floor' },
   { id: 'stairs', label: 'Stairs', key: 'S', kind: 'stairs' },
+  { id: 'stairwell', label: 'Stairs up', key: 'U', kind: 'stairs', through: true }, // til etasjen over (core/stairwells.js)
   { id: 'escalator', label: 'Escalator', key: 'E', kind: 'stairs', escalator: true },
   { id: 'tiles', label: 'Floor finish', key: 'T', kind: 'zone', layer: 'finish' },
   { id: 'slide', label: 'Slide', key: 'L', kind: 'slide' },
@@ -51,6 +56,8 @@ export const TOOLS = [
   { id: 'object', label: 'Object', key: 'J', kind: 'object' },
   { id: 'window', label: 'Window', key: 'W', kind: 'window' },
   { id: 'corner', label: 'Corner', key: 'Q', kind: 'corner' }, // skrå/avrundede hjørner (core/corners.js)
+  { id: 'led', label: 'LED Strip', key: 'N', kind: 'led' },
+  { id: 'panel', label: 'Ceiling panel', key: 'P', kind: 'panel' },
 ];
 
 export const SHAPES = [
@@ -58,6 +65,11 @@ export const SHAPES = [
   { id: 'rect', label: 'Rectangle', key: 'R' },
   { id: 'fill', label: 'Fill', key: 'F' },
 ];
+
+/** LED-farge / paneltype fra verktøyet (editoren gir `value`), 0 for viskelær. */
+const valueOf = (tool, erase) => (erase ? 0 : (tool.value ?? 1));
+/** Indeksene til rutene innenfor kartet. */
+const indicesIn = (level, cells) => cells.filter(([x, z]) => inBounds(level, x, z)).map(([x, z]) => z * level.w + x);
 
 export function toolById(id) {
   return TOOLS.find((t) => t.id === id) ?? TOOLS[0];
@@ -75,6 +87,8 @@ export function paintAt(level, tool, x, z, brush, erase, fx = 0.5, fz = 0.5) {
   if (tool.kind === 'door') return setDoor(level, x, z, tool.value, erase);
   if (tool.kind === 'object') return placeObject(level, x, z, tool.value, erase);
   if (tool.kind === 'window') return paintWindows(level, brushCells(x, z, brush), !erase);
+  if (tool.kind === 'led') return paintLeds(level, indicesIn(level, brushCells(x, z, brush)), valueOf(tool, erase));
+  if (tool.kind === 'panel') return paintPanels(level, indicesIn(level, brushCells(x, z, brush)), valueOf(tool, erase));
   if (tool.kind === 'light') {
     if (erase) return paintLights(level, brushCells(x, z, brush), LIGHT.NONE);
     return setLight(level, x, z, tool.value) ? 1 : 0;
@@ -96,6 +110,8 @@ export function applyRect(level, tool, rect, erase, spacing) {
   if (tool.kind === 'tile') return fillTiles(level, cells, erase ? tool.erase : tool.value);
   if (tool.kind === 'zone') return fillZone(level, tool.layer, cells, erase ? 0 : tool.value);
   if (tool.kind === 'window') return paintWindows(level, cells.map((i) => [i % level.w, (i / level.w) | 0]), !erase);
+  if (tool.kind === 'led') return paintLeds(level, cells, valueOf(tool, erase));
+  if (tool.kind === 'panel') return paintPanels(level, cells, valueOf(tool, erase));
   if (tool.kind === 'light') {
     if (erase) return clearLights(level, cells);
     const region = cells.filter((i) => canHaveLight(level.tiles[i]));
@@ -113,6 +129,9 @@ export function applyFill(level, tool, x, z, erase, spacing) {
   if (tool.kind === 'tile') return floodFillTile(level, x, z, erase ? tool.erase : tool.value);
   if (tool.kind === 'zone') return floodFillZone(level, tool.layer, x, z, erase ? 0 : tool.value);
   if (tool.kind === 'window') return paintWindows(level, [[x, z]], !erase);
+  // LED: Fill i et rom legger stripen langs alle veggene rundt det (en veggrute alene får den selv).
+  if (tool.kind === 'led') return paintLeds(level, ledFillCells(level, x, z), valueOf(tool, erase));
+  if (tool.kind === 'panel') return paintPanels(level, openRegion(level, x, z), valueOf(tool, erase));
   if (tool.kind === 'light') {
     const region = openRegion(level, x, z);
     if (erase) return clearLights(level, region);
@@ -122,9 +141,15 @@ export function applyFill(level, tool, x, z, erase, spacing) {
 }
 
 /** Trappeverktøyet: et trappeløp fra a (bunn) til b (topp), `width` ruter bredt. */
-export function applyStairs(level, a, b, width, erase, { escalator = false, down = false } = {}) {
+export function applyStairs(level, a, b, width, erase, { escalator = false, down = false, through = false } = {}) {
   if (erase) return removeStairs(level, a, b, width);
-  return escalator ? placeEscalator(level, a, b, width, down) : placeStairs(level, a, b, width);
+  if (escalator) return placeEscalator(level, a, b, width, down);
+  const n = placeStairs(level, a, b, width);
+  const cells = stairCells(a, b, width).rows.flat().filter(([x, z]) => getTile(level, x, z) === TILE.STAIRS);
+  clearObjects(level, cells.map(([x, z]) => z * level.w + x)); // ingenting står i trappen
+  // Trapp opp: løpet merkes og går til etasjen over (core/stairwells.js).
+  if (through) for (const [x, z] of cells) level.meta[z * level.w + x] |= STAIR_THROUGH;
+  return n;
 }
 
 /**

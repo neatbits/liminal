@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createLevel, setLight, TILE, LIGHT } from '../src/core/level.js';
 import { fillTiles, rectIndices } from '../src/core/ops.js';
 import { getTheme } from '../src/core/themes.js';
-import { collectLights, createLightField, lineOfSight, cellHeights } from '../src/world/lighting.js';
+import { collectLights, createLightField, lineOfSight, cellHeights, HANG, LIGHT_DROP } from '../src/world/lighting.js';
 import { hexToLinear } from '../src/world/color.js';
 
 // To rom side om side, adskilt av en vegg i x = 8.
@@ -129,5 +129,23 @@ describe('lys med soner', () => {
     const ambient = hexToLinear(getTheme('pool').light.ambient)[0];
     expect(field.sample(8.2, -3, 3.5, 0, 1, 0)[0]).toBeCloseTo(ambient, 5);
     expect(field.sample(8.2, -0.12, 3.5, 0, 1, 0)[0]).toBeGreaterThan(ambient * 1.2); // vannflaten
+  });
+
+  it('i svært høye rom sitter lampen i taket, men gulvet får lys som fra HANG over det', () => {
+    const room = (height) => {
+      const level = createLevel({ w: 12, h: 12, height });
+      fillTiles(level, rectIndices(level, { x0: 1, z0: 1, x1: 10, z1: 10 }), TILE.FLOOR);
+      setLight(level, 5, 5, LIGHT.ON);
+      return level;
+    };
+    const [lamp] = collectLights(room(16));
+    expect(lamp).toMatchObject({ top: 16, ceil: 16, y: 16 - LIGHT_DROP });
+    expect(lamp.low).toBeCloseTo(HANG - LIGHT_DROP, 6);
+    expect(collectLights(room(4))[0].low).toBeUndefined();
+    const theme = getTheme('office');
+    const floor = (h) => createLightField(room(h), theme).sample(7.5, 0, 6.5, 0, 1, 0)[0];
+    expect(floor(16)).toBeCloseTo(floor(HANG), 4); // som en lampe som hang i HANG
+    const wall = (h) => createLightField(room(h), theme).sample(10.99, 13, 5.5, -1, 0, 0)[0];
+    expect(wall(16)).toBeGreaterThan(hexToLinear(theme.light.ambient)[0] * 1.2); // veggen høyt oppe får også lys
   });
 });

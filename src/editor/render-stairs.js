@@ -1,11 +1,12 @@
 // Trapper i skissen: trinnstreker og en pil som peker oppover (som på en arkitekttegning),
 // og forhåndsvisning av trappeløpet mens man drar.
-import { stairSpan, STEP_RISE } from '../core/heights.js';
+import { stairSpan, STEP_RISE, STAIR_THROUGH } from '../core/heights.js';
 import { isEscalator, ESCALATOR_DOWN } from '../core/escalators.js';
 
 const LINE = 'rgba(70,55,35,0.55)';
 const ARROW = '#5b4326';
 const ACCENT = '#1f7a72';
+const UP = '#6b4fa0'; // trapp opp til etasjen over
 const ERASE = '#c0492f';
 
 /** Punkt i ruten (x, z) der t går langs trappen fra bakkanten og s på tvers. */
@@ -49,7 +50,7 @@ export function drawStairs(ctx, view, level, x, z) {
     ctx.stroke();
   }
   if (s >= 8) {
-    ctx.strokeStyle = motor ? ACCENT : ARROW;
+    ctx.strokeStyle = motor ? ACCENT : level.meta[z * level.w + x] & STAIR_THROUGH ? UP : ARROW;
     ctx.lineWidth = 1.5;
     arrow(ctx, view, local(dir, x, z, down ? 0.85 : 0.15, 0.5), local(dir, x, z, down ? 0.15 : 0.85, 0.5), Math.max(3, s * 0.18));
   }

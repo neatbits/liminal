@@ -93,7 +93,7 @@ function settles(seed) {
 }
 
 describe('stolhauger i genererte rom', () => {
-  it('Level 0 får trestoler, hauger og et og annet stoppskilt; parkeringshuset får stoppskilt', () => {
+  it('Level 0 får trestoler og hauger', () => {
     const count = (theme, id, pred = () => true) => {
       let n = 0;
       for (let seed = 1; seed <= 8; seed++) n += generateLevel({ theme, w: 48, h: 48, seed }).objects.filter((o) => o.id === id && pred(o)).length;
@@ -101,7 +101,5 @@ describe('stolhauger i genererte rom', () => {
     };
     expect(count('backrooms', PILE_CHAIR)).toBeGreaterThan(8);
     expect(count('backrooms', PILE_CHAIR, (o) => o.lift)).toBeGreaterThan(0); // minst én haug
-    expect(count('backrooms', 'stopsign')).toBeGreaterThan(0);
-    expect(count('garage', 'stopsign')).toBeGreaterThan(0);
   }, 30000);
 });

@@ -74,7 +74,7 @@ export class Explorer {
     this.hunt.stop();
     this.windowGhost.reset();
     this.scary.reset();
-    this.v.world?.setPower(1);
+    this.v.storeys.setPower(1);
     this.v.walk.power = 1;
     if (this.home) {
       const home = this.home;
@@ -103,7 +103,7 @@ export class Explorer {
     }
     const event = this.blackout.update(dt);
     const p = this.blackout.power;
-    v.world.setPower(p);
+    v.storeys.setPower(p); // hele bygget
     v.walk.power = p;
     this.tapes.setPower(p);
     if (v.walk.sound && (event === 'down' || event === 'up')) v.audio.power(event === 'down');
@@ -117,7 +117,7 @@ export class Explorer {
     if (!this.busy) this.shifts.update(dt);
     if (!this.busy) this.windowGhost.update(dt, this.mood);
     const w = v.walk.walker;
-    const got = this.tapes.pickUp(w.x, w.floorY, w.z);
+    const got = this.tapes.pickUp(w.x, w.floorY, w.z, v.storeys.current);
     if (got) {
       this.found += got;
       if (v.walk.sound) v.audio.pickup();
@@ -192,7 +192,14 @@ export class Explorer {
     // Ikke i uendelige ganger: der ville kassettene hoppet når man flyttes én periode.
     const loops = v.walk.loops?.loops ?? [];
     const inLoop = (x, z) => loops.some((l) => (l.axis === 'x' ? x >= l.u0 && x <= l.u1 && z >= l.v0 - 3 && z <= l.v1 + 3 : z >= l.u0 && z <= l.u1 && x >= l.v0 - 3 && x <= l.v1 + 3));
-    this.total = this.found + this.tapes.place(v.walk.level, v.world.field, v.walk.walker, Math.random, inLoop);
+    // Med etasjer: én kassett i hver av de andre etasjene, der den kan nås fra trappen (view3d/storeys.js).
+    const s = v.storeys;
+    const floors = s.levels.map((level, k) => {
+      if (k === s.current) return { level: v.walk.level, field: v.world.field, spawn: v.walk.walker, skip: inLoop, base: s.at[k] };
+      const spawn = s.entry(k);
+      return { level, field: s.all[k].field, spawn, base: s.at[k], count: spawn ? 1 : 0 };
+    });
+    this.total = this.found + this.tapes.placeFloors(floors, Math.random);
   }
 
   _hasExits() {

@@ -3,6 +3,8 @@ import { clampHeight, clampDepth } from '../core/level.js';
 import { $ } from '../ui/dom.js';
 import { generateInto } from './actions.js';
 import { TINTS } from '../core/tints.js';
+import { StoreyBar } from '../ui/storey-bar.js';
+import { goStorey, addStorey, removeCurrentStorey } from './storey-actions.js';
 
 /** Handlingene Sidebar kaller (se Sidebar-konstruktøren). */
 export function sidebarActions(app) {
@@ -17,6 +19,8 @@ export function sidebarActions(app) {
     slideTube: (tube) => app.setSlideTube(tube),
     escalatorDown: (down) => app.setEscalatorDown(down),
     slideColor: (color) => app.setSlideColor(color),
+    ledColor: (v) => app.setLedColor(v),
+    panelType: (v) => app.setPanelType(v),
     objectId: (id) => app.setObjectId(id),
     rename: (name) => app.rename(name),
     theme: (id) => app.setTheme(id),
@@ -41,6 +45,13 @@ export function bindButtons(app) {
   $('#btn-undo').onclick = () => app.editor.undo();
   $('#btn-redo').onclick = () => app.editor.redo();
   $('#btn-fit').onclick = () => app.editor.fit();
+  app.storeyBar = new StoreyBar({
+    go: (k) => goStorey(app, k),
+    add: () => addStorey(app),
+    copy: () => addStorey(app, { copy: true }),
+    remove: () => removeCurrentStorey(app),
+  });
+  $('#btn-fit').before(app.storeyBar.root);
   $('#btn-walk-top').onclick = () => app.walk();
   $('#btn-drift').onclick = () => app.walk({ drift: true });
   const mood = $('#mood-select');

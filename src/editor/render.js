@@ -11,6 +11,10 @@ import { drawSlides } from './render-slides.js';
 import { drawObjects, drawHighlights } from './render-objects.js';
 import { drawWindow } from './render-windows.js';
 import { drawCorners } from './render-corners.js';
+import { drawLeds } from './render-leds.js';
+import { drawPanels } from './render-panels.js';
+import { drawBelow } from './render-storey.js';
+import { drawStairwells } from './render-stairwells.js';
 import { pillarInfo } from '../core/pillars.js';
 
 export const RULER_TOP = 22;
@@ -184,8 +188,8 @@ function drawPreview(ctx, view, s) {
 
 /**
  * Tegner hele skissen.
- * `s` = { level, view, width, height, image, zones, hover, preview, stairs, slide, tool, brush, erase,
- *        grid, rulers }
+ * `s` = { level, below (etasjen under, eller null), view, width, height, image, zones, hover, preview,
+ *        stairs, slide, tool, brush, erase, grid, rulers }
  */
 export function drawPlan(ctx, s) {
   const { level, view, width, height } = s;
@@ -200,12 +204,16 @@ export function drawPlan(ctx, s) {
   ctx.drawImage(s.image, ox, oy, W, H);
   const r = visibleRange(view, level, width, height);
   drawCorners(ctx, view, level, r); // skrå og avrundede hjørner oppå bakgrunnsbildet
+  if (s.below) drawBelow(ctx, view, level, s.below, r);
   if (s.grid && view.scale >= 5) drawGrid(ctx, view, level, r);
   if (view.scale >= 10) drawTileGrid(ctx, view, level, r);
   if (view.scale >= 6) drawZoneEdges(ctx, view, level, r);
   if (view.scale >= 3) drawDecks(ctx, view, level, r);
   if (view.scale >= 4) drawDetails(ctx, view, level, r);
-  drawSlides(ctx, view, level, s.slide);
+  if (view.scale >= 4) drawLeds(ctx, view, level, r);
+  if (view.scale >= 4) drawPanels(ctx, view, level, r);
+  if (s.wells && view.scale >= 4) drawStairwells(ctx, view, level, s.wells);
+  drawSlides(ctx, view, level, s.slide, s.below);
   if (view.scale >= 4) drawObjects(ctx, view, level);
   ctx.strokeStyle = C.border;
   ctx.lineWidth = 1;
@@ -213,7 +221,7 @@ export function drawPlan(ctx, s) {
   if (s.zones && view.scale >= 8) drawZoneLabels(ctx, view, s.zones);
   drawHighlights(ctx, view, s.highlight);
   // Tegn startpunktet der spilleren faktisk starter (nærmeste gulv hvis det står i en vegg).
-  const spawn = resolveSpawn(level);
+  const spawn = s.spawn !== false && resolveSpawn(level); // bare i etasjen man starter i
   if (spawn) drawSpawn(ctx, view, spawn);
   drawPreview(ctx, view, s);
   if (s.rulers) drawRulers(ctx, view, width, height, RULER_LEFT, RULER_TOP);

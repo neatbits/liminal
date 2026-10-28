@@ -39,7 +39,7 @@ describe('størrelsen på de uendelige nivåene', () => {
         expect(exits(level), `${theme} ${id}`).toBeGreaterThan(0);
       }
     }
-  });
+  }, 30_000); // mange store nivåer: ca. 4 s alene, mer under full testkjøring
 
   it('nextLevel lager større rom og lengre korridorer med større skala', () => {
     const room = (scale) => nextLevel(1, 'backrooms', mulberry32(5), { corridor: 0 }, scale).level;

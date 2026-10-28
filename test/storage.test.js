@@ -28,16 +28,18 @@ describe('lokal lagring', () => {
     expect(loadRoom(b.id).name).toBe('B');
   });
 
-  it('lagrede rom og utkast bevarer høye soner', () => {
+  it('lagrede rom og utkast bevarer høye soner, LED-striper og lyspaneler', () => {
     const level = createLevel({ w: 8, h: 8 });
     level.ceilings[9] = 200;
     level.floors[10] = 100;
     level.decks[11] = 100;
+    level.leds.set([1, 8], 0);
+    level.panels.set([2, 3], 18);
     expect(saveRoom(level)).toBe(true);
     expect(saveDraft(level)).toBe(true);
     for (const back of [loadRoom(level.id), loadDraft()]) {
       expect(back.id).toBe(level.id);
-      for (const key of ['ceilings', 'floors', 'decks']) expect(back[key]).toEqual(level[key]);
+      for (const key of ['ceilings', 'floors', 'decks', 'leds', 'panels']) expect(back[key]).toEqual(level[key]);
     }
   });
 

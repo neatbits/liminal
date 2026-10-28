@@ -15,7 +15,12 @@ const SIZES = [
   ['vertical_capsule', 748, 896, 'tall'],
   ['library_capsule', 600, 900, 'tall'],
   ['library_logo', 1280, 360, 'logo'],
+  ['library_header_capsule', 920, 430, 'wide'],
+  ['event_cover', 800, 450, 'wide'],
 ];
+
+// Ikonene lages av programikonet (desktop/icon.png): snarvei (PNG) og app-ikon (JPG, mørk bakgrunn).
+const ICONS = [['shortcut_icon', 256, 'png'], ['app_icon', 184, 'jpeg']];
 
 const html = (w, h, kind, bg) => {
   const tall = kind === 'tall';
@@ -63,7 +68,24 @@ async function hero(evaluate, url, w, h) {
   return data;
 }
 
-/** art: { wide, tall } – adresser til skjermbildene (tall brukes til de høye kapslene). */
+/** Ikonene, tegnet på et lerret og hentet ut (de er små nok til én melding). */
+async function icons(evaluate, url, out) {
+  for (const [name, size, type] of ICONS) {
+    const data = await evaluate(`(async () => {
+      const img = new Image(); img.crossOrigin = 'anonymous'; img.src = ${JSON.stringify(url)}; await img.decode();
+      const c = document.createElement('canvas'); c.width = c.height = ${size};
+      const ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high';
+      if ('${type}' === 'jpeg') { ctx.fillStyle = '#1b1810'; ctx.fillRect(0, 0, ${size}, ${size}); }
+      ctx.drawImage(img, 0, 0, ${size}, ${size});
+      return c.toDataURL('image/${type}', 0.95).split(',')[1];
+    })()`);
+    const file = `${name}.${type === 'jpeg' ? 'jpg' : 'png'}`;
+    writeFileSync(`${out}/${file}`, Buffer.from(data, 'base64'));
+    console.log(`${file} (${size} × ${size})`);
+  }
+}
+
+/** art: { wide, tall, icon } – adresser til skjermbildene (tall: de høye kapslene) og programikonet. */
 export async function capsules(browser, origin, art, out) {
   const { call, evaluate } = browser;
   await call('Page.navigate', { url: `${origin}/` });
@@ -88,4 +110,5 @@ export async function capsules(browser, origin, art, out) {
     console.log(`${name}.png (${w} × ${h})`);
   }
   await call('Emulation.setDefaultBackgroundColorOverride', {});
+  if (art.icon) await icons(evaluate, art.icon, out);
 }

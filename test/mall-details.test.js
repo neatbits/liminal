@@ -90,7 +90,7 @@ describe('mall seating and greenery', () => {
   });
 
   it('uses the models in suitable themes, with valid positions clear of approaches', () => {
-    const expected = { mall:['mallbench','pottedpalm','pottedtree','pottedplant'], pool:['pottedpalm'], office:['pottedplant'], hotel:['pottedplant'], ward:['pottedplant'] };
+    const expected = { mall:['mallbench','pottedpalm','pottedtree','pottedplant','palmplant'], pool:['pottedpalm','palmplant'], office:['pottedplant','yucca'], hotel:['pottedplant','palmplant','yucca'], ward:['pottedplant','yucca'] };
     for (const [theme,ids] of Object.entries(expected)) {
       const seen = new Set();
       for (const seed of [1,3,7,11]) {

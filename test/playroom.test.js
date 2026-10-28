@@ -46,15 +46,28 @@ describe('ballbinger', () => {
 });
 
 describe('lekerommet', () => {
-  it('genererte lekerom har ballbinger og en sklie som ender i en av dem', () => {
+  it('genererte lekerom er gyldige; sklie (om den finnes) ender i vann', () => {
     for (let seed = 1; seed <= 8; seed++) {
       const level = generateLevel({ theme: 'playroom', w: 48, h: 40, seed });
-      expect(level.tiles.filter((t) => t === TILE.WATER).length).toBeGreaterThan(100);
-      expect(level.slides).toHaveLength(1);
-      const [ex, ez] = level.slides[0].points.at(-1);
-      expect(level.tiles[ez * level.w + ex]).toBe(TILE.WATER);
-      expect(slidePath(level, level.slides[0]).problem).toBeNull();
+      expect(level.tiles.filter((t) => t === TILE.FLOOR).length).toBeGreaterThan(80);
+      for (const slide of level.slides) {
+        const [ex, ez] = slide.points.at(-1);
+        expect(level.tiles[ez * level.w + ex]).toBe(TILE.WATER);
+        expect(slidePath(level, slide).problem).toBeNull();
+      }
     }
+  });
+
+  it('lekerom varierer: noen har stor ballbinge med sklie, andre åpen lekesal', () => {
+    let withSlide = 0, withLargePit = 0;
+    for (let seed = 1; seed <= 20; seed++) {
+      const level = generateLevel({ theme: 'playroom', w: 48, h: 40, seed });
+      if (level.slides.length > 0) withSlide++;
+      if (level.tiles.filter((t) => t === TILE.WATER).length > 100) withLargePit++;
+    }
+    expect(withSlide).toBeGreaterThan(2);     // variant A forekommer
+    expect(withSlide).toBeLessThan(18);       // ikke alle (B og C har ingen sklie)
+    expect(withLargePit).toBeGreaterThan(3);  // noen rom har stor ballbinge
   });
 
   it('eksempelet «The Playroom» finnes og bruker lekeromstemaet', () => {

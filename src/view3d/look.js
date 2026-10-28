@@ -6,6 +6,7 @@ import { getMood } from '../gen/moods.js';
 export const OVERVIEW_BG = new THREE.Color('#d8d6cf');
 
 export function applyLook(viewer) {
+  viewer.storeys?.setWalking(viewer.mode === 'walk'); // først: kan bytte viewer.world (view3d/storeys.js)
   const { world, scene, renderer, camera, settings } = viewer;
   const theme = world?.theme;
   if (!theme) return;

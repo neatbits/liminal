@@ -2,6 +2,8 @@
 // rutenettet (vegger, lavere tak, bassengkanter og dekkeplater kaster skygge). Blinkende lys
 // bakes i egne grupper. Et lys i en rute med dekke gir én armatur i hver etasje.
 import { LIGHT, canHaveLight, inBounds } from '../core/level.js';
+import { ledLights } from '../core/leds.js';
+import { panelLights } from '../core/panels.js';
 import { ceilingAt, floorAt, deckAt, SLAB } from '../core/heights.js';
 import { glowSources } from '../core/objects.js';
 import { windows, skyOf } from '../core/windows.js';
@@ -16,14 +18,14 @@ export { cellHeights, lineOfSight }; // samlet her for de mange som allerede imp
 
 export const FLICKER_GROUPS = 4;
 export const LIGHT_DROP = 0.15; // lyskilden sitter litt under taket
-export const HANG = 8; // i høyere rom henger lampene i en ledning, så høyt over gulvet under
+export const HANG = 8; // i høyere rom bakes lyset som en søyle fra taket ned hit (`low`), så det når gulvet
 
 export function flickerGroup(x, z) {
   return (((x * 73856093) ^ (z * 19349663)) >>> 0) % FLICKER_GROUPS;
 }
 
 /**
- * Alle armaturer i rommet: { cx, cz, x, z, y, ceil, state, group }, pluss lyskilder uten
+ * Alle armaturer i rommet: { cx, cz, x, z, y, top, ceil, low?, state, group }, pluss lyskilder uten
  * armatur (object: true – de surrer ikke): svakt lys fra skjermer og dagslys fra vinduer, med
  * egen farge (rgb, lineær) og styrke (power) i forhold til et taklys.
  */
@@ -37,13 +39,14 @@ export function collectLights(level) {
       if (state === LIGHT.NONE || !canHaveLight(level.tiles[i]) || pillarContains(level, x + .5, z + .5)) continue;
       const group = flickerGroup(x, z);
       const d = deckAt(level, x, z);
-      // Med dekke: én armatur under dekket og én under taket over det. top = der armaturen sitter
-      // (under taket, eller i enden av en ledning i høye rom), ceil = taket.
+      // Med dekke: én armatur under dekket og én under taket over det. Armaturen sitter alltid i taket
+      // (top = ceil). I rom høyere enn HANG lyser den som en søyle fra taket ned til HANG over gulvet
+      // (low, se gather): gulvet får like mye lys som fra en lampe der nede, uten hengende lamper.
       const floors = d ? [floorAt(level, x, z), d] : [floorAt(level, x, z)];
       (d ? [d - SLAB, ceilingAt(level, x, z)] : [ceilingAt(level, x, z)]).forEach((ceil, k) => {
         if(roof?.mask[i] && (!d||k===1))return;
-        const top = Math.min(ceil, floors[k] + HANG);
-        out.push({ cx: x, cz: z, x: x + 0.5, z: z + 0.5, y: top - LIGHT_DROP, top, ceil, state, group });
+        const low = Math.min(ceil, floors[k] + HANG);
+        out.push({ cx: x, cz: z, x: x + 0.5, z: z + 0.5, y: ceil - LIGHT_DROP, top: ceil, ceil, state, group, ...(low < ceil ? { low: low - LIGHT_DROP } : {}) });
       });
     }
   }
@@ -69,6 +72,10 @@ export function collectLights(level) {
     const y = (win.sill + win.head) / 2;
     out.push({ cx: Math.floor(x), cz: Math.floor(z), x, z, y, ceil: y, state: LIGHT.ON, group: 0, object: true, power: sky.power / (1 + (near - 1) * 0.7), rgb });
   }
+  // Lys fra etasjen over i et trapperom (core/stairwells.js).
+  for (const l of level.borrowed ?? []) out.push({ ...l, cx: Math.floor(l.x), cz: Math.floor(l.z), ceil: l.y, state: LIGHT.ON, group: 0, object: true });
+  // Lyspaneler i taket og LED-striper under taket (core/panels.js, core/leds.js): farget lys.
+  for (const { hex, ...l } of [...panelLights(level), ...ledLights(level)]) out.push({ ...l, rgb: hexToLinear(hex) });
   return out;
 }
 
@@ -106,8 +113,9 @@ export function createLightField(level, theme, lights = collectLights(level)) {
     const { sx, sz, candidates, sight } = at;
     for (let i = 0; i < candidates.length; i++) {
       const l = candidates[i];
+      const ly = l.low === undefined ? l.y : Math.min(l.y, Math.max(l.low, y)); // nærmeste punkt i lyssøylen
       const dx = l.x - sx;
-      const dy = l.y - y;
+      const dy = ly - y;
       const dz = l.z - sz;
       const d2 = dx * dx + dy * dy + dz * dz;
       if (d2 > R2) continue;
@@ -124,7 +132,7 @@ export function createLightField(level, theme, lights = collectLights(level)) {
           // Gjenstander: start 2 cm mot lyset (vannrett, som normalforskyvningen for flater), så en
           // flate på en halvvegg ikke skygger for seg selv – men lys bak den fortsatt stenges.
           const h = at.toward ? Math.hypot(dx, dz) || 1 : Infinity;
-          sight[i] = lineOfSight(level, sx + (dx / h) * 0.02, sz + (dz / h) * 0.02, l.x, l.z, heights, y, l.y) ? 1 : 2;
+          sight[i] = lineOfSight(level, sx + (dx / h) * 0.02, sz + (dz / h) * 0.02, l.x, l.z, heights, y, ly) ? 1 : 2;
         }
         if (sight[i] === 2) continue;
         if (l.state === LIGHT.FLICKER) {

@@ -33,22 +33,34 @@ export class Tapes {
    * @param skip (x, z) → true for ruter kassettene ikke skal ligge i
    */
   place(level, field, spawn, rand = Math.random, skip = null) {
+    return this.placeFloors([{ level, field, spawn, skip }], rand);
+  }
+
+  /**
+   * Kassetter i flere etasjer (view3d/storeys.js): floors = [{ level, field, spawn, skip, base, count }].
+   * Hver kassett husker etasjen sin (`storey`) og ligger i etasjehøyden (`base`).
+   */
+  placeFloors(floors, rand = Math.random) {
     this.clear();
-    for (const t of placeTapes(level, spawn, rand, undefined, skip)) {
-      const s = field.sample(t.x, t.y + 0.03, t.z, 0, 1, 0);
-      const light = new THREE.Color(s[0], s[1], s[2]);
-      const body = new THREE.MeshBasicMaterial();
-      const paper = new THREE.MeshBasicMaterial();
-      const mesh = new THREE.Group();
-      mesh.add(new THREE.Mesh(shell, body), new THREE.Mesh(label, paper));
-      mesh.position.set(t.x, t.y + 0.0125, t.z);
-      mesh.rotation.y = t.rot;
-      this.group.add(mesh);
-      const item = { ...t, mesh, materials: [body, paper], light };
-      this.items.push(item);
-      this._tint(item, 1);
-    }
+    floors.forEach(({ level, field, spawn, skip = null, base = 0, count }, storey) => {
+      for (const t of placeTapes(level, spawn, rand, count, skip)) this._add({ ...t, storey, base }, field);
+    });
     return this.items.length;
+  }
+
+  _add(t, field) {
+    const s = field.sample(t.x, t.y + 0.03, t.z, 0, 1, 0);
+    const light = new THREE.Color(s[0], s[1], s[2]);
+    const body = new THREE.MeshBasicMaterial();
+    const paper = new THREE.MeshBasicMaterial();
+    const mesh = new THREE.Group();
+    mesh.add(new THREE.Mesh(shell, body), new THREE.Mesh(label, paper));
+    mesh.position.set(t.x, t.base + t.y + 0.0125, t.z);
+    mesh.rotation.y = t.rot;
+    this.group.add(mesh);
+    const item = { ...t, mesh, materials: [body, paper], light };
+    this.items.push(item);
+    this._tint(item, 1);
   }
 
   _tint(item, power) {
@@ -62,11 +74,11 @@ export class Tapes {
     for (const t of this.items) this._tint(t, power);
   }
 
-  /** Plukker opp kassetter man står ved. Returnerer antall plukket opp nå. */
-  pickUp(x, y, z) {
+  /** Plukker opp kassetter man står ved (i etasje `storey`). Returnerer antall plukket opp nå. */
+  pickUp(x, y, z, storey = 0) {
     const before = this.items.length;
     this.items = this.items.filter((t) => {
-      if (Math.hypot(t.x - x, t.z - z) > REACH || Math.abs(t.y - y) > 1) return true;
+      if (t.storey !== storey || Math.hypot(t.x - x, t.z - z) > REACH || Math.abs(t.y - y) > 1) return true;
       this.group.remove(t.mesh);
       for (const m of t.materials) m.dispose();
       return false;

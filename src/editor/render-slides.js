@@ -48,7 +48,7 @@ function band(ctx, view, path, alpha) {
 function label(ctx, view, path) {
   const end = path.samples[path.samples.length - 1];
   const [x, y] = view.toScreen(end.x, end.z);
-  const text = path.problem ?? `${path.h0.toFixed(1)} m → water · ${path.length.toFixed(0)} m`;
+  const text = path.problem ?? `${path.h0.toFixed(1)} m → ${path.drop ? 'pool on the floor below' : 'water'} · ${path.length.toFixed(0)} m`;
   ctx.save();
   ctx.font = '600 11px system-ui, sans-serif';
   const tw = ctx.measureText(text).width + 12;
@@ -59,12 +59,16 @@ function label(ctx, view, path) {
   ctx.restore();
 }
 
-/** Alle sklier i rommet, og eventuelt sklien man tegner nå ({ points, tube, color }). */
-export function drawSlides(ctx, view, level, preview) {
+/**
+ * Alle sklier i rommet, og eventuelt sklien man tegner nå ({ points, tube, color, drop }). below: etasjen
+ * under – skliene ned fra denne etasjen er lagret der (core/slide-drops.js) og vises svakere.
+ */
+export function drawSlides(ctx, view, level, preview, below = null) {
   for (const slide of level.slides) band(ctx, view, slidePath(level, slide), 1);
+  for (const slide of below?.slides ?? []) if (slide.drop) band(ctx, view, slidePath(below, slide), 0.55);
   if (preview?.points.length >= 2) {
-    const path = slidePath(level, preview);
+    const path = slidePath(preview.drop ? below : level, preview);
     band(ctx, view, path, 0.8);
-    label(ctx, view, path);
+    label(ctx, view, { ...path, drop: preview.drop });
   }
 }

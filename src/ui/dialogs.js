@@ -179,6 +179,7 @@ export function helpDialog() {
     ['Space + drag', 'Pan the plan (or middle mouse button)'],
     ['Wheel', 'Zoom'],
     ['0', 'Fit the plan'],
+    ['Page Up / Page Down', 'Floor above / below'],
     ['Ctrl+Z / Ctrl+Y', 'Undo / redo'],
     ['Ctrl+S', 'Save to My rooms'],
     ['W A S D / arrows', 'Walk'],

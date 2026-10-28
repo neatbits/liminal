@@ -5,7 +5,7 @@ import { OBJECTS, objectBox } from './objects.js';
 import { cornerShape } from './corners.js';
 
 export const SHADOW_KINDS = ['box', 'round', 'legs'];
-const ROUND = new Set(['pottedplant', 'pottedpalm', 'pottedtree', 'cafe', 'softcylinder', 'playball']);
+const ROUND = new Set(['pottedplant', 'pottedpalm', 'pottedtree', 'yucca', 'palmplant', 'cafe', 'softcylinder', 'playball']);
 const LEGS = new Set([
   'desk',
   'desk2',

@@ -138,6 +138,7 @@ export function buildRailings(level, field) {
   for (let z = 0; z < level.h; z++) {
     for (let x = 0; x < level.w; x++) {
       if (isEscalator(level, x, z)) continue; // eget lukket vern og håndløper
+      if (level.seams?.noRail.has(z * level.w + x)) continue; // reposet i et trapperom: vernet stopper bare (world/seams.js)
       for (const side of railSides(level, x, z)) railing(out, level, x, z, side);
     }
   }

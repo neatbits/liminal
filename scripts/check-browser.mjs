@@ -12,6 +12,9 @@ import { checkWater } from './check-water-browser.mjs';
 import { checkGraphics } from './check-graphics-browser.mjs';
 import { checkUnavailable } from './check-unavailable-browser.mjs';
 import { checkEscalatorEditor } from './check-escalator-editor.mjs';
+import { checkStoreys } from './check-storeys.mjs';
+import { checkStairwells } from './check-stairwells.mjs';
+import { checkSlideDrops } from './check-slide-drops.mjs';
 import { checkImportedModels } from './check-imported-models.mjs';
 import { checkMall } from './check-mall-browser.mjs';
 import { checkArcades } from './check-arcades.mjs';
@@ -127,6 +130,12 @@ try {
   await new Promise((r) => setTimeout(r, 300));
   assert.equal(await evaluate('liminal.viewer.walk.paused && !liminal.viewer.walk.input.enabled'), true);
   assert.deepEqual(await evaluate(`({x:liminal.viewer.walk.walker.x,z:liminal.viewer.walk.walker.z,time:liminal.viewer.time})`), position);
+  // Mood-knappen på pause bytter stemning (og lar pausen stå).
+  const mood = await evaluate(`(() => { const m = liminal.viewer.settings.mood; document.querySelector('.hud-walkbar [data-act="mood"]').click();
+    return { from: m, to: liminal.viewer.settings.mood, label: document.querySelector('.hud-walkbar [data-act="mood"]').textContent, paused: liminal.viewer.walk.paused }; })()`);
+  assert.notEqual(mood.to, mood.from, 'pause Mood button changes the mood');
+  assert.ok(mood.label.startsWith('Mood: ') && mood.paused, JSON.stringify(mood));
+  await evaluate(`liminal.viewer.setMood(${JSON.stringify(mood.from)})`);
   await evaluate(`document.querySelector('[data-act="resume"]').click()`);
   assert.equal(await evaluate('!liminal.viewer.walk.paused && liminal.viewer.walk.input.enabled'), true);
   assert.equal(await evaluate(`getComputedStyle(document.querySelector('.hud-walkbar')).display`), 'none', 'resuming hides desktop toolbar again');
@@ -145,6 +154,9 @@ try {
   await checkWater(browser, origin);
   await checkGraphics(browser, origin, { hardware: process.argv.includes('--hardware') });
   await checkEscalatorEditor(browser, origin);
+  await checkStoreys(browser, origin);
+  await checkStairwells(browser, origin);
+  await checkSlideDrops(browser, origin);
   await checkImportedModels(browser, origin);
   await checkPCDisplays(browser, origin);
   await checkMall(browser, origin);

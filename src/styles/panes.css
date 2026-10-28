@@ -141,3 +141,22 @@
   background: var(--accent-soft);
   color: var(--accent);
 }
+
+/* Etasjevelgeren over 2D-skissen (ui/storey-bar.js). */
+.storey-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.storey-label {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  padding: 0 2px;
+}
+
+.storey-bar .chip:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

@@ -7,6 +7,9 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 ## [Ukommet]
 
 ### Endret
+- Ingen hengende lamper i svært høye rom (over 8 m): armaturen sitter i taket, og lyset bakes som en
+  søyle fra taket ned til 8 m over gulvet (`low` i `collectLights`), så gulvet er like godt opplyst som
+  før og veggene høyt oppe får lys. Ledningene i `world/fixtures.js` er fjernet.
 - Fonten VT323 pakkes med (`@fontsource/vt323`) i stedet for å hentes fra Google Fonts – også på
   nettsiden. Personvernteksten på About-siden er oppdatert: ingen tredjepart kontaktes for fonter.
 - En dør til ingensteds fører alltid videre til et nytt sted, i alle stemninger: avvikene «samme rom
@@ -16,6 +19,87 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
   `anomalies` har bare `loops` og `corridor`.
 
 ### Lagt til
+- Sklier ned fra etasjen over: dra Slide-verktøyet fra gulvet i en øvre etasje ned til et basseng i etasjen
+  under (vist blått i skissen). Sklien lagres der nede med `drop` (romformatet), starter i høyde med gulvet
+  over og går gjennom en sjakt i etasjeskillet (`core/slide-drops.js`; åpning og sjakt deles med
+  trapperommene i `core/storey-seams.js`). Man går inn i toppen i etasjen over, bytter etasje og sklir ned i
+  bassenget (`Storeys.dropAt`). Angres for begge etasjene; viskelæret virker fra begge.
+- En kopi av en etasje (⧉, `copyStorey`) tar ikke med sklier ned fra etasjen over (de hører til den), og
+  trapper opp blir gulv i kopien (som i genererte bygg): kopien legges rett over, så trappen ville stått i
+  sjakten til trappen den er kopiert fra. To trapperom oppå hverandre ga løse grå flater i etasjeskillet;
+  `stairwells` hopper nå over en trapp opp som står i sjakten eller på reposet til trapperommet nedenfra
+  (også i rom lagret før denne rettelsen).
+  Drar man en sklie mot et basseng som har et basseng rett over seg, forklarer et hint at man må male
+  gulv over det for å skli ned dit.
+- Veggene rundt trapperom og skliesjakter i etasjen over er 10 cm tykke i stedet for uendelig tynne
+  (`world/shaft-walls.js`, sjaktrutene merkes i `seams.shaft`): flatene flyttes ut i rommet, får endeflater
+  og lukkede hjørner, og inngangen fra reposet / toppen av sklien er en bue i en like tykk vegg opp til
+  taket (`buildArch` tar nå `depth`, buen regnes av `archCurve`). Kollisjonen er uendret.
+- Flisene og tapeten langs trapper går i ett i stedet for å hoppe på hvert trinn: veggen i en trapperute
+  regner teksturhøyden fra foten av trappen, mens gulvlisten fortsatt følger trinnene
+  (`stairWallSpans` i `world/stairs.js`). Temaer med brystning (`wall2`) er som før.
+- En sklie som går over et basseng i etasjen man tegner i, er alltid en vanlig sklie i den etasjen, også
+  med basseng rett under; en sklie ned som er lagret før bassenget der oppe ble malt, lager ingen sjakt
+  gjennom det. Merkelappen sier «→ pool on the floor below» for sklier ned.
+- Ingen gjenstander i trapper og sjakter: en ny trapp rydder gjenstandene som står i den, og trapperom,
+  sjakter og sklitopper fjerner gjenstander etter hele fotavtrykket (`clearObjects`, `footprintCells` i
+  `core/object-pose.js`) – også genererte bygg velger trappeplass etter fotavtrykk (et tre stod i en trapp).
+- Etasjer (resten av fase 3): bassenger henger ned som en kasse i rommet under (taket senkes der,
+  2,1 m fri høyde), så etasjene blir lavere (`storeyGap`, `poolsOver`). Startpunktet kan stå i hvilken
+  som helst etasje (`room.spawnStorey`, lagres og angres). «Add floor below» (Edit) lager en kjeller, og den
+  nederste etasjen kan fjernes. Lys fra etasjen over faller ned i trapperommet; reposet har vern mot fall
+  (bare kollisjon). Kassetter også i de andre etasjene, monsteret kommer etter opp og ned trappen når det
+  jager en, og «Hendelser bak ryggen» virker i bygg med flere etasjer. Fikset: man ble sendt tilbake til
+  etasje 1 når gåingen startet i en annen etasje (`Storeys.leave` ved utgang i stedet for i applyLook).
+  Tester: `storey-walk.test.js`, utvidet `storeys.test.js`/`stairwells.test.js` og `check-stairwells.mjs`.
+- Etasjer (fase 2 og 3): man kan gå mellom etasjene. Nytt verktøy **Stairs up** (U, i Heights) legger en
+  trapp som går opp til etasjen over; ruten forbi toppen (↑) er reposet der man kommer ut. I etasjen
+  over blir løpet en sjakt (vegg, skravert i skissen med ↓ på reposet). Trappen stiger nøyaktig til
+  etasjehøyden, trapperommet er åpent opp til taket over, og man bytter etasje midt på reposet – sømløst,
+  i samme høyde (`core/stairwells.js`: `walkLevels` lager etasjene slik de bygges og gås i, med `seams` for
+  flatene som ikke skal bygges der etasjene møtes, `world/seams.js`; `storeyAt` velger etasje). I gåmodus
+  vises etasjen man står i og naboene; bare den man står i har speiling i vannet. Strømbrudd gjelder hele
+  bygget, monsteret holder seg i etasjen sin (tegnes i riktig høyde), «Hendelser bak ryggen» står over i
+  bygg med flere etasjer, og man starter (og våkner) i etasje 1. `view3d/storeys.js` (`Storeys`) eier nå
+  alle etasjeverdenene, også etasje 0, og bytter `viewer.world`/`walk.level`; `walk.base` løfter kameraet.
+- Kjøpesenter med etasjer: glasstaket over atriet hører til toppen av bygget, så bare øverste etasje får det
+  (`level.covered` i `walkLevels`). Galleriet på dekker rundt atriet er uendret (en mesanin i én etasje).
+- Nytt eksempel **The Hotel Floors**: fire nesten like hotelletasjer med trapper mellom dem. Genererte
+  nivåer i hotell, kontor, skole, sykehus og kjeller får av og til 2–3 etasjer (20 %). `gen/floors.js`
+  (`stackFloors`): kopier av etasje 0 med «Make it wrong» (subtle), trapperom bare der sjakten ikke stenger
+  noe av. Tester: `stairwells.test.js`, `floors.test.js`, `check-stairwells.mjs` (går opp og ned i
+  produksjonsbygget). Trapp opp er meta-bit 16 (`STAIR_THROUGH`).
+- Etasjer (fase 1): et rom kan ha opptil 8 etasjer. Velgeren over 2D-skissen (▼ Floor 2 / 3 ▲, + ny
+  etasje øverst, ⧉ kopi rett over, ✕ fjern), Edit-menyen og Page Up/Down. Etasjen under vises blekt med
+  stiplet kant. Takhøyde, vanndybde, frø, nøkkeltall, lys, «Make it wrong» og generering gjelder etasjen
+  man tegner i; størrelse og tema hele bygget. Angre husker etasjen og viser den. 3D-oversikten viser
+  etasjene opp til den man tegner i og løfter kameraet dit; tomme områder i øvre etasjer er usynlige.
+  Etasjehøyden regnes ut (høyeste tak under + plate + dypeste basseng), så bassenger aldri krasjer med
+  etasjen under. Man går foreløpig bare i etasje 1 (øvre etasjer skjules i gåmodus). Romformat v4
+  (`storeys`); v1–v3 leses som før. `core/storeys.js`, `core/serialize-storeys.js`, `view3d/storeys.js`,
+  `ui/storey-bar.js`, `app/storey-actions.js`, `editor/render-storey.js`; historikken tar etasjenummer
+  eller `'all'`. Verktøytilstanden er skilt ut i `editor/tool-state.js`, appens verktøysettere i
+  `app/tool-methods.js` og gåtastene i `view3d/viewer-keys.js` (filgrensen). Tester:
+  `storeys.test.js`, `check-storeys.mjs` i nettlesersjekken. Se `docs/storeys.md`.
+- To nye planter (CC BY 4.0, kreditert i katalogen og på About-siden): **Yucca** (1,7 m,
+  `potted_plant_03`) og **Palm plant** (1,3 m, `potted_plant_04`) i `object-catalog-mall.js`, gruppen Plants
+  i objektvelgeren og runde kontaktskygger. Glissent møblert: yucca på kontoret, i hotellet og på sykehuset,
+  palmeplanten i hotellet, bassenget og kjøpesenteret. Lavpolygonpalmen `potted_tree_02` ble tatt ut igjen
+  (så ikke bra nok ut): `model.json.disabled`, ingen GLB eller katalogoppføring.
+- `model.json.join` i `npm run models`: slår sammen delene før forenklingen. Yuccaen var kuttet i 27 biter
+  på 65k hjørner med låste kanter, så `simplify` stoppet på 94k trekanter; med `join` ble 2,67 mill.
+  trekanter (100 MB) til 16k (96 kB).
+- To nye lysverktøy i Lights-gruppen. **LED Strip** (N) legger en farget remse under taket på
+  veggruter, mot hvert gulv, vann eller trapp ved siden av (ikke døråpninger eller skrå hjørner). Det er
+  åtte farger, og Fill i et rom legger stripen langs alle veggene rundt rommet. **Ceiling panel** (P) gjør
+  taket i en rute til et lysende panel: White, Warm eller Dim; Fill dekker rommet. Begge baker farget lys
+  inn i rommet (svakt per meter/rute, så et helt felt ikke brenner ut bildet), slukner ved strømbrudd,
+  og panelene følger lysfargen. Nye lag `leds` og `panels` i `LAYERS` (lagres i romformat v3,
+  angres, kopieres og følger størrelsesendring); `setTile` fjerner dem når ruten ikke lenger kan ha dem.
+  Ren logikk i `core/leds.js` (`ledFaces`, `ledLights`, `ledFillCells`) og `core/panels.js`
+  (`panelCells`, `panelLights`), delt av 2D, 3D (`world/led-strips.js`, `world/panels.js`, FrontSide så
+  dukkehuset virker) og lysbakingen. Tester: `leds-panels.test.js`, serialisering og lagring; visuell
+  sjekk `scripts/check-leds.mjs`.
 - Liminal Simulator som program (Electron) for Windows og Linux/Steam Deck – første steg mot Steam.
   `desktop/main.mjs` serverer bygget under `app://liminal/` (egen opprinnelse, så lagring virker),
   starter i simulatoren, åpner lenker ut i nettleseren, sender tilbakemeldinger videre til nettstedet

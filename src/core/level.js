@@ -16,7 +16,7 @@ export const LIGHT_COUNT = 4;
 export const MIN_SIZE = 8;
 export const MAX_SIZE = 128;
 export const HEIGHT_MIN = 2.2;
-export const HEIGHT_MAX = 20; // høye haller (lampene henger da ned, se world/lighting.js)
+export const HEIGHT_MAX = 20; // høye haller (lyset bakes da som en søyle ned mot gulvet, se world/lighting.js)
 export const DOOR_HEIGHT = 2.1;
 // En åpning uten dørblad (DOOR.NONE) med denne meta-biten er en bue (core/doors.js, world/arches.js):
 // toppen av buen står ARCH_TOP over gulvet, eller like under taket i lavere rom.
@@ -32,7 +32,7 @@ export const DECK_MIN = 2.4; // et dekke (mesanin) ligger minst så høyt over g
 export const DECK_MAX = 10;
 
 /** Alle lag med én verdi per rute (Uint8Array(w*h), indeks z*w+x). */
-export const LAYERS = ['tiles', 'lights', 'ceilings', 'depths', 'floors', 'finish', 'meta', 'decks', 'corners'];
+export const LAYERS = ['tiles', 'lights', 'ceilings', 'depths', 'floors', 'finish', 'meta', 'decks', 'corners', 'leds', 'panels'];
 
 export function clampSize(n) {
   return Math.max(MIN_SIZE, Math.min(MAX_SIZE, Math.round(Number(n) || MIN_SIZE)));
@@ -89,6 +89,7 @@ export function createLevel({ name = 'Untitled', theme = DEFAULT_THEME, w = 48, 
 export function cloneLevel(level) {
   const out = { ...level, spawn: { ...level.spawn } };
   for (const key of LAYERS) out[key] = level[key].slice();
+  if (level.storeys) out.storeys = level.storeys.map(cloneLevel); // etasjene over (core/storeys.js)
   return out;
 }
 
@@ -117,6 +118,8 @@ export function setTile(level, x, z, tile) {
   if (changed) {
     level.meta[i] = 0;
     level.corners[i] = 0; // skrått/avrundet hjørne (core/corners.js) hører til rutetypen
+    if (tile !== TILE.WALL) level.leds[i] = 0; // LED-striper sitter på vegger (core/leds.js) …
+    if (!canHaveLight(tile) || tile === TILE.DOOR) level.panels[i] = 0; // … lyspaneler der man står
   }
   level.tiles[i] = tile;
   if (!canHaveLight(tile) && level.lights[i] !== LIGHT.NONE) {
@@ -168,6 +171,7 @@ export function resizeLevel(level, w, h) {
     z: Math.min(h - 0.5, Math.max(0.5, level.spawn.z + oz)),
     a: level.spawn.a,
   };
+  if (level.storeys?.length) out.storeys = level.storeys.map((s) => resizeLevel(s, w, h));
   return out;
 }
 

@@ -28,6 +28,7 @@ export class WalkMode {
     this.theme = null;
     this.field = null;
     this.sound = true;
+    this.base = 0; // gulvhøyden i etasjen man går i (view3d/storeys.js)
     this._statsIn = 0;
     this.doors = null;
     this.power = 1; // strømmen (0..1): settes under strømbrudd (view3d/explore.js)
@@ -67,6 +68,7 @@ export class WalkMode {
 
   /** Starter gåing fra rommets startpunkt. Returnerer false hvis rommet ikke har gulv. */
   enter() {
+    this.beforeEnter?.(); // etasje 0 (view3d/storeys.js)
     const spawn = resolveSpawn(this.level);
     if (!spawn) return false;
     this.walker.reset(this.level, spawn);
@@ -153,8 +155,9 @@ export class WalkMode {
   /** Går man framover inn i toppen av en sklie, tar sklien over. */
   _maybeSlide() {
     const w = this.walker;
-    if (this.input.forward <= 0 || !this.level.slides.length) return;
-    const path = slideEntry(this.level, w.x, w.z, groundAt(this.level, w.x, w.z, w.floorY));
+    if (this.input.forward <= 0) return;
+    // En sklie her, eller en sklie ned til etasjen under (dropAt bytter etasje, view3d/storeys.js).
+    const path = (this.level.slides.length && slideEntry(this.level, w.x, w.z, groundAt(this.level, w.x, w.z, w.floorY))) || this.dropAt?.(w);
     if (!path) return;
     this.rider.start(path, Math.hypot(w.vx, w.vz));
     this.hud.setRiding(true);
@@ -213,6 +216,7 @@ export class WalkMode {
       this.walker.applyToCamera(camera);
       this._maybeSlide();
     }
+    camera.position.y += this.base; // etasjen man går i (view3d/storeys.js)
     this.play.update(dt, this.walker, this.rider.active);
 
     if (this.sound) {

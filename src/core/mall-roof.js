@@ -3,7 +3,8 @@ import { TILE } from './level.js';
 import { ceilingAt, deckAt } from './heights.js';
 
 export function mallRoof(level) {
-  if (level.theme !== 'mall') return null;
+  // covered: en etasje ligger over (core/stairwells.js) – glasstaket hører til toppen av bygget.
+  if (level.theme !== 'mall' || level.covered) return null;
   let x0=level.w,z0=level.h,x1=-1,z1=-1,base=Infinity;
   for(let z=1;z<level.h-1;z++) for(let x=1;x<level.w-1;x++) {
     const i=z*level.w+x,t=level.tiles[i];

@@ -128,7 +128,7 @@ export class Monster3D {
     this.time += step;
     this.mixer.setTime(ghostClothTime(this.time));
     const p = ghostPose(this.time, ai, player);
-    this.group.position.set(p.x, p.y, p.z);
+    this.group.position.set(p.x, p.y + (this.base ?? 0), p.z); // base: etasjen (view3d/storeys.js)
     this.group.rotation.y = p.yaw;
     this.float.rotation.set(p.pitch, 0, p.roll);
     this.material.uniforms.uDark.value = 1 - Math.max(0, Math.min(1, power ?? 1));

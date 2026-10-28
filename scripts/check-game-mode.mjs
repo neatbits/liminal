@@ -41,7 +41,9 @@ export async function checkGameMode(browser, origin) {
     v.setMood('normal'); // lagres (updateSettings gjør ikke det), så neste sjekk ikke arver stemningen
     return out;
   })()`);
-  assert.deepEqual(desktop, { mood: 'nightmare', locked: true, tapes: true, home: dialog.home, modal: false, title: desktop.title, back: dialog.home });
+  // Låst når nivået har kassetter. Level 1 kan være en uendelig korridor: der ligger ingen kassetter
+  // (de ville hoppet når man flyttes en periode), og døren er åpen.
+  assert.deepEqual(desktop, { mood: 'nightmare', locked: desktop.tapes, tapes: desktop.tapes, home: dialog.home, modal: false, title: desktop.title, back: dialog.home });
   assert.match(desktop.title, /^LEVEL 1/);
 
   // Telefonen: knappen under stemningsvalget får fokus når man kommer fra forsiden.
@@ -58,13 +60,13 @@ export async function checkGameMode(browser, origin) {
     })()`);
     await inGame();
     const phone = await evaluate(`(() => {
-      const v = liminal.viewer, out = { mood: v.settings.mood, locked: v.explorer.hunt.locked };
+      const v = liminal.viewer, out = { mood: v.settings.mood, locked: v.explorer.hunt.locked, tapes: v.explorer.total > 0 };
       v.exitWalk(false);
       out.home = !document.querySelector('.mobile-home').hidden;
       v.setMood('normal'); // lagres (updateSettings gjør ikke det), så neste sjekk ikke arver stemningen
       return out;
     })()`);
-    assert.deepEqual(phone, { mood: 'uncanny', locked: true, home: true });
+    assert.deepEqual(phone, { mood: 'uncanny', locked: phone.tapes, tapes: phone.tapes, home: true }); // se over
   } finally {
     await call('Emulation.setTouchEmulationEnabled', { enabled: false });
     await call('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false });

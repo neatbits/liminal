@@ -8,7 +8,7 @@ describe('romformat v3 og eldre sonelag', () => {
     ['depths', DEPTH_MIN * 10, DEPTH_MAX * 10],
     ['floors', 1, FLOOR_MAX * 10],
     ['decks', DECK_MIN * 10, DECK_MAX * 10],
-    ['finish', 1, 15], ['meta', 1, 15], ['corners', 1, 8],
+    ['finish', 1, 15], ['meta', 1, 15], ['corners', 1, 8], ['leds', 1, 8], ['panels', 1, 3],
   ])('bevarer alle lovlige verdier i %s, inkludert 0', (key, min, max) => {
     const level = createLevel({ w: 16, h: 16 });
     for (let v = min; v <= max; v++) level[key][v - min + 1] = v;
@@ -18,13 +18,15 @@ describe('romformat v3 og eldre sonelag', () => {
     expect(levelFromJSON(json)[key]).toEqual(level[key]);
   });
 
-  it('høye tak, platåer og dekker følger med delingslenker', async () => {
+  it('høye tak, platåer, dekker, LED-striper og lyspaneler følger med delingslenker', async () => {
     const level = createLevel({ w: 8, h: 8 });
     level.ceilings.set([82, 83, 200], 9);
     level.floors.set([61, 62, 100], 17);
     level.decks.set([84, 85, 100], 25);
+    level.leds.set([1, 8, 5], 0);
+    level.panels.set([3, 1, 2], 20);
     const back = await decodeLevel(await encodeLevel(level));
-    for (const key of ['ceilings', 'floors', 'decks']) expect(back[key]).toEqual(level[key]);
+    for (const key of ['ceilings', 'floors', 'decks', 'leds', 'panels']) expect(back[key]).toEqual(level[key]);
   });
 
   it.each([undefined, 1, 2])('leser gamle ett-tegns lag (versjon %s)', (v) => {

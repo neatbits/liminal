@@ -22,6 +22,8 @@ import { createObjects } from './objects.js';
 import { buildWindows } from './windows.js';
 import { buildShopfronts } from './shopfronts.js';
 import { buildWayfinding } from './wayfinding.js';
+import { buildLedStrips } from './led-strips.js';
+import { buildPanels } from './panels.js';
 import { skyOf } from '../core/windows.js';
 import { worldMaterials } from './world-materials.js';
 import { buildWaterData } from './water/geometry.js';
@@ -125,6 +127,10 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true, waterDe
   // Gjenstander (ferdige 3D-modeller) lastes i bakgrunnen og dukker opp når de er klare.
   const objects = createObjects(level, field, shared);
   group.add(objects.group);
+  const ledStrips = buildLedStrips(level);
+  group.add(ledStrips.group);
+  const panels = buildPanels(level);
+  group.add(panels.group);
   floorReflection?.attach(group);
 
   let lastTime = null;
@@ -158,6 +164,8 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true, waterDe
       shared.uTime.value = time;
       shared.uFlick.value.set(flicker[0], flicker[1], flicker[2], flicker[3]);
       fixtures.update(flicker, power, tint);
+      ledStrips.update(power);
+      panels.update(power, tint);
     },
     setBoost(v) {
       boost = v;
@@ -184,6 +192,8 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true, waterDe
       spray.dispose();
       balls?.dispose();
       objects.dispose();
+      ledStrips.dispose();
+      panels.dispose();
     },
   };
 }

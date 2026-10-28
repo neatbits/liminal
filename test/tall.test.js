@@ -19,19 +19,21 @@ describe('høye tak og platåer', () => {
     expect(zoneDm('floor', FLOOR_MAX)).toBe(100);
   });
 
-  it('i vanlige rom sitter lampen under taket; i høye haller henger den i en ledning', () => {
+  it('lampen sitter alltid i taket; i høye haller lyser den som en søyle ned til HANG over gulvet', () => {
     const [low] = collectLights(hall(3));
     expect(low.top).toBe(3);
     expect(low.y).toBeCloseTo(3 - LIGHT_DROP, 6);
+    expect(low.low).toBeUndefined();
     const [high] = collectLights(hall(15));
-    expect(high.ceil).toBe(15);
-    expect(high.top).toBe(HANG);
-    // På et platå henger den like høyt over platået.
+    expect(high).toMatchObject({ ceil: 15, top: 15 });
+    expect(high.low).toBeCloseTo(HANG - LIGHT_DROP, 6);
+    // På et platå går søylen like langt ned over platået.
     const level = hall(15);
-    fillZone(level, 'floor', [5 * level.w + 5], 8); // 8 + HANG er over taket: under taket
-    expect(collectLights(level)[0].top).toBe(15);
+    fillZone(level, 'floor', [5 * level.w + 5], 8); // 8 + HANG er over taket: vanlig taklampe
+    expect(collectLights(level)[0].low).toBeUndefined();
     fillZone(level, 'floor', [5 * level.w + 5], 4);
-    expect(collectLights(level)[0].top).toBe(4 + HANG);
+    expect(collectLights(level)[0]).toMatchObject({ top: 15 });
+    expect(collectLights(level)[0].low).toBeCloseTo(4 + HANG - LIGHT_DROP, 6);
   });
 
   it('gulvet i en høy hall er like godt opplyst som i en hall på 8 m', () => {

@@ -1,7 +1,8 @@
 // 3D-visningen: renderer, scene, etterbehandling og bytte mellom oversikt og gåmodus.
 import * as THREE from 'three';
 import { builtBounds } from '../core/level.js';
-import { buildWorld } from '../world/build.js';
+import { Storeys } from './storeys.js';
+import { walkKey } from './viewer-keys.js';
 import { AudioEngine } from '../audio/engine.js';
 import { createPostFX } from './postfx.js';
 import { OverviewCamera } from './cameras.js';
@@ -64,6 +65,7 @@ export class Viewer {
     this.walk.mood = getMood(this.settings.mood);
     // Kassetter, strømbrudd og uendelige nivåer (dører til ingensteds) i gåmodus.
     this.explorer = new Explorer(this);
+    this.storeys = new Storeys(this); // etasjene og trapperommene mellom dem
     this.walk.onExit = (door) => this.explorer.goDeeper({ door });
     this.walk.exitLock = () => this.explorer.hunt.lockText();
     this.hud.setToggles(this.settings);
@@ -74,7 +76,7 @@ export class Viewer {
     renderer.domElement.addEventListener('click', () => {
       if (this.mode === 'walk' && !this.walk.locked) this.walkFullscreen();
     });
-    window.addEventListener('keydown', (e) => this._onKey(e));
+    window.addEventListener('keydown', (e) => walkKey(this, e));
     document.addEventListener('pointerlockchange', () => {
       if (!document.pointerLockElement) this._pausedAt = performance.now();
     });
@@ -100,14 +102,11 @@ export class Viewer {
     this._w = level.w;
     this._h = level.h;
     this.level = level;
-    if (this.world) {
-      this.scene.remove(this.world.group);
-      this.world.dispose();
-    }
-    this.world = buildWorld(level, { anisotropy: this.anisotropy, waterQuality: this.settings.waterReflections, waterDetail: this.settings.waterDetail, waterWaves: this.settings.waterWaves });
+    const options = { anisotropy: this.anisotropy, waterQuality: this.settings.waterReflections, waterDetail: this.settings.waterDetail, waterWaves: this.settings.waterWaves };
+    const storeys = this.storeys.build(level, options); // alle etasjene (view3d/storeys.js)
+    this.world = storeys.world;
     this.world.water?.setSize(this._rtW, this._rtH);
     this.world.floorReflection?.setSize(this._rtW, this._rtH);
-    this.scene.add(this.world.group);
     const built = builtBounds(level);
     const b = built ?? { x0: 0, z0: 0, x1: level.w - 1, z1: level.h - 1 };
     this.overview.setBounds(b.x0, b.z0, b.x1 + 1, b.z1 + 1, Math.max(level.w, level.h));
@@ -115,9 +114,16 @@ export class Viewer {
     const firstBuild = built && !this._hadBuilt;
     this._hadBuilt = !!built;
     if ((refit || firstBuild) && this.mode === 'overview') this.overview.go('perspective', first);
-    this.walk.setWorld(level, this.world.theme, this.world.field, this.world.doors, this.world);
+    if (!this.storeys.rebuilt()) this.walk.setWorld(storeys.level, this.world.theme, this.world.field, this.world.doors, this.world);
+    this.showStorey(this.storeys.shown);
     this._applyLook();
-    return this.world.stats;
+    return storeys.stats;
+  }
+
+  /** Oversikten viser etasjene opp til k og sikter på den (view3d/storeys.js). */
+  showStorey(k) {
+    this.storeys.show(k);
+    if (this.mode !== 'walk') this.overview.raise(this.storeys.floorY());
   }
 
   /** 'perspective' | 'top' | 'reset' */
@@ -146,6 +152,7 @@ export class Viewer {
 
   exitWalk(tween = true) {
     if (this.mode !== 'walk') return;
+    this.storeys.leave();
     if (document.fullscreenElement) document.exitFullscreen?.();
     const { x, z } = this.walk.walker;
     this.walk.exit();
@@ -206,17 +213,6 @@ export class Viewer {
     applyLook(this);
   }
 
-  _onKey(e) {
-    if (this.mode !== 'walk' || e.target?.tagName === 'INPUT' || e.ctrlKey || e.metaKey) return;
-    if (e.code === 'KeyV') this.toggle('vhs');
-    else if (e.code === 'KeyM') this.toggle('sound');
-    else if (e.code === 'KeyN') this.toggle('music');
-    else if (e.code === 'KeyP') this.photo();
-    else if (e.code === 'KeyX') this.setMood(nextMood(this.settings.mood));
-    else if (e.code === 'KeyG') this.walk.drift.toggle();
-    else if (e.code === 'Escape') this._escape();
-  }
-
   // Størrelse, format i fullskjerm og oppløsning (display.js).
   _resize() {
     resizeView(this);
@@ -230,10 +226,13 @@ export class Viewer {
     if (!this.world) return;
     const changed = this.flicker.update(dt);
     // Lysfargen: visningsinnstillingen eller rommets (core/tints.js).
-    this.world.setTint(tintFactor(activeTint(this.settings.light, this.level), this.time, this.world.field.color));
+    const tint = tintFactor(activeTint(this.settings.light, this.level), this.time, this.world.field.color);
+    this.world.setTint(tint);
     this.world.update(this.time, this.flicker.values, this.camera);
+    this.storeys.update(this.time, this.flicker.values, this.camera, tint);
     if (this.mode === 'walk') {
       this.walk.update(dt, this.camera, this.flicker.values, changed);
+      this.storeys.follow(); // trapperom: bytt etasje midt på reposet
       if (!this.walk.paused) this.explorer.update(dt);
     }
     else this.overview.update(dt);

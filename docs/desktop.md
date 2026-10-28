@@ -59,7 +59,9 @@ og da kjører Electron som vanlig Node: «does not provide an export named 'Brow
 2. **Kapsler og bibliotekbilder**: `npm run steam:capsules -- <bredt bilde> [høyt bilde]` lager alle
    i `release/steam/` med tittelen i VT323: `header_capsule` (920 × 430), `small_capsule` (462 × 174),
    `main_capsule` (1232 × 706), `vertical_capsule` (748 × 896), `library_capsule` (600 × 900),
-   `library_hero` (3840 × 1240, uten tekst) og `library_logo` (1280 × 360, gjennomsiktig). Det brede
+   `library_hero` (3840 × 1240, uten tekst), `library_logo` (1280 × 360, gjennomsiktig),
+   `library_header_capsule` (920 × 430), `event_cover` (800 × 450), og ikonene `shortcut_icon.png`
+   (256 × 256) og `app_icon.jpg` (184 × 184) av `desktop/icon.png`. Det brede
    bildet brukes til de brede kapslene og helten – ta det i så høy oppløsning som mulig; det høye
    (valgfritt) til de høye (`scripts/steam-capsules.mjs`).
 

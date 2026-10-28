@@ -1,10 +1,11 @@
-// Vannsklier: objekter oppå rutenettet. En sklie er { points: [[x, z], …], tube, color } – ruter fra
-// toppen (på et hevet gulv) til bunnen (over vann). Banen glattes med Catmull-Rom gjennom
+// Vannsklier: objekter oppå rutenettet. En sklie er { points: [[x, z], …], tube, color, drop } – ruter fra
+// toppen (på et hevet gulv) til bunnen (over vann). Med drop starter den i etasjen over (core/slide-drops.js):
+// toppen er gulvet der oppe, og sklien lagres i etasjen med bassenget. Banen glattes med Catmull-Rom gjennom
 // rutemidtene, med rett/flatt innløp før fallet fra plattformen til litt over vannflaten.
 // Sklier endres aldri på stedet: legg til / fjern ved å lage en ny liste (angre sammenligner
 // referanser). Ren logikk.
 import { TILE, getTile, WATER_SURFACE, HEIGHT_MAX } from './level.js';
-import { topFloorAt, ceilingAt, groundAt } from './heights.js';
+import { topFloorAt, ceilingAt, groundAt, SLAB } from './heights.js';
 import { slideCurve, blur, ease } from './slide-curve.js';
 import { launchLength } from './slide-launch.js';
 import { pillarsTouchBox } from './pillars.js';
@@ -34,16 +35,19 @@ export const SLIDE_COLORS = {
 export const DEFAULT_SLIDE_COLOR = 'blue';
 const colorOf = (c) => (SLIDE_COLORS[c] ? c : DEFAULT_SLIDE_COLOR);
 
-/** Hva som er galt med en sklie langs `points` (engelsk tekst for brukeren), eller null. */
-export function slideProblem(level, points) {
+/**
+ * Hva som er galt med en sklie langs `points` (engelsk tekst for brukeren), eller null.
+ * drop: sklien starter i etasjen over, så startruten her er ikke en plattform (den lages av core/slide-drops.js).
+ */
+export function slideProblem(level, points, drop = false) {
   if (points.length < 2) return 'Drag from a raised floor down to the water.';
-  for (const [x, z] of points) {
+  for (const [x, z] of drop ? points.slice(1) : points) {
     const t = getTile(level, x, z);
     if (t === TILE.WALL || t === TILE.PILLAR || t === TILE.DOOR || pillarsTouchBox(level, [x, z, x + 1, z + 1])) return 'A wall, pillar or door is in the way.';
   }
   const [sx, sz] = points[0];
   const [ex, ez] = points[points.length - 1];
-  if (getTile(level, sx, sz) === TILE.WATER || topFloorAt(level, sx, sz) < SLIDE.MIN_START) return 'A slide must start on a floor raised at least 1 m.';
+  if (!drop && (getTile(level, sx, sz) === TILE.WATER || topFloorAt(level, sx, sz) < SLIDE.MIN_START)) return 'A slide must start on a floor raised at least 1 m.';
   if (getTile(level, ex, ez) !== TILE.WATER) return 'A slide must end over water.';
   return null;
 }
@@ -56,9 +60,10 @@ const cache = new WeakMap();
  * y er bunnen av rennen. supports = [{ x, z, y0, y1 }] (støtteben fra bakken opp til rennen).
  */
 export function slidePath(level, slide) {
-  let problem = slideProblem(level, slide.points);
+  let problem = slideProblem(level, slide.points, slide.drop);
   const [sx, sz] = slide.points[0];
-  const h0 = topFloorAt(level, sx, sz);
+  // Fra etasjen over: minst over taket her (i etasjene slik de gås i ligger startruten på gulvet der oppe).
+  const h0 = slide.drop ? Math.max(topFloorAt(level, sx, sz), level.height + SLAB) : topFloorAt(level, sx, sz);
   const pts = slideCurve(slide, SLIDE.STEP, SLIDE.LAUNCH);
   const length = pts[pts.length - 1][2];
   const launch = problem ? Math.min(SLIDE.LAUNCH, length * 0.4)
@@ -138,12 +143,14 @@ export function slideEntry(level, x, z, feet) {
 }
 
 /** Legger til en sklie (ny liste) og løfter taket der rennen trenger plass. */
-export function addSlide(level, points, tube = false, color = DEFAULT_SLIDE_COLOR) {
+export function addSlide(level, points, tube = false, color = DEFAULT_SLIDE_COLOR, drop = false) {
   if (level.slides.length >= SLIDE.MAX_SLIDES || points.length < 2) return 0;
-  const slide = { points: points.slice(0, SLIDE.MAX_POINTS).map(([x, z]) => [x, z]), tube: !!tube, color: colorOf(color) };
+  const slide = { points: points.slice(0, SLIDE.MAX_POINTS).map(([x, z]) => [x, z]), tube: !!tube, color: colorOf(color), ...(drop ? { drop: true } : {}) };
   level.slides = [...level.slides, slide];
   const path = slidePath(level, slide);
-  if (!path.problem) {
+  // En sklie fra etasjen over får plass i trapperommet core/slide-drops.js lager (ikke her: høyere tak
+  // ville løftet etasjen over, som igjen ville gjort sklien høyere).
+  if (!path.problem && !drop) {
     // Rutene der rennen ikke får plass løftes alle til samme høyde (én sone, ikke en trapp).
     const low = [];
     let need = 0;

@@ -104,7 +104,9 @@ omtales som CC BY 4.0. Eventuell senere bruk krever at prosjektets lisensvalg vu
 - `npm run models -- arm_chair coffee_mug` bygger bare navngitte kildemapper.
 - `npm run models` bygger nye/endrede kilder; `--all` tvinger ombygging av tillatte kilder.
   `model.json.disabled` gjelder også ved `--all`.
-- `model.json`: `textureSize`, `simplify` og `simplifyError` styrer komprimeringen.
+- `model.json`: `textureSize`, `simplify` og `simplifyError` styrer komprimeringen. `join: true` slår
+  sammen delene først – nødvendig når en modell er kuttet i biter på 65k hjørner (låste kanter
+  stopper ellers forenklingen; yuccaen `potted_plant_03` gikk fra 2,67 mill. til 16k trekanter).
   `drop` fjerner noder, `split` deler en kilde i flere modeller. Se `scripts/models.mjs`.
 - `node scripts/preview-models.mjs` lager en belyst kontaktoversikt med faktisk størrelse
   og retning i `node_modules/.cache/models.png` (bruker lokal Vite og ekte GPU).

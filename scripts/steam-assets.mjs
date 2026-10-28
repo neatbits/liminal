@@ -17,8 +17,8 @@ if (!process.argv[2]) {
   process.exit(1);
 }
 
-// Bare de to bildene, som /wide og /tall – ingenting annet fra disken.
-const files = { '/wide': wide, '/tall': tall };
+// Bare de to bildene og programikonet – ingenting annet fra disken.
+const files = { '/wide': wide, '/tall': tall, '/icon': resolve('desktop/icon.png') };
 const images = createServer((req, res) => {
   const file = files[req.url];
   if (!file) return res.writeHead(404).end();
@@ -33,7 +33,7 @@ const origin = server.resolvedUrls.local[0].replace(/\/$/, '');
 const browser = await launchBrowser();
 mkdirSync(OUT, { recursive: true });
 try {
-  await capsules(browser, origin, { wide: `${imageBase}/wide`, tall: `${imageBase}/tall` }, OUT);
+  await capsules(browser, origin, { wide: `${imageBase}/wide`, tall: `${imageBase}/tall`, icon: `${imageBase}/icon` }, OUT);
   console.log(`Ferdig: ${OUT}/`);
 } catch (e) {
   console.error('Feil:', e.message);

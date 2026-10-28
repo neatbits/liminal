@@ -134,3 +134,27 @@ export function poser(level) {
 export function objectPose(level, o) {
   return { ...poser(level)(o) };
 }
+
+/** Rutene gjenstandene dekker (hele fotavtrykket, ikke bare ruten de står i): Set av indekser. */
+export function footprintCells(level) {
+  const out = new Set();
+  if (!level.objects?.length) return out;
+  const pose = poser(level);
+  for (const o of level.objects) {
+    const [x0, z0, x1, z1] = objectBox(pose(o));
+    for (let z = Math.floor(z0); z < Math.ceil(z1); z++) for (let x = Math.floor(x0); x < Math.ceil(x1); x++) out.add(z * level.w + x);
+  }
+  return out;
+}
+
+/** Fjerner gjenstandene som dekker noen av rutene (et tre i en trapp, en stol i en sjakt). */
+export function clearObjects(level, cells) {
+  const set = new Set(cells);
+  if (!set.size || !level.objects?.length) return;
+  const pose = poser(level);
+  level.objects = level.objects.filter((o) => {
+    const [x0, z0, x1, z1] = objectBox(pose(o));
+    for (let z = Math.floor(z0); z < Math.ceil(z1); z++) for (let x = Math.floor(x0); x < Math.ceil(x1); x++) if (set.has(z * level.w + x)) return false;
+    return true;
+  });
+}

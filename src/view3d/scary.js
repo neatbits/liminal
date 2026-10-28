@@ -7,6 +7,7 @@ import { heartbeat, breath, caught, roarAt, warmScary } from '../audio/scary.js'
 
 const ROAR_AGAIN = 20; // s: tidligst neste brøl
 const ROAR_FAR = 30; // m: så langt unna høres brølet svakest og mørkest
+const FOLLOW = 2.5; // s: så lenge det tar før et jagende monster kommer etter opp/ned trappen
 
 export class Scary {
   constructor(viewer) {
@@ -32,6 +33,7 @@ export class Scary {
    */
   reset(prepare = false) {
     this.ai = null;
+    this.follow = null;
     this.roarIn = null;
     this.roarAgain = 0;
     this.hide();
@@ -48,11 +50,18 @@ export class Scary {
     this.monster.load(); // Prefetch while hidden; first appearance needs no download pause.
     const v = this.v;
     const w = v.walk.walker;
-    if (!this.ai || this.ai.level !== v.walk.level) this.ai = new MonsterAI(v.walk.level);
+    if (!this.ai || this.ai.level !== v.walk.level) this._newFloor(w);
+    if (this.follow && (this.follow.t -= dt) <= 0) {
+      // Det kommer etter: dukker opp på reposet der man gikk inn, og jakter videre.
+      this.ai._place([Math.floor(this.follow.x), Math.floor(this.follow.z)]);
+      this.ai.state = 'hunt';
+      this.follow = null;
+    }
     this.ai.gentle = gentle;
     this.ai.chase = chase;
     const player = { x: w.x, z: w.z, y: w.floorY, yaw: w.yaw };
     const event = this.ai.update(dt, player, dark);
+    this.monster.base = v.walk.base;
     this.monster.update(dt, this.ai, player, power);
     // Alt det første gangen koster, gjøres på forhånd: tegningen (GPU) og lydene (i små biter).
     if (!this.ai.visible) this.monster.warm(v.renderer, v.camera, v.scene);
@@ -79,6 +88,19 @@ export class Scary {
       this.breathIn = 1.3 + Math.random() * 1.2;
       breath(v.audio, pan, 0.15 + 0.75 * (1 - d / 14));
     }
+  }
+
+  /**
+   * Nytt rom for monsteret: et nytt nivå, en ombygging – eller en annen etasje (view3d/storeys.js).
+   * Jaktet det da man tok trappen, kommer det etter litt senere.
+   */
+  _newFloor(w) {
+    const v = this.v;
+    const climbed = this.ai && this.floor !== v.storeys.current;
+    const hunting = this.ai?.state === 'hunt';
+    this.ai = new MonsterAI(v.walk.level);
+    this.floor = v.storeys.current;
+    this.follow = climbed && hunting ? { t: FOLLOW, x: w.x, z: w.z } : null;
   }
 
   /** Nightmare: et brøl like etter at jakten begynner, fra der monsteret er – en advarsel om å løpe. */

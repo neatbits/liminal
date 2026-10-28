@@ -32,4 +32,14 @@ export const MALL_OBJECTS = {
     size: [1.27, 2.693, 1.293],
     ...ccBy('Potted Tree', 'dylanheyes', 'https://sketchfab.com/3d-models/potted-tree-dd6c9d90421b4a99acdfebbddd4ccf75', 'https://sketchfab.com/dylanheyes'),
   },
+  yucca: {
+    label: 'Yucca', file: 'potted_plant_03', scale: 0.455,
+    size: [1.054, 1.701, 1.163],
+    ...ccBy('Indoor palm plant', 'ozai', 'https://sketchfab.com/3d-models/indoor-palm-plant-0d51a1519e124f5dbe1e41584c22543e', 'https://sketchfab.com/ozaj'),
+  },
+  palmplant: {
+    label: 'Palm plant', file: 'potted_plant_04', scale: 0.0051,
+    size: [0.876, 1.297, 0.955],
+    ...ccBy('Palm Plant', 'SomeKevin', 'https://sketchfab.com/3d-models/palm-plant-fc5680053bb54ff6bacae64be12200ad', 'https://sketchfab.com/SomeKevin'),
+  },
 };

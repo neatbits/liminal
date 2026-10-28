@@ -7,7 +7,9 @@ import { corridorLevel, CORRIDOR_THEMES } from './corridors.js';
 import { babbdiLevel, BABBDI_THEME } from './babbdi.js';
 import { levelDims } from './sizes.js';
 import { pickTint } from '../core/tints.js';
+import { FLOOR_THEMES, stackFloors } from './floors.js';
 
+const FLOORS_CHANCE = 0.2; // så ofte et nytt rom i FLOOR_THEMES får flere etasjer (gen/floors.js)
 const TINT_CHANCE = 0.25; // så ofte et nytt rom får en egen lysfarge (core/tints.js)
 const HALLS_CHANCE = 0.05; // betongsalene (gen/babbdi.js): sjeldne, fra Level 2, aldri to ganger på rad
 
@@ -40,5 +42,7 @@ export function nextLevel(depth, prevTheme, rand, odds = { corridor: 0.2 }, scal
   const seed = 1 + Math.floor(rand() * 1e9);
   const level = generateLevel({ theme, w, h, seed, name: `Level ${depth}` });
   if (rand() < TINT_CHANCE) level.tint = pickTint(rand);
+  // Av og til et bygg med flere nesten like etasjer og trapper mellom dem (gen/floors.js).
+  if (FLOOR_THEMES.includes(theme) && rand() < FLOORS_CHANCE) stackFloors(level, rand, 1 + Math.floor(rand() * 2));
   return { level, label: getTheme(theme).label, kind: 'room' };
 }

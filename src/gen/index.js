@@ -17,6 +17,7 @@ import { levelHeight, poolDepths, tallHalls } from './variety.js';
 import { untangleDoors, clearDoorways } from './door-space.js';
 import { shapeCorners } from './corners.js';
 import { archways } from './arches.js';
+import { stackFloors } from './floors.js';
 
 const BY_THEME = {
   backrooms: styles.backrooms,
@@ -85,6 +86,13 @@ function makeMall({ seed = randomSeed(), layout = 'auto' } = {}) {
   return level;
 }
 
+/** Fire nesten like hotelletasjer med trapper mellom dem (gen/floors.js). */
+function makeHotelFloors() {
+  const level = generateLevel({ theme: 'hotel', w: 34, h: 34, seed: 14, name: 'The Hotel Floors', vary: false });
+  stackFloors(level, mulberry32(14), 3);
+  return level;
+}
+
 function makeCorridor() {
   const level = createLevel({ name: 'The Endless Corridor', theme: 'hotel', w: 128, h: 8 });
   styles.corridor(level);
@@ -134,7 +142,7 @@ export const PRESETS = [
     id: 'playroom',
     name: 'The Playroom',
     hint: 'Ball pits in red, green, yellow and blue. The slide is still warm.',
-    make: () => generateLevel({ theme: 'playroom', w: 48, h: 40, seed: 4, name: 'The Playroom', vary: false }),
+    make: () => generateLevel({ theme: 'playroom', w: 48, h: 40, seed: 8, name: 'The Playroom', vary: false }),
   },
   {
     id: 'mall',
@@ -153,6 +161,12 @@ export const PRESETS = [
     name: 'The Ward',
     hint: 'Closed doors, a pale green corridor and a monitor beeping somewhere.',
     make: () => Object.assign(generateLevel({ theme: 'ward', w: 48, h: 36, seed: 2, name: 'The Ward', vary: false }), { sky: 'dusk' }),
+  },
+  {
+    id: 'hotel-floors',
+    name: 'The Hotel Floors',
+    hint: 'Four floors of the same hotel – almost. Take the stairs and see what changed.',
+    make: makeHotelFloors,
   },
   {
     id: 'corridor',
