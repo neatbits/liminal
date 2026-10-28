@@ -1,4 +1,5 @@
-// Venstre sidepanel: verktøy, rommets egenskaper, lys og stemning, generering, nøkkeltall og tegnehjelp.
+// Venstre sidepanel med to faner: Tools (verktøyene) og Room (rommets egenskaper, lys og stemning,
+// generering, nøkkeltall og tegnehjelp), så rommet kan nås uten å bla forbi verktøyene.
 import { THEMES, THEME_IDS, getTheme } from '../core/themes.js';
 import { SKIES } from '../core/windows.js';
 import { TINTS } from '../core/tints.js';
@@ -9,6 +10,8 @@ import { section, range, unitInput } from './fields.js';
 import { ToolPanel } from './tool-panel.js';
 
 const metres = (v) => `${+v.toFixed(1)} m`;
+const TAB_KEY = 'liminal.sidebar-tab';
+const TABS = [['tools', 'Tools'], ['room', 'Room']];
 const span = ([lo, hi]) => (Math.abs(hi - lo) < 1e-6 ? metres(lo) : `${+lo.toFixed(1)}–${metres(hi)}`);
 
 export class Sidebar {
@@ -102,7 +105,51 @@ export class Sidebar {
       h('label', { class: 'row-toggle' }, h('span', { text: 'Rulers' }), this.rulerToggle),
       h('p', { class: 'side-hint', text: '1 cell = 1 × 1 metre. Hold Space and drag to pan; the wheel zooms.' }),
     );
-    root.append(this.tools.el, room, atmosphere, generate, keys, helpers);
+    this.root = root;
+    this.tabs = Object.fromEntries(TABS.map(([id, text]) => [id, h('button', {
+      type: 'button', role: 'tab', class: 'side-tab', id: `side-tab-${id}`, 'aria-controls': `side-panel-${id}`, text, onclick: () => this.showTab(id),
+    })]));
+    const tablist = h('div', { class: 'side-tabs', role: 'tablist', 'aria-label': 'Sidebar' }, Object.values(this.tabs));
+    tablist.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const next = TABS[(TABS.findIndex(([id]) => id === this.tab) + 1) % TABS.length][0];
+      this.showTab(next, { focus: true });
+      e.preventDefault();
+    });
+    const panel = (id, ...children) => h('div', { class: 'side-panel', role: 'tabpanel', id: `side-panel-${id}`, 'aria-labelledby': `side-tab-${id}` }, ...children);
+    this.panels = { tools: panel('tools', this.tools.el), room: panel('room', room, atmosphere, generate, keys, helpers) };
+    root.append(tablist, ...Object.values(this.panels));
+    let saved = null;
+    try {
+      saved = localStorage.getItem(TAB_KEY);
+    } catch {
+      /* ikke kritisk */
+    }
+    this.showTab(this.panels[saved] ? saved : 'tools');
+  }
+
+  /** Viser fanen id ('tools' | 'room'). focus: flytt tastaturfokus til fanen. */
+  showTab(id, { focus = false } = {}) {
+    this.tab = id;
+    for (const [key, tab] of Object.entries(this.tabs)) {
+      tab.setAttribute('aria-selected', String(key === id));
+      tab.tabIndex = key === id ? 0 : -1;
+      this.panels[key].hidden = key !== id;
+    }
+    if (focus) this.tabs[id].focus();
+    this.root.scrollTop = 0;
+    try {
+      localStorage.setItem(TAB_KEY, id);
+    } catch {
+      /* ikke kritisk */
+    }
+  }
+
+  /** Rominnstillingene (navnet i toppfeltet): Room-fanen med navnefeltet i fokus. */
+  openRoom() {
+    this.showTab('room');
+    this.name.focus();
+    this.name.select();
   }
 
   /** @param s editorens verktøytilstand (se ToolPanel.sync) */

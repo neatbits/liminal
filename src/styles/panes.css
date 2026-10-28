@@ -93,17 +93,21 @@
   flex: none;
 }
 
-/* Visningsinnstillingene (stemning, lysfarge, nivåstørrelse) øverst til venstre i 3D-vinduet. */
+/* Visningsinnstillingene (stemning, lysfarge, musikk) i hodet på 3D-panelet. */
 .view-settings {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  right: 8px;
-  z-index: 2;
   display: flex;
-  flex-wrap: wrap;
   gap: 5px;
-  pointer-events: none;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.view-settings select {
+  min-width: 0;
+  max-width: 110px;
+}
+
+.pane-3d .pane-actions {
+  flex: none;
 }
 
 /* Hver innstilling: liten etikett og velger i samme pille. */
@@ -116,10 +120,9 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--panel);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
   color: var(--muted);
   font-size: 11px;
-  pointer-events: auto;
+  white-space: nowrap;
 }
 
 .view-setting select {
@@ -134,6 +137,26 @@
 .view-toggle {
   padding-right: 9px;
   cursor: pointer;
+  font-size: 13px;
+}
+
+/* Smalt 3D-panel: tittelen viker for knappene. */
+.pane-3d {
+  container-type: inline-size;
+}
+
+@container (max-width: 640px) {
+  .pane-3d .pane-title {
+    display: none;
+  }
+}
+
+/* Enda smalere: etikettene står i verktøytipset, og Photo blir bare kameraet. */
+@container (max-width: 520px) {
+  .pane-3d .view-setting > span,
+  .pane-3d .photo-label {
+    display: none;
+  }
 }
 
 .view-toggle.active {

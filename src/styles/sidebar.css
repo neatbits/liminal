@@ -188,3 +188,47 @@
   flex: 1;
   min-width: 0;
 }
+
+/* Fanene øverst i sidepanelet: Tools og Room. Står fast når panelet rulles. */
+.side-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 8px 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.side-tab {
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  padding: 5px 8px;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+.side-tab:hover {
+  color: var(--text);
+  background: var(--panel-2);
+}
+
+.side-tab[aria-selected='true'] {
+  background: var(--accent-soft);
+  border-color: #b9d6d2;
+  color: var(--accent);
+}
+
+.tool-panel {
+  padding: 10px 14px 12px;
+}
+
+/* Typen i en verktøyfamilie (Light, Stairs, Door): like brede knapper, uansett antall. */
+.tool-options .segmented.variant-row {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+}

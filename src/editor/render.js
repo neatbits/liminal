@@ -122,6 +122,16 @@ function drawDetails(ctx, view, level, r) {
   }
 }
 
+function drawTag(ctx, view, { x, z }, text) {
+  const [sx, sy] = view.toScreen(x, z);
+  ctx.font = '600 11px system-ui, sans-serif';
+  const tw = ctx.measureText(text).width + 10;
+  ctx.fillStyle = 'rgba(31, 122, 114, 0.85)';
+  ctx.fillRect(sx + 10, sy - 8, tw, 16);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(text, sx + 15, sy + 4);
+}
+
 function drawSpawn(ctx, view, spawn, alpha = 1) {
   const [cx, cy] = view.toScreen(spawn.x, spawn.z);
   const r = Math.max(4, view.scale * 0.32);
@@ -220,9 +230,12 @@ export function drawPlan(ctx, s) {
   ctx.strokeRect(Math.round(ox) + 0.5, Math.round(oy) + 0.5, Math.round(W), Math.round(H));
   if (s.zones && view.scale >= 8) drawZoneLabels(ctx, view, s.zones);
   drawHighlights(ctx, view, s.highlight);
-  // Tegn startpunktet der spilleren faktisk starter (nærmeste gulv hvis det står i en vegg).
-  const spawn = s.spawn !== false && resolveSpawn(level); // bare i etasjen man starter i
-  if (spawn) drawSpawn(ctx, view, spawn);
+  // Tegn startpunktet der spilleren faktisk starter (nærmeste gulv hvis det står i en vegg). I de andre
+  // etasjene: svakt, med etasjen det står i (s.spawn = { level, storey }).
+  const other = typeof s.spawn === 'object' ? s.spawn : null;
+  const spawn = s.spawn !== false && resolveSpawn(other?.level ?? level);
+  if (spawn) drawSpawn(ctx, view, spawn, other ? 0.35 : 1);
+  if (spawn && other) drawTag(ctx, view, spawn, `Start · floor ${other.storey + 1}`);
   drawPreview(ctx, view, s);
   if (s.rulers) drawRulers(ctx, view, width, height, RULER_LEFT, RULER_TOP);
 }

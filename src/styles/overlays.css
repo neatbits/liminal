@@ -149,3 +149,17 @@
     transform: translateY(6px);
   }
 }
+
+/* «Or open Examples … / My rooms …» nederst i oppstartsdialogen. */
+.start-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.start-links span {
+  margin-right: 2px;
+}

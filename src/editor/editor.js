@@ -154,7 +154,8 @@ export class Editor extends ToolState {
       level: this.level,
       below,
       wells: this._wells,
-      spawn: this.storey === spawnStorey(this.room),
+      // Startpunktet: i etasjen man starter i, ellers svakt med etasjenummeret (render.js).
+      spawn: this.storey === spawnStorey(this.room) || { level: storeyLevel(this.room, spawnStorey(this.room)), storey: spawnStorey(this.room) },
       theme: getTheme(this.level.theme),
       view: this.view,
       width,

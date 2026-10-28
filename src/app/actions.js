@@ -25,10 +25,14 @@ async function confirmReplace(app) {
   );
 }
 
-export function newRoom(app, { startup = false } = {}) {
+/** draft: ved oppstart med et utkast fra forrige gang (da er «Continue» hovedvalget). */
+export function newRoom(app, { startup = false, draft = false } = {}) {
   newRoomDialog({
     theme: app.level.theme,
     startup,
+    draft: draft ? app.level.name : null,
+    onExamples: () => openExamples(app),
+    onMine: () => openMine(app),
     onCreate: async (o) => {
       if (!(await confirmReplace(app))) return;
       const seed = parseSeed(o.seed) ?? randomSeed();

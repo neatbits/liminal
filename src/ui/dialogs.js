@@ -20,7 +20,11 @@ function sizeSelect(value) {
   return h('select', { class: 'field' }, SIZES.map((s) => h('option', { value: s, text: `${s} m`, selected: s === value })));
 }
 
-export function newRoomDialog({ theme, onCreate, startup = false }) {
+/**
+ * Nytt rom. startup: ved oppstart, med rommet bak dialogen; draft: navnet på utkastet man holdt på med
+ * (da er «Continue» hovedvalget), onExamples/onMine: åpne de dialogene i stedet.
+ */
+export function newRoomDialog({ theme, onCreate, startup = false, draft = null, onExamples, onMine }) {
   const themeEl = themeSelect(theme);
   const wEl = sizeSelect(48);
   const hEl = sizeSelect(48);
@@ -47,20 +51,27 @@ export function newRoomDialog({ theme, onCreate, startup = false }) {
   const body = h(
     'div',
     {},
-    startup ? h('p', { text: 'Create a new room, or continue the room behind this dialog.' }) : null,
+    startup ? h('p', { text: draft ? 'Pick up where you left off, or create a new room.' : 'Create a new room, or continue the room behind this dialog.' }) : null,
     h('div', { class: 'row' }, h('label', { text: 'Theme' }), themeEl),
     h('div', { class: 'row-2' }, h('div', {}, h('label', { text: 'Width' }), wEl), h('div', {}, h('label', { text: 'Depth' }), hEl)),
     h('div', { class: 'side-label', text: 'Start from' }),
     list,
     seedRow,
+    startup && (onExamples || onMine)
+      ? h('div', { class: 'start-links' }, h('span', { text: 'Or open' }),
+          h('button', { type: 'button', class: 'btn', text: 'Examples …', onclick: () => onExamples() }),
+          h('button', { type: 'button', class: 'btn', text: 'My rooms …', onclick: () => onMine() }))
+      : null,
   );
+  const create = { label: 'Create room', onClick: () => onCreate({ theme: themeEl.value, w: +wEl.value, h: +hEl.value, template, seed: seedEl.value }) };
+  const short = draft && draft.length > 28 ? `${draft.slice(0, 27)}…` : draft;
   openModal({
     title: 'New room',
     body,
-    actions: [
-      { label: startup ? 'Continue current room' : 'Cancel' },
-      { label: 'Create room', primary: true, onClick: () => onCreate({ theme: themeEl.value, w: +wEl.value, h: +hEl.value, template, seed: seedEl.value }) },
-    ],
+    // Med et utkast er det å fortsette hovedvalget (Enter); ellers å lage rommet.
+    actions: draft && startup
+      ? [create, { label: `Continue “${short}”`, primary: true }]
+      : [{ label: startup ? 'Continue current room' : 'Cancel' }, { ...create, primary: true }],
   });
 }
 

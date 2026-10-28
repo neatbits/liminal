@@ -28,17 +28,31 @@ export const SWATCH = {
   panel: 'linear-gradient(90deg, #e4eef8 0 33%, #ffe8a8 33% 67%, #c8a838 67%)',
 };
 
-/** Verktøyene i sidepanelet, gruppert: [overskrift, [verktøy-id, …]]. */
+/**
+ * Nære verktøy som deler én knapp i sidepanelet; typen velges i en rad under verktøyene. Hvert verktøy
+ * beholder sin egen id og hurtigtast. tools: [[verktøy-id, tekst i raden], …].
+ */
+export const TOOL_FAMILIES = {
+  lights: { label: 'Light', tools: [['light', 'On'], ['flicker', 'Flickering'], ['broken', 'Broken']] },
+  steps: { label: 'Stairs', tools: [['stairs', 'Stairs'], ['stairwell', 'Up a floor'], ['escalator', 'Escalator']] },
+  doors: { label: 'Door', tools: [['door', 'Doorway'], ['leaf', 'Door']] },
+};
+
+/** Familien et verktøy hører til, eller null. */
+export const familyOf = (toolId) => Object.keys(TOOL_FAMILIES).find((f) => TOOL_FAMILIES[f].tools.some(([id]) => id === toolId)) ?? null;
+
+/** Knappene i sidepanelet, gruppert: [overskrift, [verktøy- eller familie-id, …]]. */
 export const TOOL_GROUPS = [
   ['Build', ['floor', 'wall', 'corner', 'water', 'pillar', 'window']],
-  ['Heights', ['ceiling', 'depth', 'raise', 'stairs', 'stairwell', 'escalator', 'deck', 'slide']],
-  ['Lights', ['light', 'flicker', 'broken', 'led', 'panel']],
-  ['Details', ['door', 'leaf', 'tiles', 'object', 'spawn']],
+  ['Heights', ['ceiling', 'depth', 'raise', 'steps', 'deck', 'slide']],
+  ['Lights', ['lights', 'led', 'panel']],
+  ['Details', ['doors', 'tiles', 'object', 'spawn']],
 ];
 
 export const HINT = 'Right-click erases. Rectangle and fill with a light tool place lights in an even pattern.';
 
 export const HINTS = {
+  spawn: 'Click where walking starts, and drag to turn it. With several floors you start on the floor where you place it – the other floors show it faintly with its floor number.',
   pillar: 'Poolrooms pillars are round; other themes use square columns. Choose the diameter, then place columns on open cells. Large columns need clear space around them. Right-click erases.',
   door: 'Click a wall cell between two rooms, or a 1-cell gap in a wall (green outline = a door fits). A wall with nothing behind gives a door to nowhere. Click a door again to flip it; right-click removes it but keeps the opening. While walking, press E to open and close doors.',
   stairs:

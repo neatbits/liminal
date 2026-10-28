@@ -7,6 +7,39 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 ## [Ukommet]
 
 ### Endret
+- Ryddigere editor (runde 1 og 2 av grensesnittet), uten at noe er fjernet:
+  - Nære verktøy deler én knapp med typen i en rad under (`TOOL_FAMILIES` i `ui/tool-info.js`):
+    Light (på, blinkende, ødelagt), Stairs (vanlig, opp en etasje, rulletrapp) og Door (åpning, dør).
+    Knappen husker typen og viser dens hurtigtast; alle hurtigtaster og verktøy-id-er er som før.
+    24 → 19 knapper.
+  - Sidepanelet har fanene Tools og Room (rom, lys og stemning, generering, nøkkeltall, tegnehjelp),
+    så rominnstillingene nås uten å bla forbi verktøyene. Fanen huskes.
+  - Romnavnet i toppfeltet er en knapp som åpner Room-fanen med navnet i fokus.
+  - 3D-panelet har én rad: Mood, Light og ♪ står i hodet (ikke lenger oppå bildet). «New levels» er flyttet
+    til Settings (Exploring). Suggestions er et ikon. På smale skjermer krymper romnavnet, og 3D-hodet
+    skjuler tittel og etiketter før knappene.
+- Oppstart (runde 3): med et utkast fra forrige gang er «Continue “navn”» hovedknappen (Enter fortsetter),
+  «Create room» ved siden av; uten utkast som før. Dialogen har snarveier til Examples … og My rooms ….
+- Pause (runde 4): alle fem stemningene som valg på egen rad (utenom pause, på berøringsskjerm, fortsatt
+  én knapp som går rundt, og X). Sound, Music og VHS viser av/på med ikon og farge og har `aria-pressed`.
+  Hjelpen («Click anywhere …») står nederst i panelet i stedet for som egen boble; beskjeder står under panelet.
+- Mye lettere fysikk i store nivåer (stolhauger i Level 0, baller i Poolrooms, klosser i Playroom): 9 → 2,0 ms,
+  17 → 4,1 ms og ~15 → 9,8 ms (1,5 ms når klossene har falt til ro) per bilde i Huge-nivåer. Egen broadphase
+  som bare søker fra det som beveger seg, mot faste vegger i et rutenett rundt seg
+  (`world/mover-broadphase.js`; cannons SAPBroadphase sjekket alle par av faste vegg-/gulvbokser), og en
+  kollisjonsmatrise som bare lagrer par som berører hverandre (før over en million plasser, nullstilt hvert
+  steg). Samme kontakter og oppførsel. Målinger i `docs/performance.md`.
+- Raskere 2D-editor når bare 2D-skissen vises (View → 2D plan only): 3D bygges ikke på nytt mens man
+  tegner, og 3D-bildet tegnes ikke. Når 3D vises igjen, eller man går i rommet, bygges det én gang med
+  alle endringene (`App._show3D`, `viewer.hidden`). En ombygging kan ta et halvt sekund i store rom
+  som Mall. Nettlesersjekk: `check-hidden-3d.mjs`.
+- Startpunktet i et bygg med flere etasjer: de andre etasjene viser det svakt med «Start · floor N», så det
+  ikke ser borte ut når det står i en annen etasje (før vistes det bare i startetasjen). Spawn-verktøyet
+  forklarer at man starter i etasjen der startpunktet settes. Nettlesersjekk: `check-spawn-storey.mjs`.
+
+## [0.5.0] – 2026-10-28
+
+### Endret
 - Ingen hengende lamper i svært høye rom (over 8 m): armaturen sitter i taket, og lyset bakes som en
   søyle fra taket ned til 8 m over gulvet (`low` i `collectLights`), så gulvet er like godt opplyst som
   før og veggene høyt oppe får lys. Ledningene i `world/fixtures.js` er fjernet.

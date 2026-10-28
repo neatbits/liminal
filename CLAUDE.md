@@ -6,7 +6,7 @@ Esc pauser; Resume fortsetter; Esc på pause eller Exit går tilbake til editore
 Fullskjerm brukes der det støttes, ellers fungerer gåmodus i panelet.
 Rom kan lagres lokalt, eksporteres som JSON og deles som lenke (`#room=...`; gamle
 `#rom=`-lenker og formatnavnet `liminal-rom` leses fortsatt).
-Vanlig oppstart viser New room; «Continue current room» beholder utkastet bak dialogen.
+Vanlig oppstart viser New room; med et utkast er «Continue “navn”» hovedknappen (ellers «Continue current room»).
 Delte rom og eksempellenker åpnes direkte uten oppstartsdialog.
 
 Tre sider (Vite multi-page): forsiden `index.html` (`src/landing.js`, eksempelkort og
@@ -276,6 +276,6 @@ src/
   Behold tapsfrie lysnøkler og del `poser` mellom modeller. Vinduer/skilt samles per materialgruppe.
   Faste gjenstander tegnes samlet (`world/object-batches.js`): det som flyttes (fysikk, flyter, snurrer) må holdes utenfor.
   Modelldeler slås sammen ved lasting (`object-parts.js`, atlas/palett); gjenstander bakes med `objectSample`, flater med `sample`.
-  Editorbygging strupes/debounces; three.js har egen cachebar byggpakke (`vite.config.js`).
+  Editorbygging strupes/debounces, og stoppes helt mens bare 2D vises (`App._show3D`: bygges når 3D vises/man går); three.js har egen cachebar byggpakke (`vite.config.js`).
 - **Ballbinger**: `pit: 'balls'` tegner bassengruter som baller (`world/ball-layout.js`, ren logikk).
   `world/balls.js` bruker instansgrupper (`chunks.js`), impostorer lenger unna enn 6 m (`ball-shaders.js`); behold bounds/frigjøring. Løse fysikkballer: `docs/play-balls.md`; måling: `docs/performance.md`.

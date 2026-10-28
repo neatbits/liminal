@@ -4,6 +4,7 @@ import { h } from './dom.js';
 import { openModal } from './modal.js';
 import { range } from './fields.js';
 import { waveStrength } from '../core/water.js';
+import { LEVEL_SIZES } from '../gen/sizes.js';
 
 const WATER = [
   ['simple', 'Simple – no reflections (fastest)'],
@@ -71,6 +72,10 @@ export function settingsDialog(settings, apply) {
     waves.row,
     h('p', { id: 'water-waves-hint', class: 'side-hint', text: 'Controls background waves. Jumping and moving through water still create ripples, even at 0 %. 100 % keeps the room’s usual waves.' }),
     h('p', { class: 'side-hint', text: 'On a slow computer: try 75 % resolution, reduced effects and simple water first.' }),
+    h('div', { class: 'side-label', text: 'Exploring' }),
+    // Størrelsen på de uendelige nivåene, fra neste nivå (gen/sizes.js).
+    h('div', { class: 'row' }, h('label', { text: 'New levels' }), select(Object.entries(LEVEL_SIZES).map(([id, s]) => [id, s.label]), settings.levelSize, (v) => apply({ levelSize: v }))),
+    h('p', { class: 'side-hint', text: 'Size of the new levels you reach through doors to nowhere.' }),
     h('div', { class: 'side-label', text: 'Controls & sound' }),
     sens.row,
     fov.row,

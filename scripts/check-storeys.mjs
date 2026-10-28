@@ -74,6 +74,7 @@ export async function checkStoreys(browser, origin) {
   await evaluate(`liminal.editor.undo()`);
   assert.equal(await evaluate(`liminal.level.storeys.length`), 3);
   await click('Remove'); // angringen beholdt etasje 3 (kopien) som valgt etasje
+  await evaluate(`liminal.layout.set('split')`); // bare 2D: 3D bygges først når det vises (check-hidden-3d)
   await built();
   assert.deepEqual(await state(), { storey: 1, n: 3, label: 'Floor 2 / 3', worlds: 2, shown: 1 });
   assert.equal(await evaluate(`liminal.level.storeys[1].tiles.every(t => t === 0)`), true);

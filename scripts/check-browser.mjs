@@ -15,6 +15,8 @@ import { checkEscalatorEditor } from './check-escalator-editor.mjs';
 import { checkStoreys } from './check-storeys.mjs';
 import { checkStairwells } from './check-stairwells.mjs';
 import { checkSlideDrops } from './check-slide-drops.mjs';
+import { checkHidden3D } from './check-hidden-3d.mjs';
+import { checkSpawnStorey } from './check-spawn-storey.mjs';
 import { checkImportedModels } from './check-imported-models.mjs';
 import { checkMall } from './check-mall-browser.mjs';
 import { checkArcades } from './check-arcades.mjs';
@@ -91,7 +93,10 @@ try {
   await ready();
   assert.equal(await evaluate('liminal.level.name'), 'Last edit before reload');
   assert.equal(await evaluate(`document.querySelector('.modal-head h2')?.textContent`), 'New room');
-  await evaluate(`document.querySelector('.modal-foot .btn:not(.btn-accent)').click()`);
+  // Med et utkast er «Continue “navn”» hovedvalget (Enter).
+  assert.equal(await evaluate(`document.querySelector('.modal-foot .btn-accent').textContent`), 'Continue “Last edit before reload”');
+  assert.equal(await evaluate(`document.activeElement.textContent`), 'Continue “Last edit before reload”');
+  await evaluate(`document.querySelector('.modal-foot .btn-accent').click()`);
   assert.equal(await evaluate('liminal.level.name'), 'Last edit before reload');
   assert.deepEqual(await evaluate('[liminal.level.ceilings[9],liminal.level.floors[10],liminal.level.decks[11]]'), [200, 100, 100]);
   console.log('PASS import, save and immediate reload with high zones');
@@ -130,11 +135,16 @@ try {
   await new Promise((r) => setTimeout(r, 300));
   assert.equal(await evaluate('liminal.viewer.walk.paused && !liminal.viewer.walk.input.enabled'), true);
   assert.deepEqual(await evaluate(`({x:liminal.viewer.walk.walker.x,z:liminal.viewer.walk.walker.z,time:liminal.viewer.time})`), position);
-  // Mood-knappen på pause bytter stemning (og lar pausen stå).
-  const mood = await evaluate(`(() => { const m = liminal.viewer.settings.mood; document.querySelector('.hud-walkbar [data-act="mood"]').click();
-    return { from: m, to: liminal.viewer.settings.mood, label: document.querySelector('.hud-walkbar [data-act="mood"]').textContent, paused: liminal.viewer.walk.paused }; })()`);
-  assert.notEqual(mood.to, mood.from, 'pause Mood button changes the mood');
-  assert.ok(mood.label.startsWith('Mood: ') && mood.paused, JSON.stringify(mood));
+  // Stemningsvelgeren på pause: alle fem som knapper, valget merkes, pausen står. Lyd viser tilstanden.
+  const mood = await evaluate(`(() => { const m = liminal.viewer.settings.mood, bar = document.querySelector('.hud-walkbar');
+    const to = m === 'uncanny' ? 'abandoned' : 'uncanny';
+    bar.querySelector('[data-pick="' + to + '"]').click();
+    return { from: m, to, now: liminal.viewer.settings.mood, buttons: bar.querySelectorAll('[data-pick]').length,
+      pressed: bar.querySelector('[data-pick][aria-pressed="true"]')?.dataset.pick,
+      cycleHidden: getComputedStyle(bar.querySelector('.hud-mood')).display === 'none',
+      sound: bar.querySelector('[data-act="sound"]').getAttribute('aria-pressed') === String(!!liminal.viewer.settings.sound),
+      help: getComputedStyle(bar.querySelector('.hud-help')).display !== 'none', paused: liminal.viewer.walk.paused }; })()`);
+  assert.deepEqual({ ...mood, from: null }, { from: null, to: mood.to, now: mood.to, buttons: 5, pressed: mood.to, cycleHidden: true, sound: true, help: true, paused: true });
   await evaluate(`liminal.viewer.setMood(${JSON.stringify(mood.from)})`);
   await evaluate(`document.querySelector('[data-act="resume"]').click()`);
   assert.equal(await evaluate('!liminal.viewer.walk.paused && liminal.viewer.walk.input.enabled'), true);
@@ -157,6 +167,8 @@ try {
   await checkStoreys(browser, origin);
   await checkStairwells(browser, origin);
   await checkSlideDrops(browser, origin);
+  await checkHidden3D(browser, origin);
+  await checkSpawnStorey(browser, origin);
   await checkImportedModels(browser, origin);
   await checkPCDisplays(browser, origin);
   await checkMall(browser, origin);
@@ -182,8 +194,8 @@ try {
     if (page === 'home') {
       await evaluate(`document.querySelector('a[href="about/#changelog"]').click()`);
       await waitFor(() => evaluate(`location.hash === '#changelog' && Boolean(document.querySelector('#changelog time'))`).catch(() => false), 'public changelog link');
-      assert.equal(await evaluate(`document.querySelector('#changelog time').dateTime`), '2026-10-24');
-      assert.equal(await evaluate(`document.querySelectorAll('#changelog .l-release time').length`), 4);
+      assert.equal(await evaluate(`document.querySelector('#changelog time').dateTime`), '2026-10-28');
+      assert.equal(await evaluate(`document.querySelectorAll('#changelog .l-release time').length`), 5);
       console.log('PASS public changelog navigation and release status');
     }
   }

@@ -1,5 +1,5 @@
 // HUD over 3D-vinduet: gålinje, hint, VHS-tekst, lastemelding, korte beskjeder og plask.
-import { getMood } from '../gen/moods.js';
+import { getMood, MOODS } from '../gen/moods.js';
 
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
@@ -11,7 +11,7 @@ function el(tag, cls, html = '') {
 }
 
 export class Hud {
-  /** @param actions { exit(), resume(), vhs(), sound(), music(), photo(), mood(), drift() } */
+  /** @param actions { exit(), resume(), vhs(), sound(), music(), photo(), mood(), setMood(id), drift() } */
   constructor(root, actions) {
     this.root = el('div', 'hud');
     this.walkbar = el(
@@ -23,11 +23,14 @@ export class Hud {
        <span class="hud-extra"></span>
        <button type="button" data-act="drift" title="Dream walk: drift slowly through the rooms on your own (G)">Drift</button>
        <button type="button" data-act="photo" title="Take a photo (P)">📷 Photo</button>
-       <button type="button" data-act="vhs" title="VHS filter (V)">VHS</button>
+       <button type="button" data-act="vhs" class="hud-toggle" aria-pressed="false" title="VHS filter (V)">VHS</button>
        <button type="button" data-act="mood" class="hud-mood" title="Mood: Normal → Abandoned → Liminal → Uncanny → Nightmare (X)">Liminal</button>
-       <button type="button" data-act="sound" title="Sound on/off (M)">Sound</button>
-       <button type="button" data-act="music" title="Music on/off (N)">♪ Music</button>
-       <button type="button" data-act="exit" title="Back to the editor (Esc)">✕ Exit</button>`,
+       <div class="hud-moods" role="group" aria-label="Mood (X)"><span>Mood</span>${Object.entries(MOODS)
+         .map(([id, m]) => `<button type="button" data-pick="${id}" aria-pressed="false" title="${m.hint}">${m.label}</button>`).join('')}</div>
+       <button type="button" data-act="sound" class="hud-toggle" aria-pressed="true" title="Sound on/off (M)">Sound</button>
+       <button type="button" data-act="music" class="hud-toggle" aria-pressed="false" title="Music on/off (N)">Music</button>
+       <button type="button" data-act="exit" title="Back to the editor (Esc)">✕ Exit</button>
+       <p class="hud-help">Click anywhere to keep walking · WASD to walk, Shift to run · Esc again to exit</p>`,
     );
     this.hint = el('div', 'hud-hint');
     this.vhs = el('div', 'hud-vhs', '<span class="vhs-play">PLAY ▶</span><span class="vhs-speed">SP</span><span class="vhs-time"></span>');
@@ -50,12 +53,15 @@ export class Hud {
     this.glitchEl = el('div', 'hud-glitch');
     this.root.append(this.black, this.titleCard, this.glitchEl);
     this.walkbar.addEventListener('click', (e) => {
-      const act = e.target.closest('button')?.dataset.act;
-      if (act && actions[act]) actions[act]();
+      const button = e.target.closest('button');
+      const { act, pick } = button?.dataset ?? {};
+      if (pick) actions.setMood?.(pick); // stemningsvelgeren på pause
+      else if (act && actions[act]) actions[act]();
     });
     root.append(this.root);
     this._clock = 0;
     this._touch = matchMedia('(pointer: coarse)').matches;
+    this.root.classList.toggle('touch', this._touch); // pausepanelet viser museteksten bare uten berøring
   }
 
   setWalking(on) {
@@ -136,9 +142,10 @@ export class Hud {
     paused = walking && paused;
     this.root.classList.toggle('paused', paused);
     this.walkbar.hidden = !walking || (!this._touch && !paused);
-    this.hint.hidden = !walking || (locked && !paused);
+    // På pause står hjelpen i panelet (.hud-help); berøring har sin egen tekst nederst.
+    this.hint.hidden = !walking || (locked && !paused) || (paused && !this._touch);
     this.hint.textContent = paused
-      ? 'Paused · Click anywhere to keep walking (WASD to walk, Shift to run) · Esc again to exit'
+      ? 'Paused · Tap Resume to keep walking'
       : this.phoneControls ? 'Left thumb: move · Right thumb: look around'
         : this._touch ? 'Left side: walk · Right side: look around' : 'Drag to look around · WASD to walk · Esc to exit';
   }
@@ -151,9 +158,17 @@ export class Hud {
     const m = this.walkbar.querySelector('[data-act="mood"]');
     m.textContent = `Mood: ${getMood(mood).label}`;
     m.dataset.mood = mood;
-    this.walkbar.querySelector('[data-act="vhs"]').classList.toggle('on', vhs);
-    this.walkbar.querySelector('[data-act="sound"]').classList.toggle('on', sound);
-    this.walkbar.querySelector('[data-act="music"]').classList.toggle('on', !!music);
+    for (const b of this.walkbar.querySelectorAll('[data-pick]')) b.setAttribute('aria-pressed', String(b.dataset.pick === mood));
+    // Av/på vises både med farge og ikon, og leses opp (aria-pressed).
+    const toggle = (act, on, icons) => {
+      const b = this.walkbar.querySelector(`[data-act="${act}"]`);
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', String(on));
+      if (icons) b.dataset.icon = icons[on ? 0 : 1];
+    };
+    toggle('vhs', !!vhs);
+    toggle('sound', !!sound, ['🔊', '🔇']);
+    toggle('music', !!music, ['♪', '🔕']);
   }
 
   setVhs(on) {

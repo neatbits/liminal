@@ -19,7 +19,8 @@ export async function checkUnavailable(browser, origin) {
       return /^(webgl2?|experimental-webgl)$/.test(type) ? null : context.call(this,type,...args);
     };
   ` });
-  const closeModal = () => evaluate(`document.querySelector('.modal-foot .btn:not(.btn-accent)')?.click()`);
+  // Oppstartsdialogen: fortsett rommet bak den (hovedknappen når det finnes et utkast).
+  const closeModal = () => evaluate(`[...document.querySelectorAll('.modal-foot .btn')].find((b) => b.textContent.startsWith('Continue'))?.click()`);
   const ready = () => waitFor(() => evaluate('Boolean(window.liminal?.level && liminal.viewer.unavailable)').catch(() => false), '2D ready without WebGL');
   try {
     await call('Page.navigate', { url: 'about:blank' });

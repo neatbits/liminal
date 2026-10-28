@@ -50,6 +50,7 @@ export class App {
       toggle: $('#layout-toggle'),
       splitter: $('#splitter'),
       workspace: $('.workspace'),
+      onChange: (layout) => this._show3D(layout !== '2d'),
     });
     buildMenus($('#menus'), menuConfig(this));
     bindShortcuts(this);
@@ -161,20 +162,35 @@ export class App {
 
   /** Går i rommet i fullskjerm (Esc tilbake). drift: drømmegange (view3d/drift.js). */
   walk({ drift = false } = {}) {
-    if (this.layout.layout === '2d') this.layout.set('split');
-    if (this._pending3D) this._rebuild();
+    if (this.layout.layout === '2d') this.layout.set('split'); // bygger 3D om det var utsatt (_show3D)
+    if (this._pending3D || this._stale3D) this._rebuild();
     if (this.viewer.walkFullscreen() && drift) this.viewer.walk.drift.set(true);
   }
 
   _schedule3D(ms, throttle) {
+    if (this._hidden3D) {
+      // Bare 2D vises: ingen ombygging før 3D vises igjen (_show3D) eller man går i rommet.
+      clearTimeout(this._pending3D);
+      this._pending3D = null;
+      this._stale3D = true;
+      return;
+    }
     if (this._pending3D && throttle) return;
     clearTimeout(this._pending3D);
     this._pending3D = setTimeout(() => this._rebuild(), ms);
   }
 
+  /** 3D-panelet vises eller skjules (2D-visningen): skjult tegnes og bygges ingenting i 3D. */
+  _show3D(on) {
+    this._hidden3D = !on;
+    if (this.viewer) this.viewer.hidden = !on;
+    if (on && this._stale3D) this._rebuild();
+  }
+
   _rebuild() {
     clearTimeout(this._pending3D);
     this._pending3D = null;
+    this._stale3D = false;
     const s = this.viewer.setLevel(this.level);
     $('#status-build').textContent = s ? `3D built in ${s.ms} ms · ${s.vertices.toLocaleString('en-US')} vertices · ${s.lights} lights` : '3D unavailable · 2D editor ready';
   }

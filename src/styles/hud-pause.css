@@ -65,5 +65,60 @@
 
 /* Beskjeder (f.eks. ny stemning) under panelet, ikke oppå det. */
 .hud.paused .hud-message {
-  top: calc(50% + 100px);
+  top: calc(50% + 135px);
+}
+
+/* Stemningen: utenom pause én knapp som går rundt (X), på pause alle fem som valg på egen rad. */
+.hud-moods,
+.hud-help {
+  display: none;
+}
+
+.hud.paused .hud-mood {
+  display: none;
+}
+
+.hud.paused .hud-moods {
+  order: -1;
+  flex-basis: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0 4px;
+}
+
+.hud.paused .hud-moods span {
+  margin-right: 4px;
+  opacity: 0.7;
+}
+
+.hud.paused .hud-moods button {
+  padding: 5px 9px;
+  font-size: 12px;
+}
+
+.hud-moods button[aria-pressed='true'] {
+  background: rgba(232, 199, 90, 0.22);
+  border-color: rgba(232, 199, 90, 0.6);
+  font-weight: 600;
+}
+
+.hud-moods button[data-pick='uncanny'] {
+  color: #f2c14e;
+}
+
+.hud-moods button[data-pick='nightmare'] {
+  color: #ff6b5e;
+}
+
+/* Hjelpen nederst i panelet (mus og tastatur); berøring har «Tap Resume» nederst på skjermen. */
+.hud.paused:not(.touch) .hud-help {
+  display: block;
+  order: 1;
+  flex-basis: 100%;
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 11px;
+  opacity: 0.65;
 }

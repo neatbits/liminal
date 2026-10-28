@@ -66,11 +66,12 @@ async function start() {
   window.liminal = app; // nyttig for feilsøking i konsollen
   bindFeedback({ endpoint: '../api/feedback.php', page: 'simulator' });
   if(phone)return;
-  app.setLevel(shared ?? preset ?? loadDraft() ?? presetById('level0').make());
+  const draft = shared || preset ? null : loadDraft();
+  app.setLevel(shared ?? preset ?? draft ?? presetById('level0').make());
   if (shared) toast(`Shared room: “${shared.name}”. Press “Walk the room” to explore.`, { ms: 5000 });
   if (desktop()) bindStartMenu(app); // programmet: logoen åpner startmenyen
   if (game) playGame(app);
-  else if (!shared && !preset) desktop() ? startMenu(app) : newRoom(app, { startup: true });
+  else if (!shared && !preset) desktop() ? startMenu(app) : newRoom(app, { startup: true, draft: !!draft });
 }
 
 start();

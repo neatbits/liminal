@@ -15,6 +15,7 @@ import { ballMaterial, addBallSupport, BALL_GROUP } from './ball-physics.js';
 import { ObjectSplashes } from './object-splashes.js';
 import { addSoftShape } from './soft-shapes.js';
 import { halfWalls } from '../core/half-walls.js';
+import { MoverBroadphase } from './mover-broadphase.js';
 import { tipOrigin, tipQuaternion } from '../core/object-tip.js';
 
 const DENSITY = 40; // kg/m³ – skumgummi
@@ -27,7 +28,12 @@ export class SoftPhysics {
     this.level = level;
     const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0) });
     world.allowSleep = true;
-    world.broadphase = new CANNON.SAPBroadphase(world);
+    world.broadphase = new MoverBroadphase(); // mange faste vegger: søk bare fra det som beveger seg
+    // Kollisjonsmatrisen husker hvilke par som berører hverandre. Standard er en tabell med én plass per par
+    // av kropper (over en million med vegger og gulv i store nivåer), nullstilt hvert steg; denne lagrer
+    // bare parene som faktisk berører hverandre.
+    world.collisionMatrix = new CANNON.ObjectCollisionMatrix();
+    world.collisionMatrixPrevious = new CANNON.ObjectCollisionMatrix();
     world.defaultContactMaterial.friction = 0.6;
     world.defaultContactMaterial.restitution = 0.08;
     this.world = world;

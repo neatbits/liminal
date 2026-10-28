@@ -58,6 +58,7 @@ export class Viewer {
       music: () => this.toggle('music'),
       photo: () => this.photo(),
       mood: () => this.setMood(nextMood(this.settings.mood)),
+      setMood: (id) => this.setMood(id),
       drift: () => this.walk.drift.toggle(),
     });
     this.walk = new WalkMode({ canvas: renderer.domElement, hud: this.hud, audio: this.audio });
@@ -219,6 +220,7 @@ export class Viewer {
   }
 
   _tick(timestamp) {
+    if (this.hidden && this.mode !== 'walk') return; // bare 2D-skissen vises (app._show3D)
     if (!frameDue(this, timestamp)) return; // begrenset bildefrekvens
     this._timer.update(timestamp);
     const dt = this.mode === 'walk' && this.walk.paused ? 0 : Math.min(0.05, this._timer.getDelta());

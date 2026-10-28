@@ -73,7 +73,7 @@ export function menuConfig(app) {
         { label: 'Fit plan', shortcut: '0', action: () => app.editor.fit() },
         { label: 'Toggle grid', action: () => app.setHelper('grid', !app.settings.grid) },
         { label: 'Toggle rulers', action: () => app.setHelper('rulers', !app.settings.rulers) },
-        { label: 'Settings … (graphics, controls)', action: () => openSettings(app) },
+        { label: 'Settings … (graphics, levels, controls)', action: () => openSettings(app) },
         '-',
         { label: 'Walk the room', action: () => app.walk() },
         { label: 'Dream walk (drift)', action: () => app.walk({ drift: true }) },

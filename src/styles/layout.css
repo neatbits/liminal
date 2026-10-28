@@ -49,6 +49,19 @@
   background: transparent;
   padding: 6px 9px;
   border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* Når det blir trangt, er det romnavnet som krymper (med …), ikke menyene og knappene. */
+.brand,
+.menus,
+.toolbar,
+.topbar-right > :not(.room-badge) {
+  flex: none;
+}
+
+.toolbar .segmented button {
+  white-space: nowrap;
 }
 
 .menu > button:hover,
@@ -105,12 +118,29 @@
   min-width: 0;
 }
 
+/* Romnavnet: en knapp som åpner rominnstillingene (Room-fanen i sidepanelet). */
 .room-badge {
+  flex: 0 1 auto;
   color: var(--muted);
   font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.room-badge:hover {
+  border-color: var(--border);
+  background: var(--panel);
+}
+
+.btn-icon {
+  padding: 5px 8px;
 }
 
 .room-badge b {

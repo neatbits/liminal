@@ -179,3 +179,8 @@
 .hud-extra:empty {
   display: none;
 }
+
+/* Av/på-knappene (VHS, lyd, musikk): ikonet viser tilstanden (data-icon), fargen også (.on). */
+.hud-toggle[data-icon]::before {
+  content: attr(data-icon) ' ';
+}

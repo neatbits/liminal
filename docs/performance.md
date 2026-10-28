@@ -163,3 +163,32 @@ vertexer og tegnekall), og må bekreftes der.
   kontaktskygger er utelatt der, uten synlig forskjell i referansebildet.
 - Lysbaking av gjenstander er fortsatt det tyngste ved lasting (~0,9 s i Mall), nå mest selve
   lysløkken (avstand og vinkel per kandidat). Neste steg kan være å bake i en worker.
+
+## Måling 28. oktober 2026: fysikken i store nivåer
+
+Brukerrapport: gåmodus i store nivåer blir tung, og lavere grafikk hjelper lite – altså CPU, ikke GPU.
+Målt i hodeløs Chrome (SwiftShader) med JS-tid per bilde i gåmodus, nivåer i størrelsen Huge (frø 5),
+60 bilder fra startpunktet. Tegningen (`postfx.render`) var 1–6 ms i Level 0/Poolrooms/Office; det tunge
+var `play.update` → `SoftPhysics.step` (cannon-es) for løse gjenstander (stoler, baller), selv med
+bare 19–32 av dem:
+
+| Nivå (Huge) | Kropper (faste) | Fysikk før | Etter |
+| --- | ---: | ---: | ---: |
+| Level 0, 88 × 79 | 793 (773) | 9,0 ms | 2,0 ms |
+| Poolrooms, 88 × 79 | 1 524 (1 491) | 16,6 ms | 4,1 ms |
+| Playroom, 88 × 79 (193 klosser/baller), de første sekundene | 1 511 (1 317) | ~15 ms | 9,8 ms |
+| Playroom etter 15 s (klossene sover, 24 baller ruller) | | | 1,5 ms |
+
+- `SAPBroadphase` bryter ikke søket for par av to faste kropper, så alle vegg-/gulvbokser sjekkes mot
+  hverandre hvert steg (kvadratisk). `world/mover-broadphase.js` søker bare fra det som beveger seg
+  (våkne kropper mot de faste i et 4 m-rutenett rundt seg og mot de andre som beveger seg, sovende bare
+  mot de andre som beveger seg; svært store faste kropper som gulvplanet sjekkes alltid) med AABB +
+  cannons kuletest. Søket i Playroom: 5,9 → 1,1 ms. Samme
+  mulige kontakter (`test/mover-broadphase.test.js` mot en fullstendig sjekk av alle par). Merk: cannon
+  merker ikke AABB-en utdatert når `position` settes etter at formen er lagt til – faste kropper regnes
+  derfor ut én gang, de som beveger seg hvert steg.
+- `ArrayCollisionMatrix` har én plass per par av kropper (≈ 1,2 mill. i Poolrooms Huge, to stykker) og
+  nullstilles hvert steg; `ObjectCollisionMatrix` lagrer bare parene som berører hverandre.
+- Gjenstående: Mall Huge har ~1 000 tegnekall (alle pass) og 10–20 ms CPU i `render` i SwiftShader;
+  det må måles på ekte GPU før noe endres. Tåken gjør alt utenfor ~2,5/tetthet m usynlig (60–200 m),
+  så en kortere `camera.far` i gåmodus gir bare noe i de aller største nivåene.

@@ -1,18 +1,20 @@
-// Verktøyseksjonen i sidepanelet: verktøy, form, penselstørrelse, høyden soneverktøyene
-// (tak, dybde, gulv) maler, tilstanden dørverktøyet setter inn og formen på nye sklier.
-// Tekstene ligger i tool-info.js.
+// Verktøyfanen i sidepanelet: verktøy, form, penselstørrelse, høyden soneverktøyene
+// (tak, dybde, gulv) maler, tilstanden dørverktøyet setter inn og formen på nye sklier. Nære verktøy
+// deler én knapp (TOOL_FAMILIES), med typen i en rad under. Tekstene ligger i tool-info.js.
 import { TOOLS, SHAPES } from '../editor/tools.js';
 import { h } from './dom.js';
-import { section, unitInput } from './fields.js';
-import { SWATCH, HINT, HINTS, ZONE, DOOR_STATES, SLIDE_SHAPES, SLIDE_COLOR_CHOICES, TOOL_GROUPS, CORNER_KINDS, ESCALATOR_DIRECTIONS, PANEL_TYPE_CHOICES } from './tool-info.js';
+import { unitInput } from './fields.js';
+import { SWATCH, HINT, HINTS, ZONE, DOOR_STATES, SLIDE_SHAPES, SLIDE_COLOR_CHOICES, TOOL_GROUPS, TOOL_FAMILIES, familyOf, CORNER_KINDS, ESCALATOR_DIRECTIONS, PANEL_TYPE_CHOICES } from './tool-info.js';
 import { LED_NAMES } from '../core/leds.js';
 import { objectPicker } from './object-picker.js';
 import { PILLAR_DIAMETERS } from '../core/pillars.js';
 import { FINISHES } from '../core/finishes.js';
 
-/** Knapperad med ett valg: [[verdi, tekst], …]. select(verdi) markerer valget. */
+const toolOf = (id) => TOOLS.find((t) => t.id === id);
+
+/** Knapperad med ett valg: [[verdi, tekst, tittel?], …]. select(verdi) markerer valget. */
 function choices(options, pick) {
-  const buttons = options.map(([value, text]) => [value, h('button', { type: 'button', text, onclick: () => pick(value) })]);
+  const buttons = options.map(([value, text, title]) => [value, h('button', { type: 'button', text, title, onclick: () => pick(value) })]);
   const row = h('div', { class: 'segmented', hidden: true }, buttons.map(([, b]) => b));
   return { row, select: (v) => buttons.forEach(([value, b]) => b.classList.toggle('active', value === v)) };
 }
@@ -20,18 +22,25 @@ function choices(options, pick) {
 export class ToolPanel {
   /** @param a handlinger: tool(id), shape(id), brush(delta), zoneValue(layer, metres), doorState(state), slideTube(bool), slideColor(name), objectId(id), ledColor(index), panelType(index) */
   constructor(a) {
-    this.toolButtons = new Map(
-      TOOLS.map((t) => [
-        t.id,
-        h(
-          'button',
-          { type: 'button', class: 'tool', title: `${t.label} (${t.key})`, onclick: () => a.tool(t.id) },
-          h('kbd', { text: t.key }),
-          h('span', { class: 'swatch', dataset: { tool: t.id } }),
-          h('span', { text: t.label }),
-        ),
-      ]),
-    );
+    // Siste type som ble brukt i hver familie: knappen velger den igjen.
+    this.last = Object.fromEntries(Object.entries(TOOL_FAMILIES).map(([f, { tools }]) => [f, tools[0][0]]));
+    const button = (id, label, title, onclick) =>
+      h('button', { type: 'button', class: 'tool', title, onclick }, h('kbd'), h('span', { class: 'swatch', dataset: { tool: id } }), h('span', { text: label }));
+    const ids = [...TOOL_GROUPS.flatMap(([, list]) => list), ...TOOLS.map((t) => t.id).filter((id) => !familyOf(id))];
+    this.toolButtons = new Map([...new Set(ids)].map((id) => {
+      const family = TOOL_FAMILIES[id];
+      if (!family) return [id, button(id, toolOf(id).label, `${toolOf(id).label} (${toolOf(id).key})`, () => a.tool(id))];
+      const keys = family.tools.map(([t]) => toolOf(t).key).join(', ');
+      return [id, button(id, family.label, `${family.label} (${keys}) – choose the type below`, () => a.tool(this.last[id]))];
+    }));
+    // Typen i familien: én rad per familie, synlig når et av verktøyene er valgt.
+    this.variants = Object.fromEntries(Object.entries(TOOL_FAMILIES).map(([f, { label, tools }]) => {
+      const c = choices(tools.map(([id, text]) => [id, text, `${toolOf(id).label} (${toolOf(id).key})`]), (id) => a.tool(id));
+      c.row.classList.add('variant-row');
+      c.row.setAttribute('role', 'group');
+      c.row.setAttribute('aria-label', `${label} type`);
+      return [f, c];
+    }));
     this.shapeButtons = new Map(
       SHAPES.map((s) => [s.id, h('button', { type: 'button', title: `${s.label} (${s.key})`, text: s.label, onclick: () => a.shape(s.id) })]),
     );
@@ -74,16 +83,16 @@ export class ToolPanel {
       ),
     );
     this.hint = h('p', { class: 'side-hint', text: HINT });
-    this.el = section(
-      'Tools',
-      true,
+    this.el = h(
+      'div',
+      { class: 'tool-panel' },
       ...this._groups(),
-      h('div', { class: 'tool-options' }, this.shapeRow, this.brushRow, this.zoneRow, this.finishRow, this.door.row, this.corner.row, this.pillar.row, this.slide.row, this.slideColor.row, this.escalator.row, this.ledRow, this.panelRow, this.object.row),
+      h('div', { class: 'tool-options' }, ...Object.values(this.variants).map((v) => v.row), this.shapeRow, this.brushRow, this.zoneRow, this.finishRow, this.door.row, this.corner.row, this.pillar.row, this.slide.row, this.slideColor.row, this.escalator.row, this.ledRow, this.panelRow, this.object.row),
       this.hint,
     );
   }
 
-  /** Verktøyknappene i grupper med overskrift (TOOL_GROUPS); resten havner i den siste gruppen. */
+  /** Knappene i grupper med overskrift (TOOL_GROUPS); resten havner i den siste gruppen. */
   _groups() {
     const grouped = new Set(TOOL_GROUPS.flatMap(([, ids]) => ids));
     const rest = [...this.toolButtons.keys()].filter((id) => !grouped.has(id));
@@ -95,7 +104,17 @@ export class ToolPanel {
 
   /** @param s editorens verktøytilstand: { tool, shape, brush, zone, doorState, slideTube, slideColor, ledColor, panelType } */
   sync({ tool, shape, brush, zone, doorState, cornerKind, pillarDiameter, slideTube, slideColor, objectId, escalatorDown, ledColor, panelType }) {
-    for (const [id, b] of this.toolButtons) b.classList.toggle('active', id === tool.id);
+    const family = familyOf(tool.id);
+    if (family) this.last[family] = tool.id;
+    for (const [id, b] of this.toolButtons) {
+      b.classList.toggle('active', id === tool.id || id === family);
+      b.querySelector('kbd').textContent = toolOf(this.last[id] ?? id).key;
+    }
+    for (const [f, v] of Object.entries(this.variants)) {
+      v.row.hidden = f !== family;
+      v.select(tool.id);
+    }
+    this._swatches();
     for (const [id, b] of this.shapeButtons) b.classList.toggle('active', id === shape);
     this.door.select(doorState);
     this.corner.select(cornerKind);
@@ -133,8 +152,15 @@ export class ToolPanel {
   }
 
   syncTheme(theme) {
+    this.floorSwatch = theme.plan.floor;
+    this._swatches();
+  }
+
+  /** Fargeprøvene; en familieknapp viser typen som er valgt i den. */
+  _swatches() {
     for (const [id, b] of this.toolButtons) {
-      b.querySelector('.swatch').style.background = id === 'floor' ? theme.plan.floor : SWATCH[id];
+      const tool = this.last[id] ?? id;
+      b.querySelector('.swatch').style.background = tool === 'floor' ? this.floorSwatch : SWATCH[tool];
     }
   }
 }

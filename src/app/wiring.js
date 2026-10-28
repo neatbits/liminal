@@ -53,6 +53,7 @@ export function bindButtons(app) {
   });
   $('#btn-fit').before(app.storeyBar.root);
   $('#btn-walk-top').onclick = () => app.walk();
+  $('#room-badge').onclick = () => app.sidebar.openRoom(); // navnet i toppfeltet: rominnstillingene
   $('#btn-drift').onclick = () => app.walk({ drift: true });
   const mood = $('#mood-select');
   mood.value = app.settings.mood;
@@ -64,12 +65,6 @@ export function bindButtons(app) {
   light.value = app.settings.light;
   light.onchange = () => {
     app.settings.light = light.value;
-    app.viewer.options.onSettingsChange?.(app.settings);
-  };
-  const size = $('#size-select'); // størrelsen på de uendelige nivåene, fra neste nivå (gen/sizes.js)
-  size.value = app.settings.levelSize;
-  size.onchange = () => {
-    app.settings.levelSize = size.value;
     app.viewer.options.onSettingsChange?.(app.settings);
   };
   // Musikken (audio/music.js) kan også slås av og på i gåmodus (N): knappen følger innstillingen.
