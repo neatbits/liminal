@@ -5,8 +5,10 @@
 // etasjen man står i har speiling og brytning i vannet.
 import { buildWorld } from '../world/build.js';
 import { storeyCount, storeyElevations, spawnStorey } from '../core/storeys.js';
-import { walkLevels, storeyAt } from '../core/stairwells.js';
+import { walkLevels, storeyAt, storeyEntry } from '../core/stairwells.js';
 import { slidePath } from '../core/slides.js';
+import { Climb } from './climb.js';
+import { Lifts } from './lifts.js';
 
 const OVERVIEW_BOOST = 1.15; // som etasje 0 i oversikten (view3d/look.js)
 
@@ -23,6 +25,8 @@ export class Storeys {
     this.spawn = 0; // etasjen man starter i (room.spawnStorey)
     viewer.walk.beforeEnter = () => this.enter(this.spawn); // gåing (og «våkn opp») starter der
     viewer.walk.dropAt = (w) => this.dropAt(w); // sklier ned til etasjen under (core/slide-drops.js)
+    viewer.walk.climb = new Climb(this); // stiger mellom etasjer (core/ladders.js)
+    viewer.walk.lift = new Lifts(this); // heiser (core/elevators.js)
   }
 
   get worlds() {
@@ -50,6 +54,7 @@ export class Storeys {
       for (const key of Object.keys(stats)) stats[key] += world.stats[key];
     });
     this._apply();
+    this.v.walk.lift.reset();
     return { world: this.all[0], level: this.levels[0], stats };
   }
 
@@ -80,6 +85,8 @@ export class Storeys {
 
   /** Ut av gåmodus (viewer.exitWalk): tilbake til etasje 0, som er oversiktens verden. */
   leave() {
+    this.v.walk.climb.stop();
+    this.v.walk.lift.stop();
     if (this.current) this._switch(0, false);
   }
 
@@ -90,13 +97,9 @@ export class Storeys {
     this._apply();
   }
 
-  /** Der man kommer inn i etasje k: reposet fra trappen nedenfra, ellers foten av trappen opp (eller null). */
+  /** Der man kommer inn i etasje k (trapp eller stige), eller null. */
   entry(k) {
-    const well = this.wells.find((x) => x.k + 1 === k) ?? this.wells.find((x) => x.k === k);
-    if (!well) return null;
-    const { w } = this.levels[0];
-    const i = well.k + 1 === k ? well.landing : well.run[0];
-    return { x: (i % w) + 0.5, z: Math.floor(i / w) + 0.5 };
+    return storeyEntry(this.levels, this.wells, k);
   }
 
   /**
@@ -117,7 +120,7 @@ export class Storeys {
 
   /** Hver ramme i gåmodus: bytt etasje om man har krysset midten av et repos. */
   follow() {
-    if (!this.wells.length || this.v.walk.rider.active) return;
+    if (!this.wells.length || this.v.walk.rider.active || this.v.walk.climb.active) return;
     const w = this.v.walk.walker;
     const k = storeyAt(this.wells, this.current, w.x, w.z, this.levels[0].w);
     if (k !== this.current) this.enter(k);
@@ -165,8 +168,29 @@ export class Storeys {
     this.all.forEach((world, k) => (world.group.visible = this.walking ? Math.abs(k - this.current) <= 1 : k <= this.shown));
   }
 
+  /**
+   * Et område i Noclip (view3d/zones.js) blir den verdenen man går i: samme punkt, ingen ombygging. Verdenen eies av
+   * områdene (world.zone), så den kastes ikke her.
+   */
+  adopt(level, world) {
+    this.dispose();
+    [this.all, this.levels, this.wells, this.at, this.current, this.spawn] = [[world], [level], [], [0], 0, 0];
+    const v = this.v;
+    v.level = level;
+    v.walk.base = 0;
+    world.water?.setQuality(v.settings.waterReflections);
+    world.water?.setSize(v._rtW, v._rtH);
+    world.floorReflection?.setSize(v._rtW, v._rtH);
+    v.world = world;
+    v.walk.lift.reset(); // før setWorld: heisene fra forrige bygg skal ikke gjelde området
+    v.walk.setWorld(level, world.theme, world.field, world.doors, world);
+    this._apply();
+    v._applyLook();
+  }
+
   dispose() {
     for (const world of this.all) {
+      if (world.zone) continue; // områdene i Noclip eier sine egne verdener
       this.v.scene.remove(world.group);
       world.dispose();
     }

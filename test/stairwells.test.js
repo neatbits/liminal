@@ -110,7 +110,7 @@ describe('kjøpesenter med etasjer', () => {
   it('bare øverste etasje får glasstaket, og Mall-galleriet (dekker) beholdes', async () => {
     const { generateLevel } = await import('../src/gen/index.js');
     const { mallRoof } = await import('../src/core/mall-roof.js');
-    const mall = generateLevel({ theme: 'mall', w: 40, h: 28, seed: 3 });
+    const mall = generateLevel({ theme: 'mall', w: 40, h: 28, seed: 3, layout: 'classic' });
     expect(mallRoof(mall)).not.toBeNull();
     insertStorey(mall, 1, copyStorey(mall, 0));
     const { levels } = walkLevels(mall);

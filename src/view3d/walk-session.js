@@ -9,7 +9,10 @@ export class WalkSession {
     this.focused = true;
     this.touch = globalThis.matchMedia?.('(pointer: coarse)').matches ?? false;
     window.addEventListener('keydown', (e) => {
-      if (walk.active && !this.paused && e.code === 'KeyE' && !e.repeat && !e.ctrlKey && !e.metaKey && !isTyping(e)) walk.useDoor();
+      if (!walk.active || this.paused || e.repeat || e.ctrlKey || e.metaKey || isTyping(e)) return;
+      if (e.code === 'KeyE') walk.useDoor();
+      else if (e.code === 'KeyC') this.crawl();
+      else if (e.code === 'KeyF') this.flash();
     });
     document.addEventListener('pointerlockchange', () => this.syncLock());
     window.addEventListener('blur', () => {
@@ -18,6 +21,18 @@ export class WalkSession {
     });
     window.addEventListener('focus', () => { this.focused = true; });
     document.addEventListener('visibilitychange', () => document.hidden && walk.active && this.setPaused(true));
+  }
+
+  /** C (eller knappen på mobil): ned på alle fire, eller opp igjen. */
+  crawl() {
+    const w = this.walk;
+    if (w.active && !this.paused && !w.climb?.active && !w.rider.active) w.walker.toggleCrawl();
+  }
+
+  /** F (eller knappen på mobil): lommelykten. */
+  flash() {
+    const w = this.walk;
+    if (w.active && !this.paused) w.flashlight.toggle(w.sound ? w.audio : null);
   }
 
   syncLock() {

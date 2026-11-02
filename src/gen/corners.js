@@ -19,6 +19,7 @@ const STYLE = {
   mall: [0.05, 0.25],
   school: [0.06, 0.03],
   ward: [0.08, 0.06],
+  airport: [0.12, 0.1],
 };
 const NONE = 0.35; // så ofte et nivå ikke får noen
 

@@ -24,12 +24,16 @@ og da kjører Electron som vanlig Node: «does not provide an export named 'Brow
   Egen, sikker opprinnelse, så `localStorage` (rom, utkast, innstillinger, kassettfremgang) lagres
   i programmets brukermappe (Windows: `%APPDATA%/Liminal Simulator/`, satt fast i `main.mjs`,
   siden den urørte exe-en ikke har produktnavnet i seg).
-- Starter i simulatoren (`app/index.html`) med **startmenyen** (`src/app/start-menu.js`): Game mode,
-  Continue, New room, Examples, My rooms, Settings, About & credits og Quit. Logoen øverst og
+- Starter i simulatoren (`app/index.html`) med **startmenyen** (`src/app/start-menu.js`) foran et Level 0 i 3D (`app/menu-backdrop.js`):
+  Play (alle spillene), Create (Continue, New room, Examples, My rooms), Settings, About & credits og Quit. Logoen øverst og
   File → Main menu åpner den igjen; File → Quit og Ctrl+Q avslutter. `window.liminalDesktop`
   (`desktop/preload.cjs`) slår dette på; på nettsiden er alt som før (`scripts/check-start-menu.mjs`
-  prøver begge). Forsiden har ingen reklameplass i programmet. Lenker ut åpnes i nettleseren;
-  egne sider (About fra dialogen) i samme vindu.
+  prøver begge). Lenker ut åpnes i nettleseren; egne sider (About) i samme vindu.
+- Minst mulig nettsted: forsiden vises aldri – lenker dit (logoen, «Home») går til simulatoren
+  (`insteadOfFrontPage` i `desktop/files.mjs`, brukt av `main.mjs`). About-siden får klassen `in-app`
+  (`src/about.js`): «← Back to Liminal» i stedet for nettstedsmenyen, ingen bunntekst, og tekstene for
+  programmet (`data-app`) i stedet for nettleseren (`data-web`). Skulle forsiden likevel lastes, har den
+  ingen reklameplass.
 - Ikonet (`desktop/icon.png`, 512 × 512 med gjennomsiktige hjørner) er korridoren fra forsiden.
 - Delte lenker: «Share link» i programmet lager lenker til `https://liminalsimulator.com/app/#room=…`
   (`WEB_APP` i `core/share-link.js`), siden programmets egen adresse (`app://…`) ikke virker for

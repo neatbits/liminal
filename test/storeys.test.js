@@ -21,18 +21,24 @@ function room() {
 const at = (level, x, z) => z * level.w + x;
 
 describe('etasjer', () => {
-  it('legger til, kopierer og fjerner etasjer, med felles tema og høyst MAX_STOREYS', () => {
+  it('legger til, kopierer og fjerner etasjer, med felles himmel, eget tema og høyst MAX_STOREYS', () => {
     const r = room();
     expect(storeyCount(r)).toBe(1);
     expect(insertStorey(r, 1)).toBe(1);
     expect(storeyLevel(r, 1).tiles.every((t) => t === TILE.WALL)).toBe(true);
+    expect(storeyLevel(r, 1).theme).toBe('hotel'); // ny etasje: rommets tema
     expect(insertStorey(r, 2, copyStorey(r, 0))).toBe(2);
     expect(storeyLevel(r, 2).tiles).toEqual(r.tiles);
     expect(storeyLevel(r, 2).tiles).not.toBe(r.tiles);
     expect(storeyLevel(r, 2).storeys).toBeUndefined();
     r.theme = 'office';
     r.sky = 'night';
-    expect(storeyLevel(r, 1)).toMatchObject({ theme: 'office', sky: 'night' });
+    storeyLevel(r, 2).theme = 'pool';
+    expect(storeyLevel(r, 1)).toMatchObject({ theme: 'hotel', sky: 'night' }); // temaet hører til etasjen
+    expect(storeyLevel(r, 2)).toMatchObject({ theme: 'pool', sky: 'night' });
+    expect(copyStorey(r, 2).theme).toBe('pool');
+    delete r.storeys[0].theme; // eldre rom: etasjen har rommets tema
+    expect(storeyLevel(r, 1).theme).toBe('office');
     while (storeyCount(r) < MAX_STOREYS) insertStorey(r, 1);
     expect(insertStorey(r, 1)).toBe(-1);
     expect(removeStorey(r, MAX_STOREYS)).toBe(false);
@@ -129,7 +135,7 @@ describe('etasjer i romformatet', () => {
     const r = building();
     const json = JSON.parse(JSON.stringify(levelToJSON(r)));
     expect(json.v).toBe(VERSION);
-    expect(VERSION).toBe(4);
+    expect(VERSION).toBe(5);
     expect(json.storeys).toHaveLength(2);
     expect(json.storeys[0].name).toBeUndefined();
     expect(json.storeys[0].sky).toBeUndefined();
@@ -213,6 +219,24 @@ describe('startetasje og etasje under', () => {
     expect(removeStorey(r, 0)).toBe(true);
     expect(storeyCount(r)).toBe(1);
     expect(removeStorey(r, 0)).toBe(false);
+  });
+
+  it('lagrer temaet per etasje (bare når det er et annet), leser eldre filer og flytter det med etasjen', () => {
+    const r = room();
+    insertStorey(r, 1);
+    insertStorey(r, 2);
+    storeyLevel(r, 2).theme = 'pool';
+    const json = levelToJSON(r);
+    expect(json.storeys.map((s) => s.theme)).toEqual([undefined, 'pool']);
+    const back = levelFromJSON(JSON.parse(JSON.stringify(json)));
+    expect([0, 1, 2].map((k) => storeyLevel(back, k).theme)).toEqual(['hotel', 'hotel', 'pool']);
+    // Kjeller under: rommets tema blir med opp; fjernes etasje 0, tar etasjen over med seg sitt tema.
+    r.storeys[0].theme = 'office';
+    insertBelow(r);
+    expect([0, 1, 2, 3].map((k) => storeyLevel(r, k).theme)).toEqual(['hotel', 'hotel', 'office', 'pool']);
+    removeStorey(r, 0);
+    removeStorey(r, 0);
+    expect(r.theme).toBe('office');
   });
 
   it('lagrer startetasjen og hver etasjes startpunkt, og angrer flytting av startpunktet', () => {

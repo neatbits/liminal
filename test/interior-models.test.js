@@ -88,7 +88,7 @@ describe('nye interiørmodeller', () => {
     };
     for (const [theme, wanted] of Object.entries(expected)) {
       const themed = new Set();
-      for (const seed of [1, 2, 3, 4]) {
+      for (const seed of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) { // planløsningene har ulikt innhold
         const l = generateLevel({ theme, w: 44, h: 38, seed });
         for (const o of l.objects.filter(o => INTERIOR_OBJECTS[o.id])) {
           seen.add(o.id); themed.add(o.id);
@@ -103,5 +103,5 @@ describe('nye interiørmodeller', () => {
       const l = generateLevel({ theme, w: 40, h: 32, seed: 1 });
       expect(l.objects.some(o => INTERIOR_OBJECTS[o.id])).toBe(false);
     }
-  });
+  }, 30000); // 54 hele nivåer: rundt 2,5 s, men over 5 s når maskinen er travel
 });

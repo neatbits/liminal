@@ -145,3 +145,14 @@
 .l-foot a {
   color: inherit;
 }
+
+/* About-siden i programmet (src/about.js): tekst for nettleseren eller programmet, ingen bunntekst. */
+[data-app],
+.in-app [data-web],
+.in-app .l-foot {
+  display: none;
+}
+
+.in-app [data-app] {
+  display: revert;
+}

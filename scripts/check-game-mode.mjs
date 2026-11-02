@@ -15,7 +15,9 @@ export async function checkGameMode(browser, origin) {
 
   await call('Page.navigate', { url: `${origin}/` });
   await waitFor(() => evaluate('document.readyState === "complete"').catch(() => false), 'landing');
-  assert.equal(await evaluate(`document.querySelector('.l-hero a[href="app/#play"]')?.textContent.includes('Game mode')`), true, 'landing has a Game mode button');
+  assert.deepEqual(await evaluate(`[...document.querySelectorAll('#play .l-mode')].map((a) => [a.getAttribute('href'), a.querySelector('h3').firstChild.textContent.trim()])`),
+    [['app/#play', 'Tape hunt'], ['app/#lights', 'Lights out'], ['app/#daily', 'Daily level']], 'landing has the three game modes');
+  assert.equal(await evaluate(`document.querySelector('.l-hero a[href="#play"]')?.textContent.includes('Play')`), true, 'the hero leads to them');
 
   await open('#play', 'Boolean(window.liminal?.viewer.world) && Boolean(document.querySelector(\'.modal[aria-label="Game mode"]\'))');
   const dialog = await evaluate(`(() => {
@@ -24,7 +26,7 @@ export async function checkGameMode(browser, origin) {
       newRoom: Boolean(document.querySelector('.modal[aria-label="New room"]')), home: liminal.level.name };
   })()`);
   assert.equal(dialog.hash, '');
-  assert.deepEqual(dialog.moods, ['Normal', 'Abandoned', 'Liminal', 'Uncanny', 'Nightmare']);
+  assert.deepEqual(dialog.moods, ['Normal', 'Abandoned', 'Liminal', 'Uncanny', 'Nightmare'], 'only the mood is chosen here');
   assert.equal(dialog.newRoom, false, 'no New room dialog in front');
   await evaluate(`(() => {
     const m = document.querySelector('.modal[aria-label="Game mode"]');

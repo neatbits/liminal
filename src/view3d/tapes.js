@@ -1,8 +1,9 @@
 // VHS-kassetter i gåmodus: små, svarte kassetter med etikett som ligger rundt i rommet
 // (plassert av gen/tapes.js). Man plukker dem opp ved å gå bort til dem. Fargen tar lyset
-// fra lysfeltet der kassetten ligger, og dempes under strømbrudd.
+// fra lysfeltet der kassetten ligger, og dempes under strømbrudd. I lommelykten vises de uansett.
 import * as THREE from 'three';
 import { placeTapes } from '../gen/tapes.js';
+import { withFlash } from '../world/flashlight.js';
 
 const REACH = 0.7; // hvor nær man må gå (m)
 const shell = new THREE.BoxGeometry(0.188, 0.025, 0.104);
@@ -51,8 +52,8 @@ export class Tapes {
   _add(t, field) {
     const s = field.sample(t.x, t.y + 0.03, t.z, 0, 1, 0);
     const light = new THREE.Color(s[0], s[1], s[2]);
-    const body = new THREE.MeshBasicMaterial();
-    const paper = new THREE.MeshBasicMaterial();
+    const body = withFlash(new THREE.MeshBasicMaterial(), [0.06, 0.06, 0.065]);
+    const paper = withFlash(new THREE.MeshBasicMaterial(), [0.92, 0.88, 0.78]);
     const mesh = new THREE.Group();
     mesh.add(new THREE.Mesh(shell, body), new THREE.Mesh(label, paper));
     mesh.position.set(t.x, t.base + t.y + 0.0125, t.z);

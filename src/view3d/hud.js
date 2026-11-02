@@ -1,5 +1,6 @@
 // HUD over 3D-vinduet: gålinje, hint, VHS-tekst, lastemelding, korte beskjeder og plask.
-import { getMood, MOODS } from '../gen/moods.js';
+import { getMood } from '../gen/moods.js';
+import { WALKBAR_HTML } from './hud-walkbar.js';
 
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
@@ -14,24 +15,7 @@ export class Hud {
   /** @param actions { exit(), resume(), vhs(), sound(), music(), photo(), mood(), setMood(id), drift() } */
   constructor(root, actions) {
     this.root = el('div', 'hud');
-    this.walkbar = el(
-      'div',
-      'hud-walkbar',
-      `<button type="button" data-act="resume" class="hud-resume" title="Keep walking (or click anywhere)">▶ Resume</button>
-       <span class="hud-badge">Walking</span>
-       <span class="hud-stats"></span>
-       <span class="hud-extra"></span>
-       <button type="button" data-act="drift" title="Dream walk: drift slowly through the rooms on your own (G)">Drift</button>
-       <button type="button" data-act="photo" title="Take a photo (P)">📷 Photo</button>
-       <button type="button" data-act="vhs" class="hud-toggle" aria-pressed="false" title="VHS filter (V)">VHS</button>
-       <button type="button" data-act="mood" class="hud-mood" title="Mood: Normal → Abandoned → Liminal → Uncanny → Nightmare (X)">Liminal</button>
-       <div class="hud-moods" role="group" aria-label="Mood (X)"><span>Mood</span>${Object.entries(MOODS)
-         .map(([id, m]) => `<button type="button" data-pick="${id}" aria-pressed="false" title="${m.hint}">${m.label}</button>`).join('')}</div>
-       <button type="button" data-act="sound" class="hud-toggle" aria-pressed="true" title="Sound on/off (M)">Sound</button>
-       <button type="button" data-act="music" class="hud-toggle" aria-pressed="false" title="Music on/off (N)">Music</button>
-       <button type="button" data-act="exit" title="Back to the editor (Esc)">✕ Exit</button>
-       <p class="hud-help">Click anywhere to keep walking · WASD to walk, Shift to run · Esc again to exit</p>`,
-    );
+    this.walkbar = el('div', 'hud-walkbar', WALKBAR_HTML); // pausepanelet (view3d/hud-walkbar.js)
     this.hint = el('div', 'hud-hint');
     this.vhs = el('div', 'hud-vhs', '<span class="vhs-play">PLAY ▶</span><span class="vhs-speed">SP</span><span class="vhs-time"></span>');
     this.loading = el('div', 'hud-loading', 'Building the room …');
@@ -159,6 +143,7 @@ export class Hud {
     m.textContent = `Mood: ${getMood(mood).label}`;
     m.dataset.mood = mood;
     for (const b of this.walkbar.querySelectorAll('[data-pick]')) b.setAttribute('aria-pressed', String(b.dataset.pick === mood));
+    this.walkbar.querySelector('.hud-mood-hint').textContent = getMood(mood).hint ?? ''; // hva stemningen gjør (på pause)
     // Av/på vises både med farge og ikon, og leses opp (aria-pressed).
     const toggle = (act, on, icons) => {
       const b = this.walkbar.querySelector(`[data-act="${act}"]`);

@@ -2,9 +2,10 @@
 // fra vannsklier, dører og skumle lyder i rykk og napp (eerie.js). Romklangen følger rommet man
 // står i (space.js), og bakgrunnslydene – musikk, regn, stillhet – styres av ambient.js.
 import { noiseBuffer, footstepBuffers, buzzBuffer, dripBuffer, thumpBuffer } from './synth.js';
-import { createSpace } from './space.js';
+import { createSpace, warmSpace } from './space.js';
 import { Ambient } from './ambient.js';
 import { eerieBuffer, playAround, pickEerie } from './eerie.js';
+import { EeriePool } from './eerie-pool.js';
 import { slideRush, splash, door, shutter, staticHiss, power, pickup } from './effects.js';
 import { createStepBuses, playStep } from './footsteps.js';
 import { PlacedAudio } from './placed-audio.js';
@@ -41,6 +42,7 @@ export class AudioEngine {
     this.buzz = buzzBuffer(this.ctx);
     this.drip = dripBuffer(this.ctx);
     this.thump = thumpBuffer(this.ctx);
+    this.eerie = new EeriePool(this.ctx); // de skumle lydene, laget i bakgrunnen
     return true;
   }
 
@@ -48,6 +50,7 @@ export class AudioEngine {
   start(theme) {
     if (!this.enabled || !this._ensure()) return;
     this.ctx.resume();
+    this.eerie?.prepare([...theme.sound.eerie, ...(this.eerieExtra ?? [])]);
     if (this.themeId !== theme.id) {
       this._teardown();
       this.graph = this._build(theme.sound);
@@ -57,6 +60,13 @@ export class AudioEngine {
     }
     this.playing = true;
     this._syncVolume(0.6);
+  }
+
+  /** Forbereder lydbildet for et tema man snart kommer til (romklangen), uten å starte noe. */
+  prepare(theme) {
+    if (!this.ctx || this.themeId === theme.id) return;
+    warmSpace(this.ctx, theme.sound);
+    this.eerie?.prepare(theme.sound.eerie);
   }
 
   stop() {
@@ -234,7 +244,8 @@ export class AudioEngine {
     // Små lyder (drypp/dunk) ofte, skumle lyder av og til – av og til to-tre tett på hverandre.
     if (this.burst > 0 || Math.random() < 0.45) {
       const name = pickEerie(sound.eerie, this.eerieExtra); // eerieExtra: stemningens egne (look.js)
-      playAround(this.ctx, eerieBuffer(this.ctx, name), this.graph.stepBus, sound.eerieGain ?? 0.5);
+      const buf = this.eerie ? this.eerie.take(name) : eerieBuffer(this.ctx, name); // laget i bakgrunnen (audio/eerie-pool.js); ikke klar: hoppes over
+      if (buf) playAround(this.ctx, buf, this.graph.stepBus, sound.eerieGain ?? 0.5);
       if (this.burst > 0) this.burst--;
       else if (Math.random() < 0.3) this.burst = 1 + Math.floor(Math.random() * 2);
     } else if (sound.drips) {

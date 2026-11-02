@@ -1,0 +1,653 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 12655,
+      "max": [
+        1.066148042678833,
+        1.516007900238037,
+        1.7291064262390137
+      ],
+      "min": [
+        -1.066148042678833,
+        -1.4909958839416504,
+        2.950429916381836e-06
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 151860,
+      "componentType": 5126,
+      "count": 12655,
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 12655,
+      "max": [
+        1.0,
+        0.9999966621398926,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 12655,
+      "max": [
+        0.7473382949829102,
+        1.0
+      ],
+      "min": [
+        0.0,
+        0.0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 101240,
+      "componentType": 5126,
+      "count": 12655,
+      "max": [
+        0.993494987487793,
+        0.9939839839935303
+      ],
+      "min": [
+        0.006015889346599579,
+        0.006015896797180176
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 51354,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 303720,
+      "componentType": 5126,
+      "count": 4608,
+      "max": [
+        1.0144333839416504,
+        1.4154404401779175,
+        1.0314617156982422
+      ],
+      "min": [
+        -1.0108400583267212,
+        -1.4174015522003174,
+        0.3938049376010895
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 359016,
+      "componentType": 5126,
+      "count": 4608,
+      "max": [
+        1.0,
+        0.9999999403953552,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "byteOffset": 202480,
+      "componentType": 5126,
+      "count": 4608,
+      "max": [
+        0.9999999403953552,
+        0.9321123957633972,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -0.8953834176063538,
+        -1.0,
+        -1.0,
+        1.0
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 202480,
+      "componentType": 5126,
+      "count": 4608,
+      "max": [
+        0.9870511889457703,
+        0.9909601211547852
+      ],
+      "min": [
+        0.10588246583938599,
+        0.004112422466278076
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 239344,
+      "componentType": 5126,
+      "count": 4608,
+      "max": [
+        0.9673606753349304,
+        0.9923739433288574
+      ],
+      "min": [
+        0.006015889346599579,
+        0.006015896797180176
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 205416,
+      "componentType": 5125,
+      "count": 16656,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 414312,
+      "componentType": 5126,
+      "count": 9050,
+      "max": [
+        1.0054163932800293,
+        1.3843944072723389,
+        1.4424638748168945
+      ],
+      "min": [
+        -0.9207895994186401,
+        0.6399150490760803,
+        0.9452634453773499
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 522912,
+      "componentType": 5126,
+      "count": 9050,
+      "max": [
+        0.9997926950454712,
+        0.9997893571853638,
+        0.9996418952941895
+      ],
+      "min": [
+        -0.9999192953109741,
+        -0.999941349029541,
+        -0.9998881220817566
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "byteOffset": 276208,
+      "componentType": 5126,
+      "count": 9050,
+      "max": [
+        0.9460979700088501,
+        0.9996873736381531,
+        0.9999574422836304,
+        1.0
+      ],
+      "min": [
+        -0.9999424815177917,
+        -0.9998427033424377,
+        -0.9999622702598572,
+        -1.0
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 276208,
+      "componentType": 5126,
+      "count": 9050,
+      "max": [
+        0.8104870319366455,
+        1.0
+      ],
+      "min": [
+        0.0,
+        0.0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 348608,
+      "componentType": 5126,
+      "count": 9050,
+      "max": [
+        0.9934394359588623,
+        0.9930720925331116
+      ],
+      "min": [
+        0.04791182279586792,
+        0.006015889346599579
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 272040,
+      "componentType": 5125,
+      "count": 41058,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "BATRIC_18 (https://sketchfab.com/BATRIC_18)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/victorian-bed-c56b0776992041648ba5c1615f6e1fed",
+      "title": "Victorian Bed"
+    },
+    "generator": "Sketchfab-14.87.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 436272,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 421008,
+      "byteOffset": 436272,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 631512,
+      "byteOffset": 857280,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 421008,
+      "byteOffset": 1488792,
+      "byteStride": 16,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 1909800,
+      "uri": "scene.bin"
+    }
+  ],
+  "images": [
+    {
+      "uri": "textures/bed_wood_material_baseColor.png"
+    },
+    {
+      "uri": "textures/bed_wood_material_metallicRoughness.png"
+    },
+    {
+      "uri": "textures/bed_wood_material_normal.png"
+    },
+    {
+      "uri": "textures/bed_mattres_material_baseColor.png"
+    },
+    {
+      "uri": "textures/bed_mattres_material_metallicRoughness.png"
+    },
+    {
+      "uri": "textures/bed_mattres_material_normal.png"
+    },
+    {
+      "uri": "textures/bed_pillow_material_baseColor.png"
+    },
+    {
+      "uri": "textures/bed_pillow_material_metallicRoughness.png"
+    },
+    {
+      "uri": "textures/bed_pillow_material_normal.png"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "bed_wood_material",
+      "normalTexture": {
+        "index": 2
+      },
+      "occlusionTexture": {
+        "index": 1
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 1
+        }
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "bed_mattres_material",
+      "normalTexture": {
+        "index": 5
+      },
+      "occlusionTexture": {
+        "index": 4
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 3
+        },
+        "metallicRoughnessTexture": {
+          "index": 4
+        }
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "bed_pillow_material",
+      "normalTexture": {
+        "index": 8
+      },
+      "occlusionTexture": {
+        "index": 7
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 6
+        },
+        "metallicRoughnessTexture": {
+          "index": 7
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "victorian_bed_wood_bed_wood_material_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TANGENT": 2,
+            "TEXCOORD_0": 3,
+            "TEXCOORD_1": 4
+          },
+          "indices": 5,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "victorian_bed_mattres_bed_mattres_material_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 7,
+            "POSITION": 6,
+            "TANGENT": 8,
+            "TEXCOORD_0": 9,
+            "TEXCOORD_1": 10
+          },
+          "indices": 11,
+          "material": 1,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "pollows_bed_pillow_material_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 13,
+            "POSITION": 12,
+            "TANGENT": 14,
+            "TEXCOORD_0": 15,
+            "TEXCOORD_1": 16
+          },
+          "indices": 17,
+          "material": 2,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Sketchfab_model"
+    },
+    {
+      "children": [
+        2
+      ],
+      "matrix": [
+        0.009999999776482582,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.009999999776482582,
+        0.0,
+        0.0,
+        -0.009999999776482582,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Victorian Bed.fbx"
+    },
+    {
+      "children": [
+        3,
+        5,
+        7
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        4
+      ],
+      "matrix": [
+        100.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.629206793918314e-05,
+        -99.99999999999868,
+        0.0,
+        0.0,
+        99.99999999999868,
+        -1.629206793918314e-05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "victorian_bed_wood"
+    },
+    {
+      "mesh": 0,
+      "name": "victorian_bed_wood_bed_wood_material_0"
+    },
+    {
+      "children": [
+        6
+      ],
+      "matrix": [
+        100.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.629206793918314e-05,
+        -99.99999999999868,
+        0.0,
+        0.0,
+        99.99999999999868,
+        -1.629206793918314e-05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "victorian_bed_mattres"
+    },
+    {
+      "mesh": 1,
+      "name": "victorian_bed_mattres_bed_mattres_material_0"
+    },
+    {
+      "children": [
+        8
+      ],
+      "matrix": [
+        100.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.629206793918314e-05,
+        -99.99999999999868,
+        0.0,
+        0.0,
+        99.99999999999868,
+        -1.629206793918314e-05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "pollows"
+    },
+    {
+      "mesh": 2,
+      "name": "pollows_bed_pillow_material_0"
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Sketchfab_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    },
+    {
+      "sampler": 0,
+      "source": 3
+    },
+    {
+      "sampler": 0,
+      "source": 4
+    },
+    {
+      "sampler": 0,
+      "source": 5
+    },
+    {
+      "sampler": 0,
+      "source": 6
+    },
+    {
+      "sampler": 0,
+      "source": 7
+    },
+    {
+      "sampler": 0,
+      "source": 8
+    }
+  ]
+}

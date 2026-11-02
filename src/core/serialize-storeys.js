@@ -1,10 +1,11 @@
-// Etasjene over etasje 0 i romformatet (v4): `storeys: [{ height, waterDepth, rows, …lag, slides,
-// objects }]`. Hver etasje lagres som et rom uten byggets felles felt; serialize.js gir funksjonene
-// for ett rom inn som argumenter (ingen sirkulær import).
+// Etasjene over etasje 0 i romformatet (v4): `storeys: [{ theme?, height, waterDepth, rows, …lag, slides,
+// objects }]`. Hver etasje lagres som et rom uten byggets felles felt; temaet bare når det er et annet
+// enn rommets (eldre filer har det ikke). serialize.js gir funksjonene for ett rom inn som argumenter
+// (ingen sirkulær import).
 import { MAX_STOREYS, SHARED, storeyCount } from './storeys.js';
 
 /** Felt som hører til rommet/bygget og derfor ikke lagres per etasje. */
-const ROOM_KEYS = ['format', 'v', 'name', 'theme', 'w', 'h', 'storeys', 'spawnStorey', ...SHARED];
+const ROOM_KEYS = ['format', 'v', 'name', 'w', 'h', 'storeys', 'spawnStorey', ...SHARED];
 
 /** @param toJSON levelToJSON for ett rom */
 export function storeysToJSON(room, toJSON) {
@@ -12,6 +13,7 @@ export function storeysToJSON(room, toJSON) {
   return room.storeys.map((s) => {
     const json = toJSON({ ...s, storeys: undefined });
     for (const key of ROOM_KEYS) delete json[key];
+    if (json.theme === room.theme) delete json.theme;
     return json;
   });
 }
@@ -25,7 +27,7 @@ export function storeysFromJSON(room, list, fromJSON, base) {
   if (!Array.isArray(list) || list.length > MAX_STOREYS - 1) throw new Error('Invalid floors in the room.');
   room.storeys = list.map((data) => {
     if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Invalid floors in the room.');
-    const s = fromJSON({ ...data, ...base, name: room.name, theme: room.theme, w: room.w, h: room.h, storeys: undefined });
+    const s = fromJSON({ ...data, ...base, name: room.name, theme: data.theme ?? room.theme, w: room.w, h: room.h, storeys: undefined });
     for (const key of SHARED) s[key] = room[key];
     return s;
   });

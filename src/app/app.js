@@ -38,6 +38,10 @@ export class App {
     this.viewer = createViewer($('#viewport3d'), {
       settings: this.settings,
       onModeChange: (mode) => {
+        if (mode !== 'walk') {
+          this.afterGame?.(); // spill startet fra hovedmenyen: tilbake dit (app/actions.js)
+          this.afterGame = null;
+        }
         $('#btn-walk-top').classList.toggle('active', mode === 'walk');
         $('#view-settings').hidden = mode === 'walk'; // gåmodus har egne knapper i HUD-en
       },
@@ -97,7 +101,7 @@ export class App {
   }
 
   setTheme(id) {
-    this.level.theme = getTheme(id).id;
+    this.editor.level.theme = getTheme(id).id; // etasjen som tegnes (hver etasje har sitt tema)
     this.mutated();
   }
 
@@ -118,7 +122,7 @@ export class App {
 
   /** Takhøyde/vanndybde for etasjen, himmel/lysfarge for bygget: også skissen må tegnes på nytt. */
   setRoomProp(key, value) {
-    (key === 'height' || key === 'waterDepth' ? this.editor.level : this.level)[key] = value;
+    (key === 'height' || key === 'waterDepth' || key === 'look' ? this.editor.level : this.level)[key] = value;
     this.editor.refresh();
     this.changed('live');
   }
@@ -133,7 +137,7 @@ export class App {
 
   fillLights() {
     this.editor.checkpoint();
-    autoLights(this.editor.level, { spacing: getTheme(this.level.theme).lightSpacing, flicker: 0.04, broken: 0.03 });
+    autoLights(this.editor.level, { spacing: getTheme(this.editor.level.theme).lightSpacing, flicker: 0.04, broken: 0.03 });
     this.mutated();
   }
 
@@ -192,7 +196,7 @@ export class App {
     this._pending3D = null;
     this._stale3D = false;
     const s = this.viewer.setLevel(this.level);
-    $('#status-build').textContent = s ? `3D built in ${s.ms} ms · ${s.vertices.toLocaleString('en-US')} vertices · ${s.lights} lights` : '3D unavailable · 2D editor ready';
+    this.sidebar.syncBuild(s); // byggetid og størrelse under Key figures (Room-fanen)
   }
 
   _saveDraftSoon() {
@@ -210,9 +214,10 @@ export class App {
 
   _refreshUI() {
     const floor = this.editor.level; // etasjen som tegnes: egen takhøyde, vanndybde, frø og tall
-    this.sidebar.syncLevel({ ...this.level, height: floor.height, waterDepth: floor.waterDepth, seed: floor.seed });
+    this.sidebar.syncLevel({ ...this.level, theme: floor.theme, height: floor.height, waterDepth: floor.waterDepth, seed: floor.seed });
     this.sidebar.syncStats(levelStats(floor));
     this.storeyBar?.sync(this.editor.storey, storeyCount(this.level));
+    this.sidebar.syncFloor(this.editor.storey, storeyCount(this.level));
     this.viewer.showStorey(this.editor.storey);
     this._refreshBadge();
     $('#btn-undo').disabled = !this.editor.history.canUndo;

@@ -21,7 +21,7 @@ describe('kjøpesenteret', () => {
 
   it('trappene går fra atriegulvet helt opp til dekket', () => {
     for (let seed = 1; seed <= 6; seed++) {
-      const level = generateLevel({ theme: 'mall', w: 56, h: 40, seed });
+      const level = generateLevel({ theme: 'mall', w: 56, h: 40, seed, layout: 'classic' });
       let tops = 0;
       for (let i = 0; i < level.tiles.length; i++) {
         if (level.tiles[i] !== TILE.STAIRS) continue;
@@ -45,7 +45,7 @@ describe('kjøpesenteret', () => {
   });
 
   it('små rom blir en vanlig hall uten dekke, og temaet har egne lyder', () => {
-    const level = generateLevel({ theme: 'mall', w: 12, h: 12, seed: 1 });
+    const level = generateLevel({ theme: 'mall', w: 12, h: 12, seed: 1, layout: 'classic' });
     expect(level.decks.some((d) => d)).toBe(false);
     expect(getTheme('mall').sound.eerie).toContain('muzak');
   });

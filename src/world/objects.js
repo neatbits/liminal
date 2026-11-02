@@ -7,12 +7,13 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { OBJECTS, poser } from '../core/objects.js';
 import { VERT, FRAG } from './object-shader.js';
 import { buildProp, propKey } from './props.js';
-import { bakeLight } from './object-light.js';
+import { bakeLightSliced } from './object-light.js';
 import { arcadeParts } from './arcade-textures.js';
 import { contactShadows } from './contact-shadows.js';
 import { batchMeshes } from './object-batches.js';
 import { mergeParts } from './object-parts.js';
 import { tipOrigin, tipQuaternion } from '../core/object-tip.js';
+import { animatedItem } from './animated-objects.js';
 
 // Konverterte modeller (npm run models) – Vite gir hver fil en URL med hash.
 const URLS = Object.fromEntries(
@@ -128,10 +129,12 @@ export function createObjects(level, field, shared) {
   const poseOf = poser(level); // del plasseringene mellom modellene, også for stablede klosser
   const makeShadow = contactShadows(level, poseOf, owned);
   const spinners = []; // gjenstander som snurrer (takvifter)
+  const mixers = []; // animerte gjenstander (world/animated-objects.js)
   const fixed = []; // gjenstander som aldri flyttes: tegnes samlet (object-batches.js)
   const jobs = (level.objects ?? []).map(async (o, index) => {
     const def = OBJECTS[o.id];
     if (!def) return;
+    if (def.animate) return animate(o, def, index);
     let parts = await (def.build ? loadProp(propKey(def, level, o)) : loadModel(def.file, def.turn));
     if (o.id === 'arcade2') parts = await arcadeParts(parts, o);
     // Skjermstøy (uScreen) og arkadekassene avhenger av UV-ene og navnene på enkeltdelene.
@@ -148,8 +151,9 @@ export function createObjects(level, field, shared) {
     item.quaternion.copy(turn);
     item.scale.setScalar(s);
     for (const part of parts) {
-      const geometry = bakeLight(part.geometry, matrix, field, part.side === THREE.DoubleSide);
+      const geometry = await bakeLightSliced(part.geometry, matrix, field, part.side === THREE.DoubleSide); // litt om gangen
       owned.push(geometry);
+      if (disposed) return;
       item.add(new THREE.Mesh(geometry, materialFor(part, def)));
     }
     items[index] = item;
@@ -161,6 +165,18 @@ export function createObjects(level, field, shared) {
     item.userData.shadow = shadow; // følger med når fysikken flytter gjenstanden (view3d/softplay.js)
     group.add(shadow);
   });
+  async function animate(o, def, index) {
+    const pose = poseOf(o);
+    const made = await animatedItem(loader, URLS[def.file], def, field, new THREE.Vector3(...tipOrigin(pose, def.size)), new THREE.Quaternion(...tipQuaternion(pose, def.size)), def.scale ?? 1);
+    owned.push(...made.materials);
+    if (disposed) return;
+    items[index] = made.item;
+    mixers.push(made.mixer);
+    group.add(made.item);
+    const shadow = makeShadow(o);
+    if (shadow) group.add(shadow);
+  }
+
   const ready = Promise.allSettled(jobs).then((results) => {
     for (const r of results) if (r.status === 'rejected') console.warn(r.reason);
     field?.releaseObjectSamples?.();
@@ -177,9 +193,10 @@ export function createObjects(level, field, shared) {
     group,
     items,
     ready,
-    /** Takvifter snurrer. */
+    /** Takvifter snurrer, og animerte gjenstander beveger seg. */
     update(dt) {
       for (const [item, spin] of spinners) item.rotation.y += spin * dt;
+      for (const mixer of mixers) mixer.update(dt);
     },
     dispose() {
       disposed = true;

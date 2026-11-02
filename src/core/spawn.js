@@ -58,9 +58,9 @@ export function resolveSpawn(level) {
   return { x: cell[0] + 0.5, z: cell[1] + 0.5, a: s.a };
 }
 
-/** Velger et godt startpunkt nær midten med blikket mot den lengste frie retningen. */
-export function autoSpawn(level) {
-  const cell = nearestWalkable(level, level.w / 2, level.h / 2);
+/** Velger et godt startpunkt nær midten (eller `near` = [x, z]) med blikket mot den lengste frie retningen. */
+export function autoSpawn(level, near = [level.w / 2, level.h / 2]) {
+  const cell = nearestWalkable(level, ...near);
   if (!cell) return { x: level.w / 2, z: level.h / 2, a: 0 };
   const [x, z] = cell;
   let best = DIRS[0];

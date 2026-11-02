@@ -26,6 +26,7 @@
     <header class="l-top">
       <a class="brand" href="./"><span class="brand-mark"></span>Liminal</a>
       <nav class="l-nav">
+        <a href="#play">Play</a>
         <a href="#examples">Examples</a>
         <a href="#how">How it works</a>
         <button type="button" class="l-feedback-link" data-feedback>Suggestions</button>
@@ -43,10 +44,9 @@
         </p>
         <div class="l-cta">
           <a class="l-btn" href="app/">▶ Open the simulator</a>
-          <a class="l-btn l-btn-game" href="app/#play">📼 Game mode</a>
-          <a class="l-btn l-btn-ghost" href="#examples">Try an example</a>
+          <a class="l-btn l-btn-game" href="#play">📼 Play a game</a>
         </div>
-        <p class="l-note">Free · runs in your browser · nothing to install</p>
+        <p class="l-note">Free · runs in your browser · nothing to install · or <a href="#examples">step into an example ↓</a></p>
       </div>
       <div class="l-hall" aria-hidden="true">
         <div class="l-hall-ceiling"></div>
@@ -62,6 +62,31 @@
     <!-- Reklamebanner: lim inn annonsekoden (f.eks. EthicalAds/Carbon/AdSense) i .ad-slot.
          Tom plass skjules automatisk; i utviklingsmodus vises en stiplet plassholder. -->
     <aside class="ad-slot" id="ad-slot" aria-label="Advertisement"></aside>
+
+    <section class="l-section" id="play">
+      <h2>Play</h2>
+      <p class="l-sub">Generated levels behind doors that lead nowhere. Headphones on.</p>
+      <div class="l-modes">
+        <a class="l-mode" href="app/#play">
+          <span class="l-mode-icon" aria-hidden="true">📼</span>
+          <h3>Tape hunt</h3>
+          <p>Endless levels. The doors stay locked until you find every VHS tape – listen for the hum. How deep can you go?</p>
+          <span class="l-mode-go">Find the tapes →</span>
+        </a>
+        <a class="l-mode" href="app/#lights">
+          <span class="l-mode-icon" aria-hidden="true">⚡</span>
+          <h3>Lights out</h3>
+          <p>The power is gone. Find the fuse boxes in the dark and switch the lights back on, one by one.</p>
+          <span class="l-mode-go">Into the dark →</span>
+        </a>
+        <a class="l-mode l-mode-daily" href="app/#daily">
+          <span class="l-mode-icon" aria-hidden="true">📅</span>
+          <h3>Daily level <span class="l-mode-date" id="daily-date"></span></h3>
+          <p>One new level every day, the same for everyone. Find the tapes against the clock and share your time.</p>
+          <span class="l-mode-go" id="daily-go">Play today's level →</span>
+        </a>
+      </div>
+    </section>
 
     <section class="l-section" id="examples">
       <h2>Step into an example</h2>

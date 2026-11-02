@@ -163,3 +163,27 @@
 .start-links span {
   margin-right: 2px;
 }
+
+/* Daily level (ui/daily-dialog.js). */
+.daily-date {
+  margin: 0 0 6px;
+  font-weight: 650;
+  color: var(--accent);
+}
+
+.daily-time {
+  margin: 4px 0;
+  font-family: 'VT323', monospace;
+  font-size: 56px;
+  line-height: 1;
+}
+
+.daily-best {
+  font-weight: 600;
+}
+
+.daily-share {
+  margin: 8px 0 6px;
+  resize: none;
+  font-size: 12px;
+}

@@ -11,24 +11,25 @@ function diamond(ctx, cx, cy, r) {
   ctx.closePath();
 }
 
-export function hotelCarpet(rand) {
+/** pal: bakgrunn, mørk rute, gull, lys gull (textures/looks.js). */
+export function hotelCarpet(rand, pal = ['#6e161a', '#4c0e12', '#b07a38', '#c98a3e']) {
   const S = 512;
   const C = 128;
   const { canvas, ctx } = makeCanvas(S);
-  ctx.fillStyle = '#6e161a';
+  ctx.fillStyle = pal[0];
   ctx.fillRect(0, 0, S, S);
   for (let cy = 0; cy < 4; cy++) {
     for (let cx = 0; cx < 4; cx++) {
       const x = cx * C + C / 2;
       const y = cy * C + C / 2;
       diamond(ctx, x, y, 60);
-      ctx.strokeStyle = '#b07a38';
+      ctx.strokeStyle = pal[2];
       ctx.lineWidth = 6;
       ctx.stroke();
       diamond(ctx, x, y, 34);
-      ctx.fillStyle = '#4c0e12';
+      ctx.fillStyle = pal[1];
       ctx.fill();
-      ctx.strokeStyle = '#c98a3e';
+      ctx.strokeStyle = pal[3];
       ctx.lineWidth = 3;
       ctx.stroke();
       ctx.fillStyle = '#d9963f';
@@ -37,7 +38,7 @@ export function hotelCarpet(rand) {
       ctx.fill();
     }
   }
-  ctx.fillStyle = '#c98a3e';
+  ctx.fillStyle = pal[3];
   for (let cy = 0; cy <= 4; cy++) {
     for (let cx = 0; cx <= 4; cx++) {
       diamond(ctx, cx * C, cy * C, 9);
@@ -49,17 +50,18 @@ export function hotelCarpet(rand) {
   return canvas;
 }
 
-export function hotelWallpaper(rand) {
+/** pal: to striper, strek, prikker og ruter (textures/looks.js). */
+export function hotelWallpaper(rand, pal = ['#b59f7c', '#c2ad8a', 'rgba(150,118,70,0.5)', 'rgba(120,95,60,0.35)', 'rgba(150,115,70,0.45)']) {
   const S = 512;
   const W = 64;
   const { canvas, ctx } = makeCanvas(S);
   for (let i = 0; i < S / W; i++) {
-    ctx.fillStyle = i % 2 ? '#b59f7c' : '#c2ad8a';
+    ctx.fillStyle = i % 2 ? pal[0] : pal[1];
     ctx.fillRect(i * W, 0, W, S);
-    ctx.fillStyle = 'rgba(150,118,70,0.5)';
+    ctx.fillStyle = pal[2];
     ctx.fillRect(i * W, 0, 2, S);
     for (let j = 0; j < S / W; j++) {
-      ctx.fillStyle = i % 2 ? 'rgba(120,95,60,0.35)' : 'rgba(150,115,70,0.45)';
+      ctx.fillStyle = i % 2 ? pal[3] : pal[4];
       if (i % 2) {
         ctx.beginPath();
         ctx.arc(i * W + W / 2, j * W, 3, 0, Math.PI * 2);

@@ -8,9 +8,18 @@ import { landscapeMaterial } from './window-landscape.js';
 import { SLIDE_COLORS } from '../core/slides.js';
 import { roofGlassMaterial } from './roof-glass.js';
 import { shopInteriorMaterials } from './shop-interiors.js';
+import { luma } from './lifts.js';
 const CAP_COLOR = '#55534e';
 const MASS_COLOR = '#a7a49c';
 const SLIDE_LEGS = '#c6cbcf';
+const LIFT_METAL = '#a9a7a1';
+const LIFT_FLOOR = '#4f4c48';
+
+/** De delte uniformene med blinkelyset i grått (samme styrke): resten deles fortsatt med verdenen. */
+function neutralLight(shared) {
+  const c = shared.uFlickColor.value;
+  return { ...shared, uFlickColor: { value: new THREE.Color().setScalar(luma(c.r, c.g, c.b)) } };
+}
 
 export function worldMaterials({ s, theme, door, railing, tiles, shared, anisotropy, own, sky, bars, level }) {
   return {
@@ -40,6 +49,9 @@ export function worldMaterials({ s, theme, door, railing, tiles, shared, anisotr
     rail: () => surfaceMaterial({ color: railing.rail }, shared, anisotropy),
     bars: () => surfaceMaterial({ color: railing.bars }, shared, anisotropy),
     railGlass: () => shopGlassMaterial(shared),
+    // Heisene er like i alle temaer (world/lifts.js): egne farger, og blinkelyset uten temaets lysfarge.
+    lift: () => surfaceMaterial({ color: LIFT_METAL }, neutralLight(shared), anisotropy),
+    liftFloor: () => surfaceMaterial({ color: LIFT_FLOOR }, neutralLight(shared), anisotropy),
     escalatorPanel: () => surfaceMaterial({ color: '#d5ccd0' }, shared, anisotropy),
     escalatorRail: () => surfaceMaterial({ color: '#27282e' }, shared, anisotropy),
     escalatorMetal: () => surfaceMaterial({ color: '#747b80' }, shared, anisotropy),

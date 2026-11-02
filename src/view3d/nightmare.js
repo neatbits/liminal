@@ -5,6 +5,7 @@ import { waitWhileWalking } from './walk-session.js';
 
 const DARK_IN = 0.05; // lysstyrke i øyehøyde (bakt lys) som regnes som mørkt …
 const DARK_OUT = 0.09; // … og som må nås før det ikke lenger gjør det (så det ikke blafrer)
+const WAKE_CALM = 8; // s etter at man våkner før det kan jakte igjen, også om starten er mørk
 
 export class Darkness {
   constructor(viewer) {
@@ -40,6 +41,7 @@ export async function wakeAtStart(explorer) {
     explorer.hunt.lost(explorer.found - explorer.levelFound);
     explorer.found = explorer.levelFound;
     explorer.scary.reset();
+    explorer.scary.calm = WAKE_CALM;
     explorer.blackout = explorer._newBlackout();
     explorer._placeTapes();
     v.hud.title('YOU WOKE UP', explorer.total > explorer.found ? 'The tapes have moved' : 'Back where you started');

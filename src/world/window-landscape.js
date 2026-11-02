@@ -6,7 +6,7 @@ import { LANDSCAPE_FRAGMENT } from './landscape-shader.js';
 import { landscapeNoise } from './landscape-noise.js';
 import { BASEMENT_CITY_FRAGMENT } from './basement-city.js';
 
-// Gjennomsiktig plassholder til bildet av spøkelset er tatt (view3d/ghost-snapshot.js).
+// Gjennomsiktig plassholder til bildet av skikkelsen er tatt (view3d/figure-snapshot.js).
 const NO_GHOST = new THREE.DataTexture(new Uint8Array(4), 1, 1);
 NO_GHOST.needsUpdate = true;
 
@@ -51,7 +51,7 @@ export function landscapeMaterial(sky, theme) {
       uGroundStyle: { value: view.groundStyle },
       uNight: { value: sky.sun ? 0 : 1 },
       uGain: { value: 1 / theme.exposure / (1 + theme.bloom * 0.5) },
-      // Spøkelset utenfor vinduet (view3d/window-ghost.js): av til det settes.
+      // Skikkelsen utenfor vinduet (view3d/window-ghost.js): av til den settes.
       uGhost: { value: new THREE.Vector4() }, uGhostFrame: { value: new THREE.Vector2(0, 1) },
       uGhostSize: { value: new THREE.Vector2(1, 2) }, uGhostMap: { value: NO_GHOST },
     },

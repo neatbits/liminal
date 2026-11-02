@@ -10,6 +10,7 @@ import { fillRect } from './util.js';
 import { hangDoors, doorsInWalls } from './doors.js';
 import { DOOR, setDoor } from '../core/doors.js';
 import { placeStairs } from '../core/stairs.js';
+import { buildLayout } from './layouts.js';
 
 /** Deler [a..b] i rom på 4–7 ruter med én rute skillevegg imellom: [[start, slutt], …]. */
 export function splitBand(rand, a, b) {
@@ -28,7 +29,8 @@ export function splitBand(rand, a, b) {
  * @returns {{ x0, z0, x1, z1, doors, rooms }} stua (det åpne området som er igjen),
  *          døråpningene inn til de små rommene og rommene selv, for videre innredning.
  */
-export function basement(level, rand) {
+export function basement(level, rand, { layout } = {}) {
+  if (layout !== 'gallery' && buildLayout(level, rand, { wanted: layout, doors: { closed: 0.3, ajar: 0.35, open: 0.35 }, flicker: 0.04, broken: 0.04 })) return null;
   const { w, h } = level;
   const room = { x0: 2, z0: 2, x1: w - 3, z1: h - 3, doors: [], rooms: [] };
   fillRect(level, room.x0, room.z0, room.x1, room.z1, TILE.FLOOR);

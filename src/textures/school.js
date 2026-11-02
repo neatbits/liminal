@@ -66,11 +66,11 @@ export function blockWall(rand) {
 }
 
 /** Sage-painted lower classroom walls, using the same block joints as the upper wall. */
-export function schoolPaint(rand) {
+export function schoolPaint(rand, color = '#adc1b0') {
   const canvas = blockWall(rand);
   const ctx = canvas.getContext('2d');
   ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = '#adc1b0';
+  ctx.fillStyle = color;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.globalCompositeOperation = 'source-over';
   return canvas;
@@ -117,10 +117,10 @@ export function lockers(rand) {
 }
 
 /** Blankt vinylbelegg i blek grønnblå, med svake flekker og en sveis hver 2. meter. */
-export function wardFloor(rand) {
+export function wardFloor(rand, color = '#b9cfc8') {
   const S = 512;
   const { canvas, ctx } = makeCanvas(S);
-  ctx.fillStyle = '#b9cfc8';
+  ctx.fillStyle = color;
   ctx.fillRect(0, 0, S, S);
   for (let k = 0; k < 3500; k++) {
     ctx.fillStyle = rand() < 0.5 ? 'rgba(80,110,100,0.25)' : 'rgba(255,255,255,0.3)';
@@ -134,10 +134,10 @@ export function wardFloor(rand) {
 }
 
 /** Mintgrønn maling (nederste del av veggen på sykehuset). */
-export function wardMint(rand) {
+export function wardMint(rand, color = '#9fc9b6') {
   const S = 256;
   const { canvas, ctx } = makeCanvas(S);
-  ctx.fillStyle = '#9fc9b6';
+  ctx.fillStyle = color;
   ctx.fillRect(0, 0, S, S);
   const n = fbm(S, 16, 2, rand);
   pixelPass(ctx, S, (x, y, i, d) => shade(d, i, 0.97 + (n[y * S + x] - 0.5) * 0.06));

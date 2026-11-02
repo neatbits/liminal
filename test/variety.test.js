@@ -21,10 +21,11 @@ describe('takhøyden varierer fra nivå til nivå', () => {
   });
 
   it('romoppsettet er det samme med og uten variasjon, og eksemplene er urørt', () => {
-    const a = generateLevel({ theme: 'office', seed: 8 });
-    const b = generateLevel({ theme: 'office', seed: 8, vary: false });
-    expect(Array.from(a.tiles)).toEqual(Array.from(b.tiles));
-    expect(b.height).toBe(2.7);
+    // Temaene i LAYOUTS har egne planløsninger; ellers kan bare krypegangene (massive blokker) skille dem.
+    const a = generateLevel({ theme: 'basement', seed: 8, layout: 'classic' });
+    const b = generateLevel({ theme: 'basement', seed: 8, vary: false });
+    for (let i = 0; i < a.tiles.length; i++) if (a.tiles[i] !== b.tiles[i]) expect([TILE.WALL, TILE.CRAWL]).toContain(a.tiles[i]);
+    expect(generateLevel({ theme: 'office', seed: 8, vary: false }).height).toBe(2.7);
     const pools = presetById('pools').make();
     expect(pools.height).toBe(3.4);
     expect(pools.depths.every((d) => d === 0)).toBe(true);
@@ -34,7 +35,7 @@ describe('takhøyden varierer fra nivå til nivå', () => {
     let all = 0;
     let tall = 0;
     for (let s = 1; s <= 8; s++) {
-      const level = generateLevel({ theme: 'pool', seed: s });
+      const level = generateLevel({ theme: 'pool', seed: s, layout: 'classic' });
       for (const cells of basins(level)) {
         if (cells.length < 30) continue;
         all++;

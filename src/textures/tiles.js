@@ -2,7 +2,7 @@
 import { fbm } from './noise.js';
 import { makeCanvas, pixelPass, shade } from './paint.js';
 
-function poolTilesWith(rand, base, grout, N = 8) {
+export function poolTilesWith(rand, base, grout, N = 8) {
   const S = 512;
   const T = S / N;
   const { canvas, ctx } = makeCanvas(S);
@@ -28,6 +28,33 @@ function poolTilesWith(rand, base, grout, N = 8) {
   return canvas;
 }
 
+/**
+ * Fliser med et farget bånd (Poolrooms, «Pink & cyan» i core/looks.js): `rows` rader, der radene i [from, to) har
+ * båndets farge. Teksturen dekker hele den nedre delen av veggen én gang (1 × 1,25 m), så båndet ligger i fast høyde.
+ */
+export function poolTilesBand(rand, base, grout, band, bandGrout, rows = 10, [from, to] = [6, 9]) {
+  const S = 512;
+  const N = 8;
+  const [T, R] = [S / N, S / rows];
+  const { canvas, ctx } = makeCanvas(S);
+  for (let j = 0; j < rows; j++) {
+    const inBand = rows - 1 - j >= from && rows - 1 - j < to; // rad 0 er nederst på veggen (bunnen av teksturen)
+    const [c, g] = inBand ? [band, bandGrout] : [base, grout];
+    ctx.fillStyle = g;
+    ctx.fillRect(0, j * R, S, R);
+    for (let i = 0; i < N; i++) {
+      const v = Math.round((rand() - 0.5) * 8);
+      ctx.fillStyle = `rgb(${c[0] + v},${c[1] + v},${c[2] + v})`;
+      ctx.fillRect(i * T + 2, j * R + 2, T - 4, R - 4);
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';
+      ctx.fillRect(i * T + 2, j * R + 2, T - 4, 3);
+    }
+  }
+  const n = fbm(S, 4, 3, rand);
+  pixelPass(ctx, S, (x, y, i, d) => shade(d, i, 0.97 + 0.05 * (n[y * S + x] - 0.5) + (rand() - 0.5) * 0.03));
+  return canvas;
+}
+
 export function poolTiles(rand) {
   return poolTilesWith(rand, [234, 239, 239], '#b7c2c3');
 }
@@ -46,21 +73,20 @@ export function tileFloorGrey(rand) {
   return poolTilesWith(rand, [112, 114, 115], '#8a8c8c', 3);
 }
 
-export function officeWall(rand) {
+export function officeWall(rand, base = '#cbc7ba') {
   const S = 256;
   const { canvas, ctx } = makeCanvas(S);
-  ctx.fillStyle = '#cbc7ba';
+  ctx.fillStyle = base;
   ctx.fillRect(0, 0, S, S);
   const n = fbm(S, 4, 5, rand);
   pixelPass(ctx, S, (x, y, i, d) => shade(d, i, 0.95 + 0.1 * (n[y * S + x] - 0.5) + (rand() - 0.5) * 0.04));
   return canvas;
 }
 
-export function officeCarpet(rand) {
+export function officeCarpet(rand, base = [84, 90, 102]) {
   const S = 512;
   const { canvas, ctx } = makeCanvas(S);
   const n = fbm(S, 8, 3, rand);
-  const base = [84, 90, 102];
   pixelPass(ctx, S, (x, y, i, d) => {
     const dir = ((x >> 8) + (y >> 8)) & 1;
     const s = Math.sin((dir ? x : y) * 1.1 + n[y * S + x] * 8) * 0.5 + 0.5;

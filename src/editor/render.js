@@ -14,6 +14,8 @@ import { drawCorners } from './render-corners.js';
 import { drawLeds } from './render-leds.js';
 import { drawPanels } from './render-panels.js';
 import { drawBelow } from './render-storey.js';
+import { drawLadders } from './render-ladders.js';
+import { drawElevators } from './render-elevators.js';
 import { drawStairwells } from './render-stairwells.js';
 import { pillarInfo } from '../core/pillars.js';
 
@@ -183,7 +185,7 @@ function drawPreview(ctx, view, s) {
     return;
   }
   if (tool.kind === 'spawn') return drawSpawn(ctx, view, { x: Math.floor(hover[0]) + 0.5, z: Math.floor(hover[1]) + 0.5, a: s.level.spawn.a }, 0.35);
-  const size = (tool.kind === 'light' && !erase) || tool.kind === 'door' || tool.kind === 'slide' ? 1 : brush;
+  const size = tool.kind === 'elevator' && !erase ? 4 : (tool.kind === 'light' && !erase) || tool.kind === 'door' || tool.kind === 'slide' || tool.kind === 'ladder' ? 1 : brush;
   const off = Math.floor((size - 1) / 2);
   const [x0, y0] = view.toScreen(Math.floor(hover[0]) - off, Math.floor(hover[1]) - off);
   // Dørverktøyet viser om ruten kan få en dør: grønt kan, rødt kan ikke.
@@ -223,6 +225,8 @@ export function drawPlan(ctx, s) {
   if (view.scale >= 4) drawLeds(ctx, view, level, r);
   if (view.scale >= 4) drawPanels(ctx, view, level, r);
   if (s.wells && view.scale >= 4) drawStairwells(ctx, view, level, s.wells);
+  if (view.scale >= 4) drawLadders(ctx, view, level, s.below);
+  if (s.lifts && view.scale >= 3) drawElevators(ctx, view, s.lifts.room, s.lifts.storey);
   drawSlides(ctx, view, level, s.slide, s.below);
   if (view.scale >= 4) drawObjects(ctx, view, level);
   ctx.strokeStyle = C.border;

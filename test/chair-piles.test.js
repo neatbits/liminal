@@ -103,3 +103,22 @@ describe('stolhauger i genererte rom', () => {
     expect(count('backrooms', PILE_CHAIR, (o) => o.lift)).toBeGreaterThan(0); // minst én haug
   }, 30000);
 });
+
+describe('stolhaugen og naboene', () => {
+  it('legges aldri inn under noe bredt ved siden av (kafébordet når over i naborutene)', async () => {
+    const { objectBox, overlaps } = await import('../src/core/object-pose.js');
+    const { fillRect } = await import('../src/gen/util.js');
+    let piles = 0;
+    for (let turn = 0; turn < 4; turn++) for (let x = 2; x <= 6; x++) for (let z = 2; z <= 6; z++) {
+      if (x <= 5 && x + 1 >= 5 && z <= 5 && z + 1 >= 5) continue; // haugen dekker bordets rute: avvist allerede
+      const level = createLevel({ theme: 'backrooms', w: 12, h: 12 });
+      fillRect(level, 1, 1, 10, 10, TILE.FLOOR);
+      level.objects = [{ id: 'cafe', x: 5, z: 5, rot: 0 }];
+      let calls = 0;
+      piles += chairPile(level, () => (calls++ ? 0 : turn / 4 + 0.01), x, z) ? 1 : 0;
+      const table = objectBox(objectPose(level, level.objects[0]));
+      for (const c of level.objects.slice(1)) expect(overlaps(objectBox(objectPose(level, c)), table), `pile at ${x},${z} turn ${turn}`).toBe(false);
+    }
+    expect(piles).toBeGreaterThan(20); // de fleste får fortsatt plass
+  });
+});

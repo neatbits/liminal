@@ -9,7 +9,7 @@ import { app, BrowserWindow, protocol, net, shell, ipcMain } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { SCHEME, START, FEEDBACK, fileFor, isFeedback, isExternal } from './files.mjs';
+import { SCHEME, START, FEEDBACK, fileFor, isFeedback, isExternal, insteadOfFrontPage } from './files.mjs';
 import { loadWindowState, saveWindowState } from './window-state.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -65,13 +65,15 @@ function createWindow() {
   webContents.setWindowOpenHandler(({ url }) => {
     // Lenker ut åpnes i nettleseren; egne sider (About fra dialogen, target=_blank) i samme vindu.
     if (isExternal(url)) shell.openExternal(url);
-    else if (fileFor(url, root)) win.loadURL(url);
+    else if (fileFor(url, root)) win.loadURL(insteadOfFrontPage(url) ?? url);
     return { action: 'deny' };
   });
   webContents.on('will-navigate', (e, url) => {
-    if (!isExternal(url)) return;
+    const simulator = insteadOfFrontPage(url); // ingen hjemmeside i programmet: rett til simulatoren
+    if (!isExternal(url) && !simulator) return;
     e.preventDefault();
-    shell.openExternal(url);
+    if (simulator) win.loadURL(simulator);
+    else shell.openExternal(url);
   });
   webContents.on('before-input-event', (e, input) => {
     if (input.type !== 'keyDown') return;

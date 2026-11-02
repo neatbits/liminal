@@ -16,13 +16,17 @@ export const SWATCH = {
   leaf: 'linear-gradient(90deg, #5a5d62 0 22%, #f1eee7 22% 64%, #c9a45a 64% 72%, #f1eee7 72% 78%, #5a5d62 78%)',
   raise: 'linear-gradient(#efe4b8 0 40%, #7a5a30 40% 50%, #c8a26e 50%)',
   stairs: 'repeating-linear-gradient(90deg, #efe4b8 0 3px, #7a5a30 3px 4px)',
+  ramp: 'linear-gradient(90deg, #efe4b8, #a8916a)',
   escalator: 'repeating-linear-gradient(135deg, #44464b 0 4px, #d7b74f 4px 5px)',
   stairwell: 'repeating-linear-gradient(90deg, #e6def5 0 3px, #6b4fa0 3px 4px)',
+  elevator: 'linear-gradient(90deg, #6b4fa0 0 18%, #c9c7c1 18% 49%, #6b4fa0 49% 51%, #c9c7c1 51% 82%, #6b4fa0 82%)',
+  ladder: 'linear-gradient(90deg, transparent 22%, #6b4fa0 22% 30%, transparent 30% 70%, #6b4fa0 70% 78%, transparent 78%), repeating-linear-gradient(#e6def5 0 4px, #6b4fa0 4px 6px)',
   tiles: 'linear-gradient(90deg, transparent 47%, #8a8c8c 47% 53%, transparent 53%), linear-gradient(transparent 44%, #8a8c8c 44% 56%, transparent 56%), #e6e6e1',
   slide: 'radial-gradient(circle at 0 0, transparent 52%, #4a9dbb 53% 78%, transparent 79%), #cdeef7',
   window: 'linear-gradient(90deg, #5a5d62 0 20%, #eef4f7 20% 48%, #5a5d62 48% 52%, #eef4f7 52% 80%, #5a5d62 80%)',
   object: 'linear-gradient(#efe4b8 0 30%, #3a3440 30% 80%, #f2c14e 80% 88%, #efe4b8 88%)',
   corner: 'linear-gradient(135deg, #5a5d62 0 42%, #efe4b8 42%)',
+  crawl: 'linear-gradient(#5a5d62 0 58%, #4b4560 58%)',
   deck: 'repeating-linear-gradient(135deg, #2f6f8f 0 2px, transparent 2px 6px), linear-gradient(#efe4b8 0 55%, #8c8f94 55% 70%, #efe4b8 70%)',
   led: 'linear-gradient(90deg, #ff4d9e 0 34%, #00e5d4 34% 67%, #aa00ff 67%)',
   panel: 'linear-gradient(90deg, #e4eef8 0 33%, #ffe8a8 33% 67%, #c8a838 67%)',
@@ -34,7 +38,7 @@ export const SWATCH = {
  */
 export const TOOL_FAMILIES = {
   lights: { label: 'Light', tools: [['light', 'On'], ['flicker', 'Flickering'], ['broken', 'Broken']] },
-  steps: { label: 'Stairs', tools: [['stairs', 'Stairs'], ['stairwell', 'Up a floor'], ['escalator', 'Escalator']] },
+  steps: { label: 'Stairs', tools: [['stairs', 'Stairs'], ['ramp', 'Ramp'], ['stairwell', 'Up a floor'], ['escalator', 'Escalator'], ['ladder', 'Ladder'], ['elevator', 'Elevator']] },
   doors: { label: 'Door', tools: [['door', 'Doorway'], ['leaf', 'Door']] },
 };
 
@@ -43,7 +47,7 @@ export const familyOf = (toolId) => Object.keys(TOOL_FAMILIES).find((f) => TOOL_
 
 /** Knappene i sidepanelet, gruppert: [overskrift, [verktøy- eller familie-id, …]]. */
 export const TOOL_GROUPS = [
-  ['Build', ['floor', 'wall', 'corner', 'water', 'pillar', 'window']],
+  ['Build', ['floor', 'wall', 'corner', 'water', 'pillar', 'window', 'crawl']],
   ['Heights', ['ceiling', 'depth', 'raise', 'steps', 'deck', 'slide']],
   ['Lights', ['lights', 'led', 'panel']],
   ['Details', ['doors', 'tiles', 'object', 'spawn']],
@@ -52,11 +56,16 @@ export const TOOL_GROUPS = [
 export const HINT = 'Right-click erases. Rectangle and fill with a light tool place lights in an even pattern.';
 
 export const HINTS = {
+  ladder: 'Click a floor cell under the floor above: the ladder goes up through a hole in the floor there, and you step off where the arrow points. Click it again to turn it, right-click to remove it. While walking, press E at the ladder (or at the hole) and climb with W and S.',
+  elevator: 'Needs two or more floors. Click to place a 4 × 4 m elevator shaft through the whole building – the arrow shows where the doors open. It stops on every floor with floor in front of the doors, and passes the others as a solid shaft. Click again to turn it, right-click to remove it. While walking, press E at the doors to call it, then E (or a number key) inside to choose a floor.',
+  crawl: 'Paint a low, dark passage through a wall, 0.9 m high. Keep walls on both sides so it stays a tunnel. While walking, press C to get down and crawl through – you stand up again when there is room. Right-click turns it back into wall.',
   spawn: 'Click where walking starts, and drag to turn it. With several floors you start on the floor where you place it – the other floors show it faintly with its floor number.',
   pillar: 'Poolrooms pillars are round; other themes use square columns. Choose the diameter, then place columns on open cells. Large columns need clear space around them. Right-click erases.',
   door: 'Click a wall cell between two rooms, or a 1-cell gap in a wall (green outline = a door fits). A wall with nothing behind gives a door to nowhere. Click a door again to flip it; right-click removes it but keeps the opening. While walking, press E to open and close doors.',
   stairs:
     'Drag from the bottom to the top. The stairs climb to a raised floor or a deck at the top end – or 0.6 m per cell up into a stairwell, as stairs to nowhere. Brush size sets the width; right-drag removes stairs.',
+  ramp:
+    'A smooth slope instead of steps. Drag from the bottom to the top: it climbs to a raised floor at the top end, or 0.2 m per cell. Brush size sets the width; right-drag removes it.',
   stairwell:
     'Stairs to the floor above: drag from the bottom to the top. You come out on the cell past the top (marked ↑), which becomes floor upstairs – the run itself becomes a stairwell wall there. Brush size sets the width.',
   escalator:

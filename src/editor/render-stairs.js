@@ -2,6 +2,7 @@
 // og forhåndsvisning av trappeløpet mens man drar.
 import { stairSpan, STEP_RISE, STAIR_THROUGH } from '../core/heights.js';
 import { isEscalator, ESCALATOR_DOWN } from '../core/escalators.js';
+import { isRamp } from '../core/ramps.js';
 
 const LINE = 'rgba(70,55,35,0.55)';
 const ARROW = '#5b4326';
@@ -35,11 +36,22 @@ export function drawStairs(ctx, view, level, x, z) {
   const { bottom, top, dir } = stairSpan(level, x, z);
   const motor = isEscalator(level, x, z);
   const down = motor && !!(level.meta[z * level.w + x] & ESCALATOR_DOWN);
+  const ramp = isRamp(level, x, z);
   const n = Math.max(1, Math.round((top - bottom) / STEP_RISE));
   ctx.save();
   ctx.strokeStyle = LINE;
   ctx.lineWidth = 1;
-  if (s / n >= 3) {
+  if (ramp) {
+    // Rampen: en skygge som blir mørkere oppover, uten trinnstreker.
+    const [ax, ay] = view.toScreen(...local(dir, x, z, 0, 0.5));
+    const [bx, by] = view.toScreen(...local(dir, x, z, 1, 0.5));
+    const g = ctx.createLinearGradient(ax, ay, bx, by);
+    g.addColorStop(0, 'rgba(90,70,40,0.04)');
+    g.addColorStop(1, 'rgba(90,70,40,0.22)');
+    ctx.fillStyle = g;
+    const [px, py] = view.toScreen(x, z);
+    ctx.fillRect(px, py, s, s);
+  } else if (s / n >= 3) {
     ctx.beginPath();
     for (let k = 0; k < n; k++) {
       const [ax, ay] = view.toScreen(...local(dir, x, z, k / n, 0));

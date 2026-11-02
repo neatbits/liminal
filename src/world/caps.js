@@ -1,7 +1,7 @@
 // Veggtopper for oversiktsvisningen («dukkehuset»). En vegg som grenser mot rom er like
 // høy som det høyeste taket rundt seg; massiv vegg ligger på rommets takhøyde. Der en
 // veggtopp er høyere enn naboen (lavere tak eller lavere veggtopp), lukkes spranget med
-// en loddrett flate, så ingen hull vises ovenfra. Ren logikk – ingen three.js.
+// en loddrett flate, så ingen hull vises ovenfra. Over krypeganger er det massiv vegg. Ren logikk – ingen three.js.
 import { TILE, getTile, inBounds } from '../core/level.js';
 import { ceilingAt } from '../core/heights.js';
 import { cornerShape } from '../core/corners.js';
@@ -15,16 +15,21 @@ export const SIDES = [
   { dx: 1, dz: 0, n: [-1, 0, 0], L: [1, 0], R: [1, 1], ux: 0, uz: 1 },
 ];
 const UP = [0, 1, 0];
+const solid = (t) => t === TILE.WALL || t === TILE.CRAWL; // en krypegang går inne i veggen
 
-/** Høyeste tak blant åpne naboer (8 retninger), eller -1 når veggen er massiv. */
+/**
+ * Høyeste tak blant åpne naboer (8 retninger), eller -1 når veggen er massiv. Med en etasje over
+ * (`level.capMax`, core/stairwells.js) aldri over undersiden av etasjeskillet: et trapperom eller en stige
+ * ved siden av har tak oppe i etasjen over, men veggen der oppe hører til den etasjen.
+ */
 export function capHeight(level, x, z) {
   let y = -1;
   for (let dz = -1; dz <= 1; dz++) {
     for (let dx = -1; dx <= 1; dx++) {
-      if ((dx || dz) && getTile(level, x + dx, z + dz) !== TILE.WALL) y = Math.max(y, ceilingAt(level, x + dx, z + dz));
+      if ((dx || dz) && !solid(getTile(level, x + dx, z + dz))) y = Math.max(y, ceilingAt(level, x + dx, z + dz));
     }
   }
-  return y;
+  return y < 0 ? y : Math.min(y, level.capMax ?? Infinity);
 }
 
 /** Legger veggtopper (og sprang mellom ulike høyder) i out.caps / out.mass. */
@@ -42,7 +47,7 @@ export function addCaps(level, out) {
   for (let z = 0; z < h; z++) {
     for (let x = 0; x < w; x++) {
       const i = z * w + x;
-      if (level.tiles[i] !== TILE.WALL) continue;
+      if (!solid(level.tiles[i])) continue;
       const y = capHeight(level, x, z);
       touches[i] = y >= 0 ? 1 : 0;
       top[i] = y >= 0 ? y : level.height;
@@ -51,7 +56,7 @@ export function addCaps(level, out) {
   for (let z = 0; z < h; z++) {
     for (let x = 0; x < w; x++) {
       const i = z * w + x;
-      if (level.tiles[i] !== TILE.WALL) continue;
+      if (!solid(level.tiles[i])) continue;
       const y = top[i];
       const mesh = touches[i] ? out.caps : out.mass;
       const shape = cornerShape(level, x, z); // åpnet hjørne: toppen bare over den massive delen
@@ -62,7 +67,7 @@ export function addCaps(level, out) {
         const nz = z + s.dz;
         if (!inBounds(level, nx, nz)) continue;
         const j = nz * w + nx;
-        const ny = level.tiles[j] === TILE.WALL ? top[j] : ceilingAt(level, nx, nz);
+        const ny = solid(level.tiles[j]) ? top[j] : ceilingAt(level, nx, nz);
         if (ny >= y - 1e-6) continue;
         // Vender ut mot naboen: motsatt omløp og normal av sidene sett innenfra.
         const Lx = x + s.L[0];

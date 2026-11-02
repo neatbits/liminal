@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { HALF_WALL } from '../core/half-walls.js';
-import { getTheme } from '../core/themes.js';
+import { surfacesOf } from '../core/looks.js';
 import { getTexture } from '../textures/index.js';
 import { box, parts } from './props-geo.js';
 
@@ -17,7 +17,8 @@ function panel(w, h, d, y, size) {
 }
 
 export function halfwall(key, texture = getTexture) {
-  const s = getTheme(key.split(':')[1] ?? 'backrooms').surfaces;
+  const [, theme = 'backrooms', look = 0] = key.split(':');
+  const s = surfacesOf({ theme, look: +look });
   const { width: w, height: h, depth: d, bodyDepth: body, cap } = HALF_WALL;
   const base = s.base?.h ?? 0.07;
   return parts([

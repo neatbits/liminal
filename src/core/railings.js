@@ -3,6 +3,7 @@
 // vannsklie går over kanten. Trappesider mot vegg får en håndlist på veggen. Dekker (andre
 // etasje) får vern langs kanten mot lavere gulv, i dekkets høyde (`y`). Ren logikk.
 import { TILE, getTile } from './level.js';
+import { isRamp } from './ramps.js';
 import { stairSpan, floorAt, topFloorAt, deckAt, ceilingAt, edgeHeight, HEADROOM } from './heights.js';
 import { SLIDE, slidePath } from './slides.js';
 
@@ -113,7 +114,7 @@ export function railSides(level, x, z) {
     for (const [dx, dz] of SIDES) {
       if (dx * dir[0] + dz * dir[1] !== 0) continue; // for- og bakkanten har ikke rekkverk
       const n = getTile(level, x + dx, z + dz);
-      if (n === TILE.WALL) out.push({ dx, dz, kind: 'wall' });
+      if (n === TILE.WALL) { if (!isRamp(level, x, z)) out.push({ dx, dz, kind: 'wall' }); } // ingen håndlist langs en slak rampe
       else if (n === TILE.STAIRS && (level.meta[(z + dz) * level.w + x + dx] & 3) === d) continue;
       else if (surfaceNear(level, x + dx, z + dz, top) < top - 0.25) out.push({ dx, dz, kind: 'guard' });
     }

@@ -1,6 +1,6 @@
 // Førstepersons gange: bevegelse med treghet, kollisjon, hodebevegelse og fottrinn.
 // I dypt vann flyter man i overflaten i stedet for å gå på bunnen. Mellomrom hopper (høyere fra et
-// stupebrett), og går man utfor en kant, faller man – ned i vannet med et plask (splash).
+// stupebrett), og går man utfor en kant, faller man – ned i vannet med et plask (splash). C kryper (core/crawl.js).
 import { TILE, getTile, WATER_SURFACE } from '../core/level.js';
 import { waterCell } from '../core/pillar-water.js';
 import { groundAt, headAt } from '../core/heights.js';
@@ -9,6 +9,7 @@ import { objectGround } from '../core/objects.js';
 import { moveCircle, resolveCircle, STEP_UP } from '../world/collision.js';
 import { SHOP_INTERIORS, shopInteriorMap } from '../core/shop-interiors.js';
 import { FINISHES } from '../core/finishes.js';
+import { BODY, CRAWL, canStand } from '../core/crawl.js';
 
 export const EYE = 1.62;
 export const SWIM_EYE = 0.3; // øyehøyde over vannflaten når man svømmer
@@ -21,7 +22,6 @@ const JUMP = 3.4; // m/s opp (ca. 0,6 m hopp)
 const SPRING = 5.4; // fra et stupebrett (ca. 1,5 m)
 const DROP = 0.5; // så mye lavere bakken må være før man faller i stedet for å gå ned
 const MAX_LAG = 0.12; // så langt føttene kan henge etter bakken på vei opp (utjevningen av kameraet)
-const BODY = 1.75;
 
 /** Underlaget for fottrinn. finish = belegget i ruten: fliser (eller temaets eget belegg, tiles.step). */
 export function surfaceFor(theme, tile, finish = 0, shopStyle = 0) {
@@ -35,9 +35,9 @@ export function isSwimming(floorY) {
   return floorY + EYE < WATER_SURFACE + SWIM_EYE;
 }
 
-/** Øyehøyden over en bunn: man vasser til vannet blir for dypt, så flyter man. */
-export function eyeHeight(floorY) {
-  return Math.max(floorY + EYE, WATER_SURFACE + SWIM_EYE);
+/** Øyehøyden over en bunn: man vasser til vannet blir for dypt, så flyter man. low: 1 = kryper. */
+export function eyeHeight(floorY, low = 0) {
+  return Math.max(floorY + EYE + (CRAWL.EYE - EYE) * low, WATER_SURFACE + SWIM_EYE);
 }
 
 export class Walker {
@@ -58,6 +58,20 @@ export class Walker {
     this.vy = 0; // fart opp/ned i et hopp eller fall
     this.splash = 0; // farten man traff vannet med denne rammen (walkmode lager plasket), ellers 0
     this._jumpHeld = false;
+    this.wantDown = false; // valgt med C
+    this.down = false; // kryper akkurat nå: valgt, eller fordi det ikke er plass til å stå
+    this.low = 0; // kameraet på vei ned (0 = står, 1 = kryper)
+  }
+
+  /** C: ned på alle fire, eller opp igjen når det er plass. */
+  toggleCrawl() {
+    this.wantDown = !this.wantDown;
+  }
+
+  /** Opp med en gang (stiger, sklier, nytt startpunkt). */
+  stand() {
+    this.wantDown = this.down = false;
+    this.low = 0;
   }
 
   /** Bakken under føttene: gulvet, eller en gjenstand man kan gå på (stupebrettet). */
@@ -77,13 +91,13 @@ export class Walker {
       // Bratte trapper stiger fortere enn utjevningen. Hang føttene langt etter, ville etasjen under
       // et dekke blitt valgt (groundAt med y, DECK_SNAP) – man falt gjennom galleriet og satt fast.
       this.floorY = Math.max(this.floorY, ground.y - MAX_LAG);
-      if (jump && (ground.object || here !== TILE.WATER)) this.vy = ground.spring ? SPRING : JUMP; // ikke fra bunnen av bassenget
+      if (jump && !this.down && (ground.object || here !== TILE.WATER)) this.vy = ground.spring ? SPRING : JUMP; // ikke fra bunnen av bassenget
       return;
     }
     const before = this.floorY;
     this.vy -= GRAVITY * dt;
     this.floorY += this.vy * dt;
-    if (this.vy > 0 && this.floorY + BODY > headAt(level, Math.floor(this.x), Math.floor(this.z), before)) this.vy = 0; // taket
+    if (this.vy > 0 && this.floorY + (this.down ? CRAWL.BODY : BODY) > headAt(level, Math.floor(this.x), Math.floor(this.z), before)) this.vy = 0; // taket
     if (here === TILE.WATER && before > WATER_SURFACE && this.floorY <= WATER_SURFACE) {
       this.splash = Math.max(0.5, -this.vy);
       this.dip = Math.min(1.1, 0.25 + this.splash * 0.12);
@@ -107,6 +121,9 @@ export class Walker {
     this.floorY = groundAt(level, this.x, this.z);
     this.floorY = Math.max(this.floorY, objectGround(level, this.x, this.z)?.y ?? -Infinity); // start oppå stupebrettet
     this.visited = new Uint8Array(level.w * level.h);
+    this.stand();
+    this.down = !canStand(level, this.x, this.z, this.floorY, RADIUS); // startpunkt i en krypegang
+    this.low = this.down ? 1 : 0;
   }
 
   /** Lander i vannet etter en sklietur (se Rider.update): fart, retning og et dukk. */
@@ -119,6 +136,7 @@ export class Walker {
     this.floorY = groundAt(level, this.x, this.z);
     this.vy = 0;
     this.dip = Math.min(0.9, 0.3 + speed * 0.08);
+    this.stand();
   }
 
   /** Etter at rommet er endret: skyv ut av eventuelle nye vegger. */
@@ -148,7 +166,11 @@ export class Walker {
     // Vasser man (ikke står over vannet på stupebrettet), går det tregere.
     const wading = tile === TILE.WATER && this.floorY < WATER_SURFACE;
     const slow = isSwimming(this.floorY) ? 0.45 : wading ? 0.6 : 1;
-    const speed = (input.running ? RUN : WALK) * slow;
+    // Nede holder hele fotavtrykket en nede; oppreist stopper kollisjonen en ved åpningen, ikke dette.
+    this.down = this.wantDown || !canStand(level, this.x, this.z, this.floorY, this.down ? RADIUS : 0);
+    this.low += ((this.down ? 1 : 0) - this.low) * Math.min(1, dt * 7);
+    const body = this.down ? CRAWL.BODY : BODY;
+    const speed = (this.down ? (input.running ? CRAWL.RUN : CRAWL.SPEED) : input.running ? RUN : WALK) * slow;
     const sin = Math.sin(this.yaw);
     const cos = Math.cos(this.yaw);
     const tx = (-sin * f + cos * s) * speed;
@@ -159,13 +181,13 @@ export class Walker {
 
     const px = this.x;
     const pz = this.z;
-    [this.x, this.z] = moveCircle(level, this.x, this.z, this.vx * dt, this.vz * dt, RADIUS, true, this.floorY);
+    [this.x, this.z] = moveCircle(level, this.x, this.z, this.vx * dt, this.vz * dt, RADIUS, true, this.floorY, body);
     const moved = Math.hypot(this.x - px, this.z - pz);
     this.distance += moved;
 
     const [ex, ez] = escalatorVelocity(level, this.x, this.z, this.floorY, this.vy);
     // Transport gir verken fottrinn eller hodevugging; kollisjon og vern gjelder fortsatt.
-    if (ex || ez) [this.x, this.z] = moveCircle(level, this.x, this.z, ex * dt, ez * dt, RADIUS, true, this.floorY);
+    if (ex || ez) [this.x, this.z] = moveCircle(level, this.x, this.z, ex * dt, ez * dt, RADIUS, true, this.floorY, body);
 
     const here = waterCell(level,Math.floor(this.x),Math.floor(this.z))?TILE.WATER:getTile(level,Math.floor(this.x),Math.floor(this.z));
     // Etter dekket man står på; går man utfor kanten, faller man ned i etasjen under.
@@ -176,7 +198,7 @@ export class Walker {
     }
 
     const before = Math.floor(this.stepPhase);
-    this.stepPhase += moved / STEP;
+    this.stepPhase += moved / (this.down ? CRAWL.STEP : STEP);
     if (Math.floor(this.stepPhase) === before || this.vy !== 0) return null; // ingen fottrinn i lufta
     const cell = Math.floor(this.z) * level.w + Math.floor(this.x);
     // Oppe på stupebrettet over vannet: harde trinn, ikke plask.
@@ -186,13 +208,13 @@ export class Walker {
 
   applyToCamera(camera) {
     const speed = Math.hypot(this.vx, this.vz);
-    const amp = 0.035 * Math.min(1.4, speed / WALK) * (isSwimming(this.floorY) ? 0.5 : 1) * this.bobScale;
+    const amp = 0.035 * Math.min(1.4, speed / WALK) * (isSwimming(this.floorY) ? 0.5 : 1) * this.bobScale * (1 + this.low);
     const phase = this.stepPhase * Math.PI;
     const bob = (Math.abs(Math.sin(phase)) - 0.5) * amp;
     const sway = Math.cos(phase) * amp * 0.4;
     camera.position.set(
       this.x + Math.cos(this.yaw) * sway,
-      eyeHeight(this.floorY) + bob - this.dip,
+      eyeHeight(this.floorY, this.low) + bob - this.dip,
       this.z - Math.sin(this.yaw) * sway,
     );
     camera.rotation.set(this.pitch, this.yaw, 0, 'YXZ');

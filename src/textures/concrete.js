@@ -40,11 +40,10 @@ export function concreteFloor(rand) {
   return canvas;
 }
 
-export function garagePaint(rand) {
+export function garagePaint(rand, paint = [78, 104, 96]) {
   const S = 256;
   const { canvas, ctx } = makeCanvas(S);
   const n = fbm(S, 6, 4, rand);
-  const paint = [78, 104, 96];
   const bare = [140, 138, 132];
   pixelPass(ctx, S, (x, y, i, d) => {
     const v = n[y * S + x];

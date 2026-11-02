@@ -8,10 +8,15 @@ import { soft, SOFT_COLORS } from './props-soft.js';
 import { kiosk, SIGNS, THEME_SIGNS } from './props-kiosk.js';
 import { playball } from './props-ball.js';
 import { halfwall } from './props-half-wall.js';
+import { nightstand, mirror, noclipmark, darkwindow, floorvent, copier, archiveshelf, elevator, glasswall } from './props-rooms.js';
+import { bookshelf, hoop, ortable, surgicallamp, morguewall, gurney, coveredcar } from './props-institution.js';
+import { boiler } from './props-cellar.js';
+import { fids, carousel, stanchion, checkin, luggagecart } from './props-airport.js';
 
 /** Hvilken variant en gjenstand får (fast for samme rute): nøkkel til bufferet av ferdige deler. */
 export function propKey(def, level, o) {
-  if (def.build === 'halfwall') return `halfwall:${level.theme}`;
+  if (def.build === 'halfwall') return `halfwall:${level.theme}:${level.look ?? 0}`;
+  if (def.build === 'coveredcar') return `coveredcar:${o.v ?? (o.x * 7 + o.z * 13) % 3}`;
   if (def.build === 'playball') return `playball:${(o.v ?? (o.x * 7 + o.z * 13)) % 4}`;
   if (def.build === 'soft') return `soft:${o.id}:${(o.v ?? (o.x * 7 + o.z * 13)) % SOFT_COLORS.length}`;
   if (def.build !== 'kiosk') return def.build;
@@ -75,7 +80,8 @@ function cafe() {
   ]);
 }
 
-const BUILDERS = { kiosk, cafe, shelf, wallshelf, counter, soft, playball, halfwall };
+const BUILDERS = { kiosk, cafe, shelf, wallshelf, counter, soft, playball, halfwall, nightstand, mirror, noclipmark, darkwindow, floorvent, copier, archiveshelf, elevator, glasswall, bookshelf, hoop, ortable, surgicallamp, morguewall, gurney, coveredcar, boiler,
+  fids, carousel, stanchion, checkin, luggagecart };
 
 /** Delene til en bygget gjenstand (key fra propKey). */
 export function buildProp(key) {

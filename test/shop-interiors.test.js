@@ -11,7 +11,7 @@ import { surfaceFor } from '../src/view3d/walker.js';
 describe('shop-specific interior finishes', () => {
   it('classifies all four shop types without spreading into galleries or rear arcades', () => {
     for (const seed of [1, 3, 7]) {
-      const l = generateLevel({ theme: 'mall', w: 56, h: 40, seed }), map = shopInteriorMap(l);
+      const l = generateLevel({ theme: 'mall', w: 56, h: 40, seed, layout: 'classic' }), map = shopInteriorMap(l);
       expect([...new Set(map)].sort()).toEqual([0, 1, 2, 3, 4]);
       for (let i = 0; i < map.length; i++) {
         if (!l.finish[i] || ![TILE.FLOOR, TILE.PILLAR].includes(l.tiles[i])) expect(map[i]).toBe(0);

@@ -17,6 +17,7 @@ export async function checkTapeHunt(browser, origin) {
   const result = await browser.evaluate(`(async () => {
     localStorage.removeItem('liminal.progress.v1');
     const v = liminal.viewer, ex = v.explorer, door = { info: { x: 0, z: 7 } };
+    ex.hunt.progress = { deepest: 0, tapes: 0 }; // lest inn da siden ble lastet (tidligere sjekker, f.eks. Daily, har funnet kassetter)
     liminal.layout.set('3d');
     v.updateSettings({ mood: 'normal' });
     if (!v.settings.sound) v.toggle('sound'); // en tidligere sjekk kan ha slått av lyden

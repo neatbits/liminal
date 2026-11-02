@@ -4,18 +4,26 @@ import { OBJECTS } from '../core/objects.js';
 
 export const OBJECT_GROUPS = [
   ['Furniture', ['sofa', 'armchair', 'desk', 'desk2', 'moderndesk', 'table', 'officechair', 'dinerchair', 'dinerset', 'plasticchair', 'woodenchair', 'deckchair', 'tvbench', 'mallbench', 'cafe']],
-  ['School & office', ['schoolcabinet', 'whiteboard', 'wallboard', 'desklamp', 'mug', 'halfwall']],
-  ['Hospital', ['hospitalbed', 'waitingchairs', 'medicalscreen', 'medicalcabinet', 'medicaltrolley']],
+  ['School & office', ['schoolcabinet', 'whiteboard', 'wallboard', 'desklamp', 'mug', 'halfwall', 'glasswall', 'copier', 'archiveshelf', 'bookshelf', 'hoop', 'elevator']],
+  ['Hotel', ['double_bed', 'nightstand', 'toilet', 'sink', 'mirror', 'washer']],
+  ['Hospital', ['hospitalbed', 'waitingchairs', 'medicalscreen', 'medicalcabinet', 'medicaltrolley', 'ortable', 'surgicallamp', 'morguewall', 'gurney']],
+  ['Parking', ['coveredcar']],
+  ['Airport', ['fids', 'checkin', 'carousel', 'stanchion', 'luggagecart']],
+  ['Basement', ['boiler', 'bunkbed']],
+  ['Markings', ['noclipmark', 'floorvent', 'darkwindow']],
+  ['People', ['cashier']],
   ['Electronics', ['tv', 'pc', 'retropcdesktop', 'retropctower', 'retropccompact', 'retropcterminal', 'laptop', 'console', 'gamepad', 'boombox', 'hifi', 'walkman', 'vhsplayer', 'cassette', 'arcade2', 'register', 'soda', 'clock', 'fan']],
   ['Pool & water', ['divingboard', 'flamingo', 'duck']],
   ['Plants', ['pottedpalm', 'pottedplant', 'pottedtree', 'yucca', 'palmplant']],
-  ['Play', ['playball', 'playground', 'bouncehouse', 'bouncecombo', 'bouncecourse', 'softcube', 'softblock', 'softpillar', 'softbeam', 'softslab', 'softramp', 'softcylinder', 'softsteps']],
+  ['Play', ['playball', 'playground', 'softcube', 'softblock', 'softpillar', 'softbeam', 'softslab', 'softramp', 'softcylinder', 'softsteps']],
   ['Shop & food', ['kiosk', 'shelf', 'wallshelf', 'cosmeticsshelf', 'pharmacyshelf', 'vhsshelf', 'minifridge', 'counter']],
 ];
 
 export const OBJECT_ICONS = {
-  halfwall: '▰',
-  table: '🗄️',
+  halfwall: '▰', glasswall: '🪟', copier: '🖨️', archiveshelf: '🗄️', elevator: '🛗',
+  bookshelf: '📚', hoop: '🏀', ortable: '🏥', surgicallamp: '💡', morguewall: '🗄️', gurney: '🛏️', coveredcar: '🚗', boiler: '🔥', bunkbed: '🛏️',
+  double_bed: '🛏️', nightstand: '🗄️', toilet: '🚽', sink: '🚰', mirror: '🪞', noclipmark: '⬚', floorvent: '▦', darkwindow: '⬛', cashier: '🧍', washer: '🧺',
+  table: '🗄️', fids: '🛫', checkin: '🛄', carousel: '🧳', stanchion: '🚧', luggagecart: '🛒',
   vhsshelf: '📼', vhsplayer: '📼', minifridge: '🧊',
   hifi: '🎶', walkman: '📼', retropcdesktop: '🖥️', retropctower: '🖥️', retropccompact: '🖥️', retropcterminal: '🖥️',
   mallbench: '🪑', pottedpalm: '🌴', pottedplant: '🪴', pottedtree: '🌳', yucca: '🪴', palmplant: '🌿',
@@ -25,8 +33,8 @@ export const OBJECT_ICONS = {
   sofa: '🛋️', desk: '🗄️', desk2: '🗄️', officechair: '💺', dinerchair: '🪑', dinerset: '🍽️', plasticchair: '🪑', woodenchair: '🪑',
   deckchair: '🏖️', tvbench: '📺', cafe: '☕', tv: '📺', pc: '🖥️', laptop: '💻', console: '🎮', gamepad: '🕹️',
   boombox: '📻', cassette: '📼', arcade2: '👾', register: '💵', soda: '🥤', clock: '🕒', fan: '🌀',
-  divingboard: '🤸', flamingo: '🦩', duck: '🦆', playground: '🛝', bouncehouse: '🏰',
-  bouncecombo: '🏰', bouncecourse: '🏰', softcube: '🟥', softblock: '🟦', softpillar: '🟨', softbeam: '🟩',
+  divingboard: '🤸', flamingo: '🦩', duck: '🦆', playground: '🛝',
+  softcube: '🟥', softblock: '🟦', softpillar: '🟨', softbeam: '🟩',
   softslab: '🟪', softramp: '🔺', softcylinder: '🟠', softsteps: '🪜', kiosk: '🏪', shelf: '🛒', wallshelf: '🧺', cosmeticsshelf: '🧴', pharmacyshelf: '💊', counter: '🧾',
 };
 

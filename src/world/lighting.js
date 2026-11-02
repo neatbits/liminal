@@ -1,7 +1,7 @@
 // Bakt lys: hver vertex får lys fra armaturer innenfor en radius, med siktlinje gjennom
 // rutenettet (vegger, lavere tak, bassengkanter og dekkeplater kaster skygge). Blinkende lys
 // bakes i egne grupper. Et lys i en rute med dekke gir én armatur i hver etasje.
-import { LIGHT, canHaveLight, inBounds } from '../core/level.js';
+import { LIGHT, TILE, canHaveLight, getTile, inBounds } from '../core/level.js';
 import { ledLights } from '../core/leds.js';
 import { panelLights } from '../core/panels.js';
 import { ceilingAt, floorAt, deckAt, SLAB } from '../core/heights.js';
@@ -13,6 +13,7 @@ import { lightGrid, lightSampleKey, windowNeighbours } from './light-grid.js';
 import { mallRoof } from '../core/mall-roof.js';
 import { pillarContains } from '../core/pillars.js';
 import { cellHeights, lineOfSight, settle } from './sightline.js';
+import { CRAWL } from '../core/crawl.js';
 
 export { cellHeights, lineOfSight }; // samlet her for de mange som allerede importerer dem fra lighting.js
 
@@ -32,6 +33,7 @@ export function flickerGroup(x, z) {
 export function collectLights(level) {
   const out = [];
   const roof = mallRoof(level);
+  const bare = new Set((level.lifts ?? []).map(({ lamp: [x, z] }) => z * level.w + x)); // heisens egen lampe (world/lift-doors.js)
   for (let z = 0; z < level.h; z++) {
     for (let x = 0; x < level.w; x++) {
       const i = z * level.w + x;
@@ -46,7 +48,7 @@ export function collectLights(level) {
       (d ? [d - SLAB, ceilingAt(level, x, z)] : [ceilingAt(level, x, z)]).forEach((ceil, k) => {
         if(roof?.mask[i] && (!d||k===1))return;
         const low = Math.min(ceil, floors[k] + HANG);
-        out.push({ cx: x, cz: z, x: x + 0.5, z: z + 0.5, y: ceil - LIGHT_DROP, top: ceil, ceil, state, group, ...(low < ceil ? { low: low - LIGHT_DROP } : {}) });
+        out.push({ cx: x, cz: z, x: x + 0.5, z: z + 0.5, y: ceil - LIGHT_DROP, top: ceil, ceil, state, group, ...(low < ceil ? { low: low - LIGHT_DROP } : {}), ...(bare.has(i) ? { bare: true } : {}) });
       });
     }
   }
@@ -88,6 +90,12 @@ export function collectLights(level) {
  * og gjenbrukes for alle normalene og begge sidene. Eget buffer, så rekkefølgen ikke betyr noe;
  * releaseObjectSamples() frigjør det når alle gjenstandene er bakt.
  */
+/**
+ * Omgivelseslyset (temaets ambient) er lys som kastes tilbake fra lampene, så det følger dem: fullt der lampene gir minst
+ * REF i direkte lys, og bare FLOOR der ingen lampe når fram. Uten lamper er det da mørkt nok til at lommelykten trengs.
+ */
+export const AMBIENT = { FLOOR: 0.12, REF: 0.15 };
+
 export function createLightField(level, theme, lights = collectLights(level)) {
   const p = theme.light;
   const color = hexToLinear(p.color);
@@ -108,9 +116,11 @@ export function createLightField(level, theme, lights = collectLights(level)) {
 
   /** Lyset på hver side (sign 1 = normalen, −1 = baksiden) sett fra startpunktet `at`. */
   function gather(x, y, z, nx, ny, nz, signs, at = origin(x + nx * 0.02, y, z + nz * 0.02)) {
-    const outs = signs.map(() => [ambient[0], ambient[1], ambient[2], 0, 0, 0, 0]);
-    const days = signs.map(() => [0, 0, 0]); // dagslys fra vinduer, lagt til til slutt
     const { sx, sz, candidates, sight } = at;
+    const dim = getTile(level, Math.floor(sx), Math.floor(sz)) === TILE.CRAWL ? CRAWL.SHADE : 1; // krypeganger er mørke
+    const outs = signs.map(() => [ambient[0] * dim, ambient[1] * dim, ambient[2] * dim, 0, 0, 0, 0]);
+    const days = signs.map(() => [0, 0, 0]); // dagslys fra vinduer, lagt til til slutt
+    const direct = signs.map(() => 0); // alt direkte lys (også blinkende og dagslys), for omgivelseslyset
     for (let i = 0; i < candidates.length; i++) {
       const l = candidates[i];
       const ly = l.low === undefined ? l.y : Math.min(l.y, Math.max(l.low, y)); // nærmeste punkt i lyssøylen
@@ -135,6 +145,7 @@ export function createLightField(level, theme, lights = collectLights(level)) {
           sight[i] = lineOfSight(level, sx + (dx / h) * 0.02, sz + (dz / h) * 0.02, l.x, l.z, heights, y, ly) ? 1 : 2;
         }
         if (sight[i] === 2) continue;
+        direct[j] += c * (l.rgb ? (l.rgb[0] + l.rgb[1] + l.rgb[2]) / 3 : 1);
         if (l.state === LIGHT.FLICKER) {
           outs[j][3 + l.group] += c;
         } else {
@@ -149,6 +160,8 @@ export function createLightField(level, theme, lights = collectLights(level)) {
     // Dagslyset legges til mindre jo lysere det allerede er (ellers blir lyse rom med mange
     // vinduer helt hvite): et mørkt rom får nesten alt, et opplyst rom en liten del.
     outs.forEach((out, j) => {
+      const missing = (1 - AMBIENT.FLOOR) * Math.max(0, 1 - direct[j] / AMBIENT.REF);
+      for (let c = 0; c < 3; c++) out[c] -= ambient[c] * dim * missing;
       const lit = (out[0] + out[1] + out[2]) / 3;
       const share = 1 / (1 + lit * lit * 2);
       for (let c = 0; c < 3; c++) out[c] += days[j][c] * share;
@@ -188,5 +201,5 @@ export function createLightField(level, theme, lights = collectLights(level)) {
     origins.clear();
   }
 
-  return { sample, objectSample, releaseObjectSamples, near, color, lights };
+  return { sample, objectSample, releaseObjectSamples, near, color, ambient, lights };
 }

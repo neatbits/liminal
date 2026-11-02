@@ -19,6 +19,7 @@ export class Scary {
     this.breathIn = 0;
     this.roarIn = null;
     this.roarAgain = 0;
+    this.calm = 0; // s det holder seg borte i det neste rommet (etter at man våkner, view3d/nightmare.js)
   }
 
   /** Av: monsteret forsvinner. */
@@ -99,6 +100,8 @@ export class Scary {
     const climbed = this.ai && this.floor !== v.storeys.current;
     const hunting = this.ai?.state === 'hunt';
     this.ai = new MonsterAI(v.walk.level);
+    this.ai.away = this.calm;
+    this.calm = 0;
     this.floor = v.storeys.current;
     this.follow = climbed && hunting ? { t: FOLLOW, x: w.x, z: w.z } : null;
   }

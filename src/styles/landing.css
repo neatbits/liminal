@@ -207,6 +207,10 @@ body.landing {
   color: var(--l-muted);
 }
 
+.ad-slot[hidden] {
+  display: none; /* tom plass tar ingen plass (src/landing.js) */
+}
+
 .ad-slot > span {
   width: 100%;
   min-height: 90px;

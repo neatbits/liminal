@@ -15,7 +15,7 @@ const idle = { forward: 0, strafe: 0, running: false, consumeLook: () => [0, 0] 
 describe('rulletrapper', () => {
   it('Mall får to brede løp, ett opp og ett ned, uten å endre andre temaer', () => {
     for (let seed = 1; seed <= 6; seed++) {
-      const level = generateLevel({ theme: 'mall', w: 56, h: 40, seed });
+      const level = generateLevel({ theme: 'mall', w: 56, h: 40, seed, layout: 'classic' });
       const runs = escalatorRuns(level);
       expect(runs).toHaveLength(2);
       expect(runs.map((r) => r.down).sort()).toEqual([false, true]);
@@ -25,7 +25,7 @@ describe('rulletrapper', () => {
         expect(r.rise).toBe(4.4);
       }
     }
-    expect(escalatorRuns(generateLevel({ theme: 'mall', w: 12, h: 12, seed: 1 }))).toEqual([]);
+    expect(escalatorRuns(generateLevel({ theme: 'mall', w: 12, h: 12, seed: 1, layout: 'classic' }))).toEqual([]);
     expect(escalatorRuns(presetById('pools').make())).toEqual([]);
   });
 

@@ -18,7 +18,7 @@ function toGeometry(data) {
   g.setAttribute('aLight', new THREE.Float32BufferAttribute(data.light, 3));
   g.setAttribute('aFlick', new THREE.Float32BufferAttribute(data.flick, 4));
   g.setAttribute('aEdge', new THREE.Float32BufferAttribute(data.edge, 1));
-  g.setIndex(data.index);
+  g.setIndex(Array.isArray(data.index) ? data.index : new THREE.BufferAttribute(data.index, 1)); // typet array fra en bakgrunnstråd (world/world-meshes.js)
   g.computeBoundingSphere();
   return g;
 }

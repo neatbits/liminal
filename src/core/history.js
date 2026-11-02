@@ -8,7 +8,7 @@ import { storeyLevel } from './storeys.js';
 // sammenlignes med ===.
 
 export function snapshot(level) {
-  const snap = { w: level.w, h: level.h, spawn: { ...level.spawn }, slides: level.slides, objects: level.objects, seed: level.seed };
+  const snap = { w: level.w, h: level.h, spawn: { ...level.spawn }, slides: level.slides, objects: level.objects, seed: level.seed, elevators: level.elevators };
   for (const key of LAYERS) snap[key] = level[key].slice();
   return snap;
 }
@@ -22,6 +22,8 @@ export function applySnapshot(level, snap) {
   level.objects = snap.objects ?? [];
   level.spawn = { ...snap.spawn };
   level.seed = snap.seed; // frøet rommet ble generert fra (følger med når man angrer)
+  if (snap.elevators) level.elevators = snap.elevators; // heisene hører til bygget (rommet, core/elevators.js)
+  else delete level.elevators;
 }
 
 /** Bilde av etasje `storey` i rommet, eller av hele bygget ('all'). */
@@ -46,7 +48,7 @@ function unchanged(room, snap) {
 }
 
 function sameContent(a, b) {
-  if (a.w !== b.w || a.h !== b.h || a.seed !== b.seed || a.slides !== b.slides || a.objects !== b.objects) return false;
+  if (a.w !== b.w || a.h !== b.h || a.seed !== b.seed || a.slides !== b.slides || a.objects !== b.objects || a.elevators !== b.elevators) return false;
   if (a.spawn.x !== b.spawn.x || a.spawn.z !== b.spawn.z || a.spawn.a !== b.spawn.a) return false;
   for (const key of LAYERS) {
     const x = a[key];

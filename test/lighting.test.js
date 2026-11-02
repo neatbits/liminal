@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createLevel, setLight, TILE, LIGHT } from '../src/core/level.js';
 import { fillTiles, rectIndices } from '../src/core/ops.js';
 import { getTheme } from '../src/core/themes.js';
-import { collectLights, createLightField, lineOfSight, cellHeights, HANG, LIGHT_DROP } from '../src/world/lighting.js';
+import { collectLights, createLightField, lineOfSight, cellHeights, HANG, LIGHT_DROP, AMBIENT } from '../src/world/lighting.js';
 import { hexToLinear } from '../src/world/color.js';
 
 // To rom side om side, adskilt av en vegg i x = 8.
@@ -45,7 +45,7 @@ describe('lys', () => {
     const shadow = field.sample(10.5, 0, 3.5, 0, 1, 0)[0];
     const ambient = hexToLinear(getTheme('backrooms').light.ambient)[0];
     expect(lit).toBeGreaterThan(ambient * 3);
-    expect(shadow).toBeCloseTo(ambient, 5);
+    expect(shadow).toBeCloseTo(ambient * AMBIENT.FLOOR, 5); // bak veggen når ingen lampe fram: bare resten av omgivelseslyset
   });
 
   it('blinkende lys havner i egen kanal og ødelagte lys lyser ikke', () => {
@@ -59,7 +59,20 @@ describe('lys', () => {
     const ambient = hexToLinear(getTheme('office').light.ambient);
     expect(s[0]).toBeCloseTo(ambient[0], 5);
     const dark = field.sample(11.5, 0, 3.5, 0, 1, 0);
-    expect(dark[0]).toBeCloseTo(ambient[0], 5);
+    expect(dark[0]).toBeCloseTo(ambient[0] * AMBIENT.FLOOR, 5);
+  });
+
+  it('omgivelseslyset følger lampene: fullt rett under en lampe, nesten borte i et rom uten lamper', () => {
+    for (const theme of ['backrooms', 'pool', 'mall', 'basement']) {
+      const ambient = hexToLinear(getTheme(theme).light.ambient);
+      const dark = createLightField(twoRooms(), getTheme(theme)).sample(4.5, 0, 3.5, 0, 1, 0);
+      for (let c = 0; c < 3; c++) expect(dark[c], theme).toBeCloseTo(ambient[c] * AMBIENT.FLOOR, 5);
+      const level = twoRooms();
+      setLight(level, 4, 3, LIGHT.ON);
+      const under = createLightField(level, getTheme(theme)).sample(4.5, 0, 3.5, 0, 1, 0);
+      expect(under[0], theme).toBeGreaterThan(ambient[0] * 1.5);
+    }
+    expect(AMBIENT.FLOOR).toBeLessThan(0.2);
   });
 
   it('lysstyrken skalerer med rommets «bright»', () => {
@@ -98,8 +111,8 @@ describe('lys med soner', () => {
     const field = createLightField(level, getTheme('backrooms'));
     const ambient = hexToLinear(getTheme('backrooms').light.ambient)[0];
     // Rett innenfor gangen når lyset under kanten; lenger inn skjermer taket.
-    expect(field.sample(6.3, 0, 3.5, 0, 1, 0)[0]).toBeGreaterThan(ambient * 1.3);
-    expect(field.sample(9.5, 0, 3.5, 0, 1, 0)[0]).toBeCloseTo(ambient, 5);
+    expect(field.sample(6.3, 0, 3.5, 0, 1, 0)[0]).toBeGreaterThan(field.sample(9.5, 0, 3.5, 0, 1, 0)[0] * 3);
+    expect(field.sample(9.5, 0, 3.5, 0, 1, 0)[0]).toBeCloseTo(ambient * AMBIENT.FLOOR, 5);
   });
 
   it('siktlinjen sjekker høyden der den krysser en rutegrense', () => {
@@ -127,7 +140,7 @@ describe('lys med soner', () => {
     setLight(level, 6, 3, LIGHT.ON);
     const field = createLightField(level, getTheme('pool'));
     const ambient = hexToLinear(getTheme('pool').light.ambient)[0];
-    expect(field.sample(8.2, -3, 3.5, 0, 1, 0)[0]).toBeCloseTo(ambient, 5);
+    expect(field.sample(8.2, -3, 3.5, 0, 1, 0)[0]).toBeCloseTo(ambient * AMBIENT.FLOOR, 5);
     expect(field.sample(8.2, -0.12, 3.5, 0, 1, 0)[0]).toBeGreaterThan(ambient * 1.2); // vannflaten
   });
 

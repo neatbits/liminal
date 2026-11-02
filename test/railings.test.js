@@ -81,7 +81,7 @@ describe('fliser', () => {
     fillZone(level, 'finish', rectIndices(level, { x0: 1, z0: 5, x1: 3, z1: 6 }), 1);
     const back = levelFromJSON(JSON.parse(JSON.stringify(levelToJSON(level))));
     expect(Array.from(back.finish)).toEqual(Array.from(level.finish));
-    const basement = generateLevel({ theme: 'basement', w: 40, h: 30, seed: 3 });
+    const basement = generateLevel({ theme: 'basement', w: 40, h: 30, seed: 3, layout: 'classic' });
     expect(basement.finish.some((v) => v === FINISH.TILES)).toBe(true);
   });
 });

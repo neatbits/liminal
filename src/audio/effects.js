@@ -144,6 +144,13 @@ export function pickup(engine) {
   engine._oneShot(engine.pickupSound, 0.8, 0.95 + Math.random() * 0.1);
 }
 
+/** Bryteren på lommelykten: et lite plastklikk, litt lysere når den slås på. */
+export function flashClick(engine, on) {
+  if (!engine.ctx || !engine.graph) return;
+  engine.flashClickSound ??= shutterBuffer(engine.ctx);
+  engine._oneShot(engine.flashClickSound, 0.22, on ? 2.1 : 1.7);
+}
+
 /** Kameralukker: to korte, mekaniske klikk (speilet slår opp og ned). */
 export function shutterBuffer(ctx) {
   const rate = ctx.sampleRate;

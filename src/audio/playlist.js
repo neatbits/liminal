@@ -21,3 +21,9 @@ export function shuffled(count, rand = Math.random, last = -1) {
   if (count > 1 && order[0] === last) [order[0], order[1]] = [order[1], order[0]];
   return order;
 }
+
+/** Ett steg i toningen: nærmere target, aldri forbi det og aldri utenfor 0–1, også om klokken står stille. */
+export function fadeStep(level, target, step) {
+  const left = target - level;
+  return Math.abs(left) <= Math.max(0, step) ? target : level + Math.sign(left) * Math.max(0, step);
+}

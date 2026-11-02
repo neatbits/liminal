@@ -29,6 +29,8 @@ import { retailArt } from './retail-art.mjs';
 import { electronicsArt } from './electronics-art.mjs';
 import { vhsArt } from './vhs-art.mjs';
 import { sampleMorphClip } from './model-morphs.mjs';
+import { bakePose } from './model-pose.mjs';
+import { vertexColorsToMaterials } from './model-colors.mjs';
 
 const SRC = '3dmodels';
 const OUT = 'models';
@@ -69,11 +71,12 @@ async function build(dir, file, config, name, keep) {
   const out = join(OUT, `${name}.glb`);
   const artFile = { retail: 'scripts/retail-art.mjs', electronics: 'scripts/electronics-art.mjs', vhs: 'scripts/vhs-art.mjs' }[config.art];
   const changed = Math.max(newest(dir), artFile ? statSync(artFile).mtimeMs : 0,
-    config.morphSamples ? statSync('scripts/model-morphs.mjs').mtimeMs : 0);
-  if (!all && existsSync(out) && statSync(out).mtimeMs > changed) return;
+    config.morphSamples ? statSync('scripts/model-morphs.mjs').mtimeMs : 0, config.pose !== undefined ? statSync('scripts/model-pose.mjs').mtimeMs : 0);
+  if (!all && existsSync(out) && statSync(out).mtimeMs > changed && !(config.vertexColors && statSync('scripts/model-colors.mjs').mtimeMs > statSync(out).mtimeMs)) return;
 
   const doc = await io.read(join(dir, file));
   if(config.morphSamples)sampleMorphClip(doc,config.morphSamples);
+  if (config.pose !== undefined) bakePose(doc, config.pose); // én stilling fra skjelettanimasjonen (scripts/model-pose.mjs)
   if (config.art === 'retail') await retailArt(doc, name);
   if (config.art === 'electronics') await electronicsArt(doc, name);
   if (config.art === 'vhs') await vhsArt(doc);
@@ -96,11 +99,21 @@ async function build(dir, file, config, name, keep) {
     m.setEmissiveFactor([0, 0, 0]);
   }
   await doc.transform(metalRough(), prune());
+  // matte: modeller med bare fargede materialer. Ulike metall-/ruhetsverdier gir paletten en egen tekstur, og den røde
+  // kanalen der leses som skygge (world/objects.js: arm) – vasken ble mørk. Lyset bakes, så verdiene brukes ikke uansett.
+  if (config.matte) for (const m of doc.getRoot().listMaterials()) if (!m.getMetallicRoughnessTexture()) m.setMetallicFactor(0).setRoughnessFactor(1);
   // Tunge modeller (f.eks. AI-genererte): færre trekanter, med liten synlig feil.
   if (config.simplify) {
     await MeshoptSimplifier.ready;
     if (config.join) await doc.transform(flatten(), joinParts({ keepNamed: false }));
     await doc.transform(weld(), simplify({ simplifier: MeshoptSimplifier, ratio: config.simplify, error: config.simplifyError ?? 0.004 }));
+  }
+  // vertexColors: fargene ligger i hjørnene (COLOR_0), som spillet ikke bruker – blir k ensfargede materialer
+  // (scripts/model-colors.mjs). Etter forenklingen: kantene mellom fargegruppene ville ellers låst den.
+  if (config.vertexColors) {
+    console.log(`${name}: ${vertexColorsToMaterials(doc, config.vertexColors)} farger fra hjørnene`);
+    for (const m of doc.getRoot().listMaterials()) if (!m.getMetallicRoughnessTexture()) m.setMetallicFactor(0).setRoughnessFactor(1);
+    await doc.transform(prune());
   }
   const tmp = join(tmpdir(), `liminal-model-${name}.glb`);
   await io.write(tmp, doc);

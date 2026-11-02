@@ -1,5 +1,5 @@
 // Innholdet i toppmenyene.
-import { newRoom, openExamples, openMine, save, share, exportFile, importFile, generateInto, playGame, openShared } from './actions.js';
+import { newRoom, openExamples, openMine, save, share, exportFile, importFile, generateInto, playGame, playDaily, playRun, openShared } from './actions.js';
 import { helpDialog } from '../ui/dialogs.js';
 import { openSettings } from './view-settings.js';
 import { openModal } from '../ui/modal.js';
@@ -77,7 +77,11 @@ export function menuConfig(app) {
         '-',
         { label: 'Walk the room', action: () => app.walk() },
         { label: 'Dream walk (drift)', action: () => app.walk({ drift: true }) },
-        { label: 'Game mode … (find the tapes)', action: () => playGame(app) },
+        { label: 'Tape hunt …', action: () => playGame(app) },
+        { label: 'Lights out …', action: () => playGame(app, 'lights') },
+        { label: 'Daily level …', action: () => playDaily(app) },
+        { label: 'The Descent …', action: () => playRun(app, 'descent') },
+        { label: 'Spot the wrong …', action: () => playRun(app, 'spot') },
         { label: 'Music on/off', action: () => app.viewer.toggle('music') },
       ],
     },

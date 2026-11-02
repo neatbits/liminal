@@ -12,7 +12,7 @@ export { FINISH } from './finishes.js';
 // Gulvhøyde gjelder ikke vann (vannflaten er felles) og ikke trapper (de styres av
 // trappeverktøyet). Belegg lagres som et tall (raw) og får ingen etikett i skissen.
 export const ZONES = {
-  ceiling: { key: 'ceilings', clamp: clampHeight, applies: (t) => t !== TILE.WALL },
+  ceiling: { key: 'ceilings', clamp: clampHeight, applies: (t) => t !== TILE.WALL && t !== TILE.CRAWL },
   depth: { key: 'depths', clamp: clampDepth, applies: (t, l, i) => t === TILE.WATER || !!l && submergedPillar(l, i % l.w, Math.floor(i / l.w)) },
   floor: { key: 'floors', clamp: clampFloor, applies: (t) => t !== TILE.WALL && t !== TILE.WATER && t !== TILE.STAIRS },
   // Dekke (andre etasje) over gulv og søyler; trapper og dører går gjennom begge etasjer.

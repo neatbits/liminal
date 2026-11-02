@@ -15,6 +15,7 @@ const LOW = [150, 142, 124];
 const RAISED = [200, 162, 110];
 const TILED = [205, 210, 214];
 const DECK = [120, 150, 170]; // ruter med dekke (andre etasje) tones blågrått
+const CRAWLWAY = [75, 69, 96]; // krypeganger: mørke, som i spillet
 
 export function rgb(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -62,6 +63,8 @@ export function planImage(level) {
           for (let dx = -1; dx <= 1; dx++) if (getTile(level, x + dx, z + dz) !== TILE.WALL) touches = true;
         }
         c = touches ? WALL : MASS;
+      } else if (t === TILE.CRAWL) {
+        c = CRAWLWAY;
       } else if (waterCell(level, x, z)) {
         // Ballbinger vises som konfetti i ballfargene, vann blir mørkere jo dypere det er.
         const pit = theme.pitColors;

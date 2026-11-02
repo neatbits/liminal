@@ -8,7 +8,7 @@ import { ceilingAt } from './heights.js';
 import { clearObjects } from './object-pose.js';
 
 export const dm = (m) => Math.max(0, Math.min(255, Math.round(m * 10)));
-export const seamsOf = (level) => (level.seams ??= { noFloor: new Set(), noCeiling: new Set(), noRail: new Set(), open: new Map(), clip: new Map(), shaft: new Set() });
+export const seamsOf = (level) => (level.seams ??= { noFloor: new Set(), noCeiling: new Set(), noRail: new Set(), open: new Map(), clip: new Map(), shaft: new Set(), hole: new Map(), hatch: new Map() });
 
 /** Gjør ruten til vanlig gulv i høyden `floor` (dm), uten noe av det den hadde. */
 export function plainFloor(level, i, floor) {

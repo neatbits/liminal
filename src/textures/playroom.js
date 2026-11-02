@@ -3,10 +3,10 @@
 import { fbm } from './noise.js';
 import { makeCanvas, pixelPass, shade } from './paint.js';
 
-const MAT = ['#c9483d', '#2f72b0', '#d9a92a', '#3f8f52'];
+const MATS = ['#c9483d', '#2f72b0', '#d9a92a', '#3f8f52'];
 
 /** Puslematter: 4 × 4 matter à 0,6 m (tekstur 2,4 m) i fire farger, med «tenner» i skjøtene. */
-export function foamMat(rand) {
+export function foamMat(rand, MAT = MATS) {
   const S = 512;
   const T = S / 4;
   const { canvas, ctx } = makeCanvas(S);
@@ -49,17 +49,18 @@ export function foamMat(rand) {
   return canvas;
 }
 
-export function playWall(rand) {
+/** pal: bunn, to ulike flekker (textures/looks.js). */
+export function playWall(rand, pal = ['#efe9de', '#e6cd87', '#dae1df']) {
   const S = 256;
   const { canvas, ctx } = makeCanvas(S);
-  ctx.fillStyle = '#efe9de';
+  ctx.fillStyle = pal[0];
   ctx.fillRect(0, 0, S, S);
   // Faded clouds and a sun above the padded wall band; a quiet, empty indoor playground.
-  ctx.fillStyle = '#e6cd87';
+  ctx.fillStyle = pal[1];
   ctx.beginPath();
   ctx.ellipse(S * 0.26, S * 0.24, S * 0.0375, S * 0.075, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#dae1df';
+  ctx.fillStyle = pal[2];
   for (const [x, y] of [[0.58, 0.24], [0.84, 0.43]]) {
     ctx.beginPath();
     ctx.ellipse(S * x, S * y, S * 0.085, S * 0.035, 0, 0, Math.PI * 2);
@@ -72,10 +73,9 @@ export function playWall(rand) {
 }
 
 /** Fargebånd nederst på veggen: blokker i rødt, gult, blått og grønt. */
-export function playStripe(rand) {
+export function playStripe(rand, colors = ['#d9473b', '#e8b52c', '#2f78bd', '#45995a']) {
   const S = 256;
   const { canvas, ctx } = makeCanvas(S);
-  const colors = ['#d9473b', '#e8b52c', '#2f78bd', '#45995a'];
   for (let k = 0; k < 4; k++) {
     ctx.fillStyle = colors[k];
     ctx.fillRect((k * S) / 4, 0, S / 4, S);

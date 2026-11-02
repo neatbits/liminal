@@ -3,6 +3,7 @@
 import { THEMES, THEME_IDS, getTheme } from '../core/themes.js';
 import { SKIES } from '../core/windows.js';
 import { TINTS } from '../core/tints.js';
+import { looksOf } from '../core/looks.js';
 import { STRENGTHS } from '../gen/wrong.js';
 import { MIN_SIZE, MAX_SIZE, HEIGHT_MIN, HEIGHT_MAX, DEPTH_MIN, DEPTH_MAX } from '../core/level.js';
 import { h } from './dom.js';
@@ -13,6 +14,9 @@ const metres = (v) => `${+v.toFixed(1)} m`;
 const TAB_KEY = 'liminal.sidebar-tab';
 const TABS = [['tools', 'Tools'], ['room', 'Room']];
 const span = ([lo, hi]) => (Math.abs(hi - lo) < 1e-6 ? metres(lo) : `${+lo.toFixed(1)}–${metres(hi)}`);
+
+// Generate: hvor mye som lages (app/actions.js, generateInto).
+const GEN_FLOORS = [['random', 'Random (1–3)'], ['1', '1 floor'], ['2', '2 floors'], ['3', '3 floors'], ['this', 'This floor only']];
 
 export class Sidebar {
   /**
@@ -41,7 +45,7 @@ export class Sidebar {
       'Room',
       true,
       h('div', { class: 'row' }, h('label', { text: 'Name' }), this.name),
-      h('div', { class: 'row' }, h('label', { text: 'Theme' }), this.theme),
+      h('div', { class: 'row' }, (this.themeLabel = h('label', { text: 'Theme' })), this.theme),
       this.themeHint,
       h('div', { class: 'row-2' }, h('div', {}, h('label', { text: 'Width' }), this.w), h('div', {}, h('label', { text: 'Depth' }), this.h)),
       h(
@@ -57,11 +61,15 @@ export class Sidebar {
     this.fog = range('Fog', 0, 2.5, 0.05, (v) => a.fog(v));
     // Lysfargen (core/tints.js) – kan overstyres av velgeren over 3D-panelet.
     this.tint = h('select', { class: 'field', onchange: (e) => a.tint(e.target.value) }, Object.entries(TINTS).map(([id, t]) => h('option', { value: id, text: t.label })));
+    // Bygningens tapet og teppe (core/looks.js), for temaene som har det.
+    this.look = h('select', { class: 'field', 'aria-label': 'Style', onchange: (e) => a.look(+e.target.value) });
+    this.lookRow = h('div', { class: 'row', hidden: true }, h('label', { text: 'Style' }), this.look);
     const atmosphere = section(
       'Light & atmosphere',
       true,
       this.bright.row,
       this.fog.row,
+      this.lookRow,
       h('div', { class: 'row' }, h('label', { text: 'Light colour' }), this.tint),
       h('div', { class: 'row' }, h('label', { text: 'Window light' }), this.sky),
       h(
@@ -76,13 +84,19 @@ export class Sidebar {
       'Generate',
       true,
       h('p', { class: 'side-hint', text: 'Replaces the room with a new one in the same theme and size. Ctrl+Z undoes it.' }),
+      h(
+        'div',
+        { class: 'row' },
+        h('label', { text: 'Floors' }),
+        (this.genFloors = h('select', { class: 'field', title: 'How many floors to generate, joined by stairs or ladders' }, GEN_FLOORS.map(([value, text]) => h('option', { value, text })))),
+      ),
       // Generering: frøet bestemmer rommet (samme frø og tema = samme rom). Tomt felt = tilfeldig.
       h(
         'div',
         { class: 'row seed-row' },
         (this.seed = h('input', { class: 'field', type: 'number', min: 0, step: 1, placeholder: 'Seed', title: 'The same seed and theme always give the same room' })),
-        h('button', { type: 'button', class: 'btn', text: 'Generate', title: 'Generate a room from this seed', onclick: () => a.generate(this.seed.value) }),
-        h('button', { type: 'button', class: 'btn', text: '🎲 Random', title: 'Generate a room from a new random seed', onclick: () => a.generate(null) }),
+        h('button', { type: 'button', class: 'btn', text: 'Generate', title: 'Generate a room from this seed', onclick: () => a.generate(this.seed.value, this.genFloors.value) }),
+        h('button', { type: 'button', class: 'btn', text: '🎲 Random', title: 'Generate a room from a new random seed', onclick: () => a.generate(null, this.genFloors.value) }),
       ),
       // «Make it wrong»: mange små endringer som gjør at noe føles galt (gen/wrong.js).
       h(
@@ -157,6 +171,11 @@ export class Sidebar {
     this.tools.sync(s);
   }
 
+  /** Med flere etasjer gjelder temaet etasjen som tegnes: «Theme · floor 2». */
+  syncFloor(storey, count) {
+    this.themeLabel.textContent = count > 1 ? `Theme · floor ${storey + 1}` : 'Theme';
+  }
+
   syncLevel(level) {
     const theme = getTheme(level.theme);
     if (document.activeElement !== this.name) this.name.value = level.name;
@@ -168,6 +187,13 @@ export class Sidebar {
     this.depth.firstChild.value = level.waterDepth;
     this.sky.value = level.sky ?? 'day';
     this.tint.value = level.tint ?? 'theme';
+    const looks = looksOf(level.theme);
+    this.lookRow.hidden = !looks;
+    if (looks && this.look.dataset.theme !== level.theme) {
+      this.look.dataset.theme = level.theme;
+      this.look.replaceChildren(...looks.map((l, i) => h('option', { value: i, text: l.label })));
+    }
+    if (looks) this.look.value = level.look ?? 0;
     if (document.activeElement !== this.seed) this.seed.value = level.seed ?? '';
     this.bright.input.value = level.bright;
     this.bright.out.textContent = `${Math.round(level.bright * 100)} %`;
@@ -176,7 +202,14 @@ export class Sidebar {
     this.tools.syncTheme(theme);
   }
 
+  /** 3D-byggingen ({ ms, vertices, lights }, eller null uten 3D) under Key figures. */
+  syncBuild(s) {
+    this.build = s ? [['3D build', `${s.ms} ms`], ['Vertices', s.vertices.toLocaleString('en-US')]] : [['3D', 'Unavailable – 2D editor ready']];
+    if (this.lastStats) this.syncStats(this.lastStats);
+  }
+
   syncStats(stats) {
+    this.lastStats = stats;
     const rows = [
       ['Floor area', `${stats.floorArea} m²`],
       ['Volume', `${stats.volume} m³`],
@@ -185,6 +218,7 @@ export class Sidebar {
       ['Water', stats.depth ? `${stats.waterArea} m² · ${span(stats.depth)} deep` : '0 m²'],
       ['Lights', `${stats.lights}`],
       ['Flickering / broken', `${stats.flicker} / ${stats.broken}`],
+      ...(this.build ?? []),
     ];
     this.stats.replaceChildren(...rows.flatMap(([k, v]) => [h('dt', { text: k }), h('dd', { text: v })]));
   }

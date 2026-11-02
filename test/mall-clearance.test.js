@@ -9,7 +9,7 @@ describe('fontener og ferdsel i Mall', () => {
   it.each([[56, 40], [52, 38], [31, 23], [56, 37], [78, 57], [114, 84], [24, 30], [12, 12]])(
     '%s × %s holder vannet utenfor rulletrappenes trafikkakse, også i små rom', (w, h) => {
       for (let seed = 1; seed <= 6; seed++) {
-        const level = generateLevel({ theme: 'mall', w, h, seed });
+        const level = generateLevel({ theme: 'mall', w, h, seed, layout: 'classic' });
         const runs = escalatorRuns(level);
         for (let i = 0; i < level.tiles.length; i++) {
           if (level.tiles[i] !== TILE.WATER) continue;
@@ -25,7 +25,7 @@ describe('fontener og ferdsel i Mall', () => {
   );
 
   it('beholder fontener i eksempelet og romslige atrier', () => {
-    for (const level of [presetById('mall').make({seed:7,layout:'gallery'}), generateLevel({ theme: 'mall', w: 78, h: 57, seed: 3 })]) {
+    for (const level of [presetById('mall').make({seed:7,layout:'gallery'}), generateLevel({ theme: 'mall', w: 78, h: 57, seed: 3, layout: 'classic' })]) {
       const { atrium } = mallLayout(level.w, level.h);
       const water = [];
       level.tiles.forEach((t, i) => { if (t === TILE.WATER) water.push([i % level.w, Math.floor(i / level.w)]); });

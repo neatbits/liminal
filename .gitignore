@@ -16,3 +16,5 @@ release/
 !3dmodels/school_desk/model.json
 3dmodels/stop_sign_level_0/*
 !3dmodels/stop_sign_level_0/model.json
+3dmodels/washing_machine/*
+!3dmodels/washing_machine/model.json

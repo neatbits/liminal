@@ -3,6 +3,7 @@
 // startstillingen fra o.tip/o.lift/o.off (core/object-tip.js) til man dytter borti dem. Ren logikk.
 import { TILE, getTile } from '../core/level.js';
 import { OBJECTS, objectsAt, MAX_OBJECTS } from '../core/objects.js';
+import { poser, objectBox, overlaps } from '../core/object-pose.js';
 import { TIP } from '../core/object-tip.js';
 
 export const PILE_CHAIR = 'woodenchair';
@@ -39,6 +40,11 @@ export function chairPile(level, rand, x, z) {
     const off = [Math.round((wx - cx - 0.5) * 1000) / 1000, Math.round((wz - cz - 0.5) * 1000) / 1000];
     chairs.push({ id: PILE_CHAIR, x: cx, z: cz, rot: (rot + turn) & 3, ...(tip ? { tip } : {}), ...(onTop ? { lift: width } : {}), off });
   }
+  // Stolene ligger forskjøvet i rutene: de kan nå inn under noe bredt ved siden av (et kafébord), så sjekk boksene.
+  const near = level.objects.filter((o) => Math.abs(o.x - x - 0.5) < 4 && Math.abs(o.z - z - 0.5) < 4);
+  const pose = poser({ ...level, objects: [...near, ...chairs] });
+  const others = near.map((o) => objectBox(pose(o)));
+  if (chairs.some((c) => others.some((b) => overlaps(objectBox(pose(c)), b)))) return 0;
   level.objects = [...level.objects, ...chairs];
   return chairs.length;
 }

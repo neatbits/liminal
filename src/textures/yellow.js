@@ -3,14 +3,14 @@
 import { fbm } from './noise.js';
 import { makeCanvas, pixelPass, shade, stainRing } from './paint.js';
 
-export function wallpaperYellow(rand) {
+export function wallpaperYellow(rand, base = '#d9bd5e') {
   const S = 512;
   const { canvas, ctx } = makeCanvas(S);
-  ctx.fillStyle = '#d8c47e';
+  ctx.fillStyle = base;
   ctx.fillRect(0, 0, S, S);
   for (let i = 0; i < 16; i++) {
     if (i % 2 === 0) {
-      ctx.fillStyle = 'rgba(255,248,210,0.07)';
+      ctx.fillStyle = 'rgba(255,240,170,0.07)';
       ctx.fillRect(i * 32, 0, 32, S);
     }
     ctx.fillStyle = 'rgba(120,98,40,0.06)';
@@ -38,10 +38,10 @@ export function wallpaperYellow(rand) {
   return canvas;
 }
 
-export function carpetDamp(rand) { // historisk teksturnøkkel; nå et jevnere, velholdt teppe
+export function carpetDamp(rand, base = '#b4a374') { // historisk teksturnøkkel; nå et jevnere, velholdt teppe
   const S = 512;
   const { canvas, ctx } = makeCanvas(S);
-  ctx.fillStyle = '#b4a374';
+  ctx.fillStyle = base;
   ctx.fillRect(0, 0, S, S);
   const pile = fbm(S, 3, 3, rand);
   const tuft = fbm(S, 32, 2, rand);
@@ -54,11 +54,11 @@ export function carpetDamp(rand) { // historisk teksturnøkkel; nå et jevnere, 
   return canvas;
 }
 
-export function ceilingTiles(rand, { clean = false } = {}) {
+export function ceilingTiles(rand, { clean = false, base = clean ? '#e3dfcf' : '#d8d2b8', grid = clean ? '#f1eee3' : '#ebe8dd' } = {}) {
   const S = 512;
   const T = 256;
   const { canvas, ctx } = makeCanvas(S);
-  ctx.fillStyle = clean ? '#e3dfcf' : '#d8d2b8';
+  ctx.fillStyle = base;
   ctx.fillRect(0, 0, S, S);
   for (let ty = 0; ty < 2; ty++) {
     for (let tx = 0; tx < 2; tx++) {
@@ -97,7 +97,7 @@ export function ceilingTiles(rand, { clean = false } = {}) {
     ctx.fillRect(0, e + 4, S, 2);
     ctx.fillRect(0, e - 6, S, 2);
   }
-  ctx.fillStyle = clean ? '#f1eee3' : '#ebe8dd';
+  ctx.fillStyle = grid;
   for (const e of [0, T, S]) {
     ctx.fillRect(e - 4, 0, 8, S);
     ctx.fillRect(0, e - 4, S, 8);
@@ -106,5 +106,5 @@ export function ceilingTiles(rand, { clean = false } = {}) {
 }
 
 export function levelZeroCeiling(rand) {
-  return ceilingTiles(rand, { clean: true });
+  return ceilingTiles(rand, { clean: true, base: '#dec97c', grid: '#e8d693' }); // gulnet, som veggene
 }

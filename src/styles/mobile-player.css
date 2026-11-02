@@ -159,11 +159,11 @@
   right: max(16px, env(safe-area-inset-right));
   bottom: max(22px, env(safe-area-inset-bottom));
   display: grid;
-  grid-template-columns: repeat(2, 64px);
+  grid-template-columns: repeat(3, 64px);
   gap: 8px;
 }
 .touch-action-pad button { min-height: 56px; }
-.touch-use { grid-column: 1 / 3; }
+.touch-use { grid-column: span 2; }
 .touch-menu {
   position: absolute;
   right: max(16px, env(safe-area-inset-right));

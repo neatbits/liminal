@@ -8,6 +8,7 @@ import { recursiveDivision, punchLoops } from './division.js';
 import { hangDoors, doorsInWalls } from './doors.js';
 import { addPoolSlide } from './slides.js';
 import { poolPillars } from './pool-pillars.js';
+import { buildLayout } from './layouts.js';
 
 // Dører legges inn til slutt i hver stil, så tidligere rom (samme frø) beholder utformingen.
 
@@ -15,8 +16,12 @@ function lights(level, rand, flicker, broken) {
   autoLights(level, { spacing: getTheme(level.theme).lightSpacing, rand, flicker, broken });
 }
 
-/** Nivå 0: store åpne flater oppdelt av tilfeldige veggstykker. */
-export function backrooms(level, rand) {
+/**
+ * Nivå 0: store åpne flater oppdelt av tilfeldige veggstykker. Nye rom kan få en av planløsningene i
+ * gen/level0-layouts.js i stedet.
+ */
+export function backrooms(level, rand, { layout } = {}) {
+  if (layout !== 'gallery' && buildLayout(level, rand, { wanted: layout, flicker: 0.05, broken: 0.04 })) return;
   const { w, h } = level;
   fillInterior(level);
   const segments = Math.floor((w * h) / 16);
@@ -43,8 +48,12 @@ export function backrooms(level, rand) {
   lights(level, rand, 0.05, 0.04);
 }
 
-/** Kontor: rom og ganger via rekursiv oppdeling, med dører og noen ekstra løkker. */
-export function office(level, rand) {
+/**
+ * Kontor. Nye rom får en av planløsningene i gen/office-layouts.js. Eksemplene (layout 'gallery'), og rom for
+ * små for dem: rom og ganger via rekursiv oppdeling, med dører og noen ekstra løkker.
+ */
+export function office(level, rand, { layout } = {}) {
+  if (layout !== 'gallery' && buildLayout(level, rand, { wanted: layout, doors: { closed: 0.15, ajar: 0.3, open: 0.45 }, flicker: 0.06, broken: 0.04 })) return;
   fillInterior(level);
   const leaves = recursiveDivision(level, rand, { minRoom: 3, wideChance: 0.2, stopChance: 0.25, maxStopArea: 120 });
   punchLoops(level, rand, Math.ceil(leaves.length / 4));
@@ -52,8 +61,12 @@ export function office(level, rand) {
   hangDoors(level, rand, { closed: 0.15, ajar: 0.3, open: 0.45 });
 }
 
-/** Hotell: lange, svingete ganger (labyrint med 2 ruters bredde) og noen små lobbyer. */
-export function hotel(level, rand) {
+/**
+ * Hotell. Nye rom får en av planløsningene i gen/hotel-layouts.js. Eksemplene (layout 'gallery'), og rom for
+ * små for dem: lange, svingete ganger (labyrint med 2 ruters bredde) og noen små lobbyer.
+ */
+export function hotel(level, rand, { layout } = {}) {
+  if (layout !== 'gallery' && buildLayout(level, rand, { wanted: layout, doors: { closed: 0.6, ajar: 0.25, open: 0.15 } })) return;
   const cw = Math.floor((level.w - 1) / 3);
   const ch = Math.floor((level.h - 1) / 3);
   const visited = new Uint8Array(cw * ch);
@@ -108,8 +121,12 @@ export function hotel(level, rand) {
   doorsInWalls(level, rand, 0.25, { nowhere: false, minGap: 4 });
 }
 
-/** Bassengrom: store haller med brede åpninger, vann i midten og søyler i de største. */
-export function pool(level, rand) {
+/**
+ * Bassengrom. Nye rom kan få en av planløsningene i gen/pool-layouts.js. Ellers, og i eksemplene: store haller med
+ * brede åpninger, vann i midten og søyler i de største.
+ */
+export function pool(level, rand, { layout } = {}) {
+  if (layout !== 'gallery' && buildLayout(level, rand, { wanted: layout, flicker: 0.02, broken: 0.02 })) return;
   fillInterior(level);
   // Store haller: rommene deles ikke opp under 8 ruter, stopper ofte tidlig og har brede åpninger.
   const leaves = recursiveDivision(level, rand, {
@@ -139,7 +156,8 @@ export function pool(level, rand) {
 }
 
 /** Parkeringskjeller: stor hall med søylerader og noen trappe-/heiskjerner. */
-export function garage(level, rand) {
+export function garage(level, rand, { layout } = {}) {
+  if (layout !== 'gallery' && buildLayout(level, rand, { wanted: layout, flicker: 0.06, broken: 0.08 })) return;
   const { w, h } = level;
   fillInterior(level);
   for (let z = 1; z < h - 1; z++) {

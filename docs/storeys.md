@@ -21,8 +21,8 @@ virker uendret i hver etasje, i etasjens egne koordinater.
   peker og tegning virker på `editor.level` som før.
 - Velgeren over skissen (`ui/storey-bar.js`), Edit-menyen og Page Up/Down. Handlingene ligger i
   `app/storey-actions.js`. Etasjen under vises blekt med stiplet kant (`editor/render-storey.js`).
-- Takhøyde, vanndybde, frø, nøkkeltall, lys, «Make it wrong» og generering gjelder etasjen som
-  tegnes; størrelse og tema gjelder hele bygget.
+- Takhøyde, vanndybde, frø, nøkkeltall, lys og «Make it wrong» gjelder etasjen som tegnes; størrelsen gjelder
+  hele bygget. Generate/Random lager hele bygget, eller med «This floor only» bare etasjen som tegnes.
 - **Angre**: et bilde gjelder én etasje (`history.push(room, k)`, husker nummeret) eller hele
   bygget (`'all'`: størrelse og etasjelisten). `undo`/`redo` returnerer `{ storey }` eller
   `{ all: true }`, og editoren viser etasjen som ble endret. Gå via `editor.checkpoint(all)` og
@@ -62,8 +62,38 @@ hører til toppen av bygget: `walkLevels` setter `covered` på alle etasjer unde
 
 `stackFloors(room, rand, n)` legger til nesten like etasjer: kopier av etasje 0 med «Make it wrong»
 (subtle), uten trappene opp fra etasje 0, og et trapperom fra etasjen under der løpet ikke stenger noe
-under og sjakten ikke stenger noe over (sjekket med flomfylling). Eksempelet **The Hotel Floors**, og
-genererte nivåer i `FLOOR_THEMES` får 2–3 etasjer med 20 % sjanse. Kassettene ligger i etasje 0.
+under og sjakten ikke stenger noe over (sjekket med flomfylling). Brukes av eksempelet **The Hotel Floors**,
+som må bli likt hver gang.
+
+## Blandede bygg (`gen/mixed-floors.js`)
+
+`addFloors` (fra `nextLevel`, bare vanlige romnivåer) gir nye nivåer 1 (55 %), 2 (30 %) eller 3 (15 %) etasjer;
+rom på minst `BIG_ROOM` ruter høyst 2. Oftest er hver etasje et eget `generateLevel` med et tema som ikke er brukt
+i bygget (`MIX_THEMES`, alt unntatt Mall, som er for høy og har egen struktur). I `FLOOR_THEMES` er en
+tredjedel nesten like kopier. Alle etasjene har størrelsen fra etasje 0.
+
+- **Trapp eller stige** (`connect`): høyden avgjør. Trappen får `stairRun(gap)` ruter (ca. 0,65 m per rute), men
+  bare opp til `STAIR_MAX` (4,5 m). Over det blir det stige; ellers trapp i 75 % av byggene, med den andre som reserve.
+- **Alt kan nås**: hver forbindelse må ligge der man kan gå fra der man kom inn i etasjen (`reachableCells` med
+  `blocked`), må ikke stenge av noe under, og må føre ut i minst halve etasjen over. Hull, utganger og reposer er
+  `held`, så neste forbindelse ikke havner oppå dem. Sjakten går bare gjennom gulv og vegg, aldri vann eller sklier.
+- **Tak på sjekkene**: flomfyllingen er dyr, så `CHECKS` plasser prøves per forbindelse; deretter tas reserven.
+- **Stemningen** (`moodLevel`) gjelder alle etasjene. `linkCells` gir rutene der trapper og stiger går av og på, og
+  `makeWrong(…, keep)` lar dem være. Dype bassenger bare i etasje 0: de ville endret etasjehøyden over.
+- **Kassetter**: `storeyEntry` (`core/stairwells.js`) gir veien inn i en etasje også når det bare er en stige dit.
+- **Byggetid** (hele bygget, nettleser på utviklingsmaskinen, nov. 2026): Medium høyst 0,6 s, Large 1,3 s, Huge 1,9 s.
+
+Lights out legger skapene i etasjen man starter i; strømmen gjelder hele bygget.
+
+## Bygg fra editoren (`gen/new-building.js`)
+
+New room velger 1–8 etasjer (`newBuilding`): generert (hvert sitt tema, eller samme tema med ulike rom), haller med
+trapp eller stige, eller tomme etasjer. I rom på minst `BIG_ROOM` ruter kan man velge høyst 3, unntatt tomme
+(`floorLimit`: 8 genererte etasjer på 128 × 128 m låser siden i over 20 s). Generate og Random (`generateBuilding`, fra
+`generateInto`) erstatter hele bygget i rommets tema, som ett angre-punkt (`checkpoint(true)`), og velger Random (1–3)
+eller 1–3 etasjer. Samme frø, tema, størrelse og etasjevalg gir samme bygg, og etasje 0 er den samme uansett antall
+etasjer (`FLOOR_SEED`). Takhøyden til rommet beholdes, så stigningen i trappene stemmer. Får ikke alle
+etasjene forbindelse, blir bygget lavere, og New room sier fra. Mall får etasjer bare når man ber om et antall.
 
 ## Format
 
@@ -121,3 +151,59 @@ sjakten. Kollisjonen følger fortsatt rutekanten.
 
 Trapper, reposer, sjakter og sklitopper rydder gjenstander etter hele fotavtrykket (`clearObjects` i
 `core/object-pose.js`), og `gen/floors.js` velger trappeplass utenom fotavtrykkene (`footprintCells`).
+
+## Tema per etasje
+
+Temaet hører til etasjen (`OWN` i `core/storeys.js`, ikke `SHARED`): `storeyLevel` gir rommets tema til
+etasjer uten eget (eldre rom). Lagres i `storeys[]` bare når det er et annet enn rommets. I gåmodus følger
+tåke, lys og lyd temaet i etasjen man er i (`Storeys._switch` → `setWorld` og `_applyLook`). Sjakter og
+trapperom tilhører etasjen under, så veggene inne i dem har dens tema.
+
+## Heiser (`core/elevators.js`)
+
+En heis er en sjakt på 4 × 4 ruter gjennom hele bygget og lagres i rommet (`room.elevators`: `[{ x, z, dir }]`, x/z =
+hjørnet med lavest x og z; listen byttes ut, endres aldri på stedet). I heisens eget system (`cellOf`) er u langs døren og
+v innover fra dørveggen: vognen er 2 × 2 (u, v = 1–2), døråpningen u = 1–2 i v = 0, resten sjaktvegg, og reposet v = −1.
+Heisen stopper i etasjene med vanlig gulv på begge reposrutene (`elevatorStops`), minst to; i etasjene imellom er hele
+sjakten vegg. `applyElevators` (fra `walkLevels`, sist): vognen og døråpningen får gulvet i høyde med reposet, vognen
+2,4 m tak og ett `LIGHT.FLICKER`-lys, døren 2,1 m; gjenstander i sjakten og på reposet fjernes; etasjene får `lifts`.
+
+- **Editoren**: verktøyet Elevator (Y, i Stairs-familien) legger heisen rundt ruten man klikker, med dørene dit flest
+  etasjer har gulv; klikk igjen snur, høyreklikk fjerner (`toggleElevator`, angre for hele bygget). Skissen viser vognen,
+  døren med pil og etasjene den stopper i (`editor/render-elevators.js`), og en kryssert blokk der sjakten går forbi.
+- **Format**: `elevators: [[x, z, dir]]` i rommet (ingen ny versjon; gamle lesere ser bort fra feltet). Følger med i
+  `resizeLevel` (faller bort når den ikke får plass), angre (`snapshot`) og ikke i `copyStorey`/`insertBelow`.
+- **3D**: `world/lifts.js` (metallpaneler, håndlist, karm, knappepaneler og plate til etasjelampene) og
+  `world/lift-doors.js` (dørblad som glir inn i veggen, lamper som lyser av seg selv og lyspanelet i taket; `world.lifts`).
+  **Lik i alle etasjer**: vognen og døråpningen er kledd helt innvendig (vegger, tak, gulv, kanten over døren og sidene
+  i døråpningen), i egne materialer (`lift`, `liftFloor` i `world-materials.js`), ikke temaets. Lyset bakes uten temaets
+  farge (`neutralField`: samme styrke, grått), og blinkelyset får grå farge i materialet (`neutralLight`). Lyset i vognen
+  er merket `bare` i `collectLights`, så temaets armatur ikke tegnes; lyspanelet blafrer med samme blinkegruppe.
+  Styrken følger fortsatt temaets lys og eksponering.
+- **Gåing** (`view3d/lifts.js`): E ved dørene kaller heisen (knappen lyser til den kommer), inne går E til neste etasje og
+  tallene 1–8 velger (`app/shortcuts.js`). Dørene står åpne 5 s og lukkes ikke mens noen står i døråpningen; mens de ikke
+  er åpne, er døråpningen `TILE.WALL` i `walk.level`. Turen: 2,6 s + 1,6 s per etasje med motordur, knirk, risting og lys
+  som blafrer (etasjen dempes et øyeblikk); så `Storeys.enter` med samme punkt i vognen. Lyd: `audio/lift.js`.
+  Nettlesersjekk: `check-elevator.mjs`.
+- **Genererte bygg** (`gen/elevators.js`, fra `linkFloors`: nye nivåer, New room og Generate/Random): heisen kommer i
+  tillegg til trappen eller stigen, i 40 % av byggene med to etasjer og 60 % med flere (`ELEVATOR_CHANCE`; rundt 40 % får
+  en i praksis, ellers er det ikke plass). Eget frø fra rommets, så resten av bygget er uendret. Sjakten går bare
+  gjennom vegg og vanlig gulv (der den bare går forbi: bare vegg), aldri trapper, reposer, stiger, hull, vann eller
+  sklier (`linkCells` + løpene), og ikke over startpunktet. Flest stopp og mest vegg vinner; de beste `CHECKS` prøves
+  med flomfylling: reposet må ligge i minst halve etasjen, og sjakten må ikke stenge noe av. Reposet er med i
+  `linkCells`, så «Make it wrong» lar det være. Ikke i kjøpesenteret. Tid: snitt 29 ms, verst 110 ms (60 bygg).
+
+## Stiger (`core/ladders.js`)
+
+En stige er en gulvrute i etasje k med `meta` `LADDER` + retning (bit 0–1, `STAIR_DIRS`): dit går man av
+og på. Stigen står mot motsatt kant av hullet, og man klatrer på siden mot utgangen, vendt mot stigen, så
+man blir på sin side både opp og ned (ingen snuing). `applyLadders` (fra `walkLevels`): hullet i etasje k + 1 er
+rundt (`HOLE_R`) og uten rekkverk. Det er `TILE.WALL` for kollisjonen (rutekanten ligger 2–18 cm utenfor
+hullkanten) og står i `seams.hole`: surfaces bygger gulvet rundt hullet og taket over det, ingen vegger og ingen
+hjørneskygge mot det. Ruten under er åpen opp til taket der oppe (`ceilings`), med `seams.hatch`: himling rundt
+hullet og rund sjakt (`world/holes.js`) mellom himlingen og gulvet over; veggene klippes ved himlingen (`clip`),
+og etasjen under tegner ikke taket over hullet (`noCeiling`). Ingen egen lampe, lånt lys. Etasjene får `ladders`
+og `holes` ({ i, x, z, dir, gap, k }). 3D: `world/ladders.js` (vanger og trinn med håndtak over gulvet der oppe,
+i rekkverksmaterialet). Gåing: `view3d/climb.js` (E ved foten, eller ved hullet fra alle sider, også bak
+stigen (derfra flyttes man rundt), W/S, etasjebytte via `Storeys.enter`). Veggtoppene i etasjer med en etasje over
+stopper under etasjeskillet (`capMax`). Nettlesersjekk: `check-ladders.mjs`.

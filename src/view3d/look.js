@@ -14,11 +14,10 @@ export function applyLook(viewer) {
   const fog = scene.fog;
   renderer.toneMappingExposure = theme.exposure;
   if (walking) {
-    fog.color.set(theme.fog.color);
     const mood = getMood(settings.mood);
     fog.density = theme.fog.density * (viewer.level.fog ?? 1) * mood.fog;
     renderer.toneMappingExposure = theme.exposure * mood.exposure;
-    scene.background.copy(fog.color);
+    viewer.fogLight.setBase(fog.color.set(theme.fog.color)); // mørkere der det er mørkt rundt deg (view3d/fog-light.js)
     camera.fov = settings.fov;
     world.setBoost(1);
   } else {

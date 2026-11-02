@@ -130,8 +130,8 @@ export class ToolPanel {
     this.brushLabel.textContent = `${brush} m`;
     const { kind } = tool;
     // Dør og gjenstand virker på én rute, trapp og sklie på en dragning: formvalget gjelder ikke dem.
-    this.shapeRow.hidden = kind === 'door' || kind === 'object' || kind === 'stairs' || kind === 'slide' || kind === 'corner';
-    this.brushRow.hidden = kind === 'door' || kind === 'object' || kind === 'slide' || kind === 'corner';
+    this.shapeRow.hidden = ['door', 'object', 'stairs', 'slide', 'corner', 'ladder', 'elevator'].includes(kind);
+    this.brushRow.hidden = ['door', 'object', 'slide', 'corner', 'ladder', 'elevator'].includes(kind);
     this.corner.row.hidden = kind !== 'corner';
     this.object.row.hidden = kind !== 'object';
     this.door.row.hidden = kind !== 'door';

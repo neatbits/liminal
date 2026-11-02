@@ -33,8 +33,8 @@ function landing(level, x, z, towards) {
   return deckAt(level, x, z) || edgeHeight(level, x, z, towards[0], towards[1]);
 }
 
-/** Legger et trappeløp fra a (bunn) til b (topp). Returnerer antall trapperuter. */
-export function placeStairs(level, a, b, width = 1) {
+/** Legger et trappeløp fra a (bunn) til b (topp). rise: stigning per rute uten repos (ramper: core/ramps.js). Returnerer antall trapperuter. */
+export function placeStairs(level, a, b, width = 1, rise = STAIR_RISE) {
   let { dir, rows } = stairCells(a, b, width);
   const centre = Math.floor((Math.max(1, width) - 1) / 2);
   const ends = () => {
@@ -52,7 +52,7 @@ export function placeStairs(level, a, b, width = 1) {
     dir = [-dir[0], -dir[1]];
     [low, high] = ends();
   }
-  const top = high !== null && high > low + 0.05 ? high : Math.min(FLOOR_MAX, low + rows.length * STAIR_RISE);
+  const top = high !== null && high > low + 0.05 ? high : Math.min(FLOOR_MAX, low + rows.length * rise);
   const d = STAIR_DIRS.findIndex(([x, z]) => x === dir[0] && z === dir[1]);
   let n = 0;
   rows.forEach((row, k) => {

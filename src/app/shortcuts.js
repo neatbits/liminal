@@ -28,6 +28,7 @@ export function bindShortcuts(app) {
     }
     // Bokstavtaster (verktøy C/D, former B/R/F) gjelder ikke når man går – D er å gå til høyre.
     const walking = app.viewer.mode === 'walk';
+    if (walking && /^[1-8]$/.test(e.key) && app.viewer.walk.lift?.choose(Number(e.key) - 1)) return; // etasjen inne i en heis
     const tool = TOOLS.find((t) => t.key.toLowerCase() === key);
     if (tool && !(walking && /[a-z]/i.test(tool.key))) return app.setTool(tool.id);
     if ((e.key === 'PageUp' || e.key === 'PageDown') && !walking) {

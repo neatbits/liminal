@@ -41,3 +41,17 @@ export const isFeedback = (url) => {
 
 /** Lenker ut av programmet (krediteringer, kilder, e-post) åpnes i nettleseren, ikke i vinduet. */
 export const isExternal = (url) => /^(https?:|mailto:)/i.test(url);
+
+/**
+ * Forsiden (nettstedets hjemmeside) vises ikke i programmet: lenker dit (logoen og «Home» på About-siden)
+ * går til simulatoren i stedet. Returnerer adressen å åpne, eller null for andre sider.
+ */
+export function insteadOfFrontPage(url) {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== `${SCHEME}:` || u.host !== HOST) return null;
+    return u.pathname === '/' || u.pathname === '/index.html' ? START : null;
+  } catch {
+    return null;
+  }
+}

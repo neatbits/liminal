@@ -13,11 +13,16 @@ import { basement } from './basement.js';
 import { playroom } from './playroom.js';
 import { mall, mallLayout } from './mall.js';
 import { school, ward } from './building.js';
+import { airport } from './airport.js';
 import { levelHeight, poolDepths, tallHalls } from './variety.js';
 import { untangleDoors, clearDoorways } from './door-space.js';
 import { shapeCorners } from './corners.js';
 import { archways } from './arches.js';
 import { stackFloors } from './floors.js';
+import { addCrawlways } from './crawlways.js';
+import { addRamps } from './ramps.js';
+import { addSpecials } from './specials.js';
+import { rectIndices } from '../core/ops.js';
 
 const BY_THEME = {
   backrooms: styles.backrooms,
@@ -30,15 +35,23 @@ const BY_THEME = {
   mall,
   school,
   ward,
+  airport,
 };
+
+/** Rutene krypeganger holder seg unna i en planløsning: rom med et bestemt innhold, ikke de store flatene. */
+const CRAWL_FREE = ['cubicles', 'archive', 'storage', 'lounge', 'office', 'kitchen', 'copy', 'bare', 'bays', 'waiting'];
+function roomCells(level) {
+  return level.plan ? new Set(level.plan.filter((r) => !CRAWL_FREE.includes(r.kind)).flatMap((r) => rectIndices(level, r))) : null;
+}
 
 /**
  * Tilfeldig rom i stilen til temaet. Samme frø gir samme rom. Rommet får noen utganger
  * (dører til ingensteds i ytterveggen) – i gåmodus fører de videre til et nytt nivå – og
  * gjenstander som passer til temaet (gen/furnish.js). Med vary varierer takhøyden og
- * bassengdybdene (gen/variety.js) – eksemplene bruker det ikke, så de er som de alltid har vært.
+ * bassengdybdene (gen/variety.js) – eksemplene bruker det ikke, så de er som de alltid har vært. onPlan(rommene):
+ * rommene fra planløsningen (hotell og kontor), for tester og sjekker.
  */
-export function generateLevel({ theme = 'backrooms', w = 48, h = 48, seed = 1, name, vary = true, layout } = {}) {
+export function generateLevel({ theme = 'backrooms', w = 48, h = 48, seed = 1, name, vary = true, layout, onPlan = null } = {}) {
   const rand = mulberry32(seed ^ 0x4e16); // eget frø: romoppsettet er det samme som uten variasjon
   const height = vary ? levelHeight(theme, rand) : undefined;
   const level = createLevel({ theme, w, h, height, name: name ?? getTheme(theme).label });
@@ -47,17 +60,23 @@ export function generateLevel({ theme = 'backrooms', w = 48, h = 48, seed = 1, n
   furnishStructure(level, mulberry32(seed ^ 0x1a1f));
   if (vary && !getTheme(level.theme).pit) {
     poolDepths(level, rand);
-    if (level.theme === 'pool') tallHalls(level, rand);
+    if (level.theme === 'pool' && !level.layout) tallHalls(level, rand);
   }
-  level.spawn = autoSpawn(level);
+  level.spawn = autoSpawn(level, level.start); // start: planløsningens ønskede startsted (salen med bakke ned)
+  delete level.start;
   // Eget frø, så rommene ellers blir som før.
   addExits(level, mulberry32(seed ^ 0x5eed), 3, level.spawn);
   untangleDoors(level); // dørblad som slår inn i hverandre
   if (vary) archways(level, mulberry32(seed ^ 0xa4c4)); // buede åpninger i Level 0 (ikke i eksemplene)
+  if (vary) addRamps(level, mulberry32(seed ^ 0x5a3e)); // skrånende gulv i Level 0 (gen/ramps.js)
+  if (vary) addCrawlways(level, mulberry32(seed ^ 0x7c0d), undefined, roomCells(level)); // krypeganger (ikke i eksemplene)
   furnish(level, mulberry32(seed ^ 0xf00d), level.spawn, { deepEnds: vary });
-  clearDoorways(level); // ingen gjenstander foran døråpningene
+  if (vary) addSpecials(level, mulberry32(seed ^ 0x5bec)); // av og til et spesialrom (gen/specials.js, ikke i eksemplene)
+  clearDoorways(level); // ingen gjenstander foran døråpningene eller krypegangene
   addWindows(level, mulberry32(seed ^ 0x51de));
   if (vary) shapeCorners(level, mulberry32(seed ^ 0xc0e2)); // skrå og avrundede hjørner (ikke i eksemplene)
+  if (level.plan) onPlan?.(level.plan);
+  delete level.plan; // rommene fra planløsningen trengs bare her
   return level;
 }
 

@@ -12,6 +12,7 @@ import { doorInfo } from '../core/doors.js';
 import { closedLeafBox } from './doors.js';
 import { cornerShape, pointInPolygon } from '../core/corners.js';
 import { halfWallContains } from '../core/half-walls.js';
+import { BODY } from '../core/crawl.js';
 
 function solidBox(level, cx, cz) {
   const t = getTile(level, cx, cz);
@@ -21,7 +22,6 @@ function solidBox(level, cx, cz) {
 }
 
 export const STEP_UP = 0.45; // høyeste kant man går rett opp på (trapper stiger jevnt)
-const BODY = 1.75; // kroppshøyde: sklier høyere enn dette kan man gå under
 
 const RING = Array.from({ length: 8 }, (_, k) => [Math.cos((k * Math.PI) / 4), Math.sin((k * Math.PI) / 4)]);
 
@@ -41,22 +41,24 @@ export function climbBase(level, x, z, r = 0, y = null) {
 
 /**
  * En åpen rute er en hindring når bakken der man ville gått inn ligger for høyt, eller taket i
- * den høyden er for lavt (over en døråpning eller under et dekke når man går i etasjen over).
+ * den høyden er for lavt (over en døråpning, under et dekke når man går i etasjen over, eller i en
+ * krypegang når man står oppreist). body = kroppshøyden akkurat nå.
  */
-function tooHigh(level, cx, cz, x, z, base) {
+function tooHigh(level, cx, cz, x, z, base, body) {
   if (base === null || getTile(level, cx, cz) === TILE.WALL) return null;
   const gx = Math.max(cx + 1e-4, Math.min(x, cx + 1 - 1e-4));
   const gz = Math.max(cz + 1e-4, Math.min(z, cz + 1 - 1e-4));
   const ground = groundAt(level, gx, gz, base);
-  const low = headAt(level, cx, cz, base) < Math.max(ground, base) + BODY;
+  const low = headAt(level, cx, cz, base) < Math.max(ground, base) + body;
   return ground > base + STEP_UP || low ? [cx, cz, cx + 1, cz + 1] : null;
 }
 
 /**
  * Skyver punktet (x, z) ut av alle hindringer innenfor radius r.
  * @param base klatrehøyden (climbBase), eller null for å se bort fra gulvhøyder
+ * @param body kroppshøyden: mindre når man kryper (sklier og gjenstander høyere enn dette går man under)
  */
-export function resolveCircle(level, x, z, r, base = null) {
+export function resolveCircle(level, x, z, r, base = null, body = BODY) {
   for (let iter = 0; iter < 3; iter++) {
     let moved = false;
     const pushed = pushFromPillars(level, x, z, r);
@@ -65,13 +67,13 @@ export function resolveCircle(level, x, z, r, base = null) {
     for (let cz = Math.floor(z - r); cz <= Math.floor(z + r); cz++) {
       for (let cx = Math.floor(x - r); cx <= Math.floor(x + r); cx++) {
         const boxes = guardBoxes(level, cx, cz, base);
-        const solid = solidBox(level, cx, cz) ?? tooHigh(level, cx, cz, x, z, base);
+        const solid = solidBox(level, cx, cz) ?? tooHigh(level, cx, cz, x, z, base, body);
         if (solid) boxes.push(solid);
         // Gjenstander i ruten som står i kroppshøyde (ikke dem i etasjen under eller over).
         for (const o of level.objects?.length ? objectColliders(level, cx, cz) : []) {
-          if (base === null || (o.top > base + 0.05 && o.bottom < base + BODY)) boxes.push(o.box);
+          if (base === null || (o.top > base + 0.05 && o.bottom < base + body)) boxes.push(o.box);
         }
-        if (base !== null && level.objects?.length) boxes.push(...walkBlockers(level, cx, cz, base, STEP_UP, BODY));
+        if (base !== null && level.objects?.length) boxes.push(...walkBlockers(level, cx, cz, base, STEP_UP, body));
         for (const box of boxes) {
           const qx = Math.max(box[0], Math.min(x, box[2]));
           const qz = Math.max(box[1], Math.min(z, box[3]));
@@ -109,7 +111,7 @@ export function resolveCircle(level, x, z, r, base = null) {
       }
     }
     if (base !== null && level.slides?.length) {
-      const pushed = pushFromSlides(level, x, z, r, base);
+      const pushed = pushFromSlides(level, x, z, r, base, body);
       moved ||= pushed[0] !== x || pushed[1] !== z;
       [x, z] = pushed;
     }
@@ -142,8 +144,8 @@ export function pushFromPolygon(x, z, r, poly) {
 }
 
 /** Skyver sirkelen bort fra sklierenner og støtteben som er i kroppshøyde. */
-function pushFromSlides(level, x, z, r, base) {
-  const head = base + BODY;
+function pushFromSlides(level, x, z, r, base, body) {
+  const head = base + body;
   for (const c of slideColliders(level)) {
     if (c.bottom >= head || c.top <= base + 0.1) continue;
     const ex = c.bx - c.ax;
@@ -167,13 +169,14 @@ function pushFromSlides(level, x, z, r, base) {
  * Flytter med delsteg så man ikke kan «tunnelere» gjennom tynne hindringer.
  * @param climb true: man kommer ikke opp på kanter høyere enn STEP_UP (bare via trapper)
  * @param y høyden man står i (etasjen der det er dekke)
+ * @param body kroppshøyden (se resolveCircle)
  */
-export function moveCircle(level, x, z, dx, dz, r, climb = false, y = null) {
+export function moveCircle(level, x, z, dx, dz, r, climb = false, y = null, body = BODY) {
   const len = Math.hypot(dx, dz);
   const steps = Math.max(1, Math.ceil(len / (r * 0.5)));
   for (let i = 0; i < steps; i++) {
     const base = climb ? climbBase(level, x, z, r, y) : null;
-    [x, z] = resolveCircle(level, x + dx / steps, z + dz / steps, r, base);
+    [x, z] = resolveCircle(level, x + dx / steps, z + dz / steps, r, base, body);
   }
   return [x, z];
 }

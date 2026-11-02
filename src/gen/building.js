@@ -8,6 +8,7 @@ import { randInt } from '../core/rng.js';
 import { getTheme } from '../core/themes.js';
 import { fillRect } from './util.js';
 import { hangDoors } from './doors.js';
+import { buildLayout } from './layouts.js';
 
 /**
  * @param o corridor: bredde, depth: [min, maks] romdybde, width: [min, maks] rombredde,
@@ -66,11 +67,13 @@ export function corridorBuilding(level, rand, o) {
 }
 
 /** Skolen: brede korridorer med skap, klasserom på begge sider med dørene åpne eller på gløtt. */
-export function school(level, rand) {
+export function school(level, rand, { layout } = {}) {
+  if (layout !== 'gallery' && buildLayout(level, rand, { wanted: layout, doors: { closed: 0.2, ajar: 0.35, open: 0.45 }, flicker: 0.04, broken: 0.04 })) return;
   corridorBuilding(level, rand, { corridor: 3, depth: [6, 8], width: [6, 9], lockers: true, doors: { closed: 0.2, ajar: 0.35, open: 0.45 } });
 }
 
 /** Sykehuset: lange ganger, pasientrom og små bad, de fleste dørene lukket. */
-export function ward(level, rand) {
+export function ward(level, rand, { layout } = {}) {
+  if (layout !== 'gallery' && buildLayout(level, rand, { wanted: layout, doors: { closed: 0.55, ajar: 0.3, open: 0.15 }, flicker: 0.04, broken: 0.04 })) return;
   corridorBuilding(level, rand, { corridor: 3, depth: [5, 6], width: [4, 5], baths: 0.2, doors: { closed: 0.55, ajar: 0.3, open: 0.15 } });
 }

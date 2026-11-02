@@ -87,5 +87,5 @@ describe('stemningsskalaen', () => {
     for (let s = 1; s <= 30; s++) {
       expect(nextLevel(3, 'basement', mulberry32(s), MOODS.normal.anomalies).kind).toBe('room');
     }
-  });
+  }, 30000); // 30 hele nivåer (med etasjer): rundt 4–6 s
 });

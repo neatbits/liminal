@@ -1,10 +1,10 @@
-// Spøkelset utenfor vinduene (world/window-ghost-view.js): hvor det står utenfor et vindu, og om man
+// Skikkelsen utenfor vinduene (world/window-ghost-view.js): hvor det står utenfor et vindu, og om man
 // ser mot den veggretningen. Det synes gjennom alle vinduer med samme retning, så det må dukke opp
 // og forsvinne mens man ser en annen vei. Ren logikk – view3d/window-ghost.js setter uniformene.
 
 /**
  * Et sted ute i byen, et stykke unna vinduet, med midten omtrent i øyehøyde (det svever over
- * gatene). y er bunnen av spøkelset (bildet er 1,7 m høyt, core/ghost.js).
+ * gatene). y er bunnen av bildet (2,3 m høyt, core/figure.js).
  * @param win vinduet ({ x, z, n: [dx, dz] inn i rommet, floor }, core/windows.js)
  * @returns {{ along, y, out, frame }} i vindusutsiktens koordinater (langs veggen, høyde, ut fra veggen)
  */

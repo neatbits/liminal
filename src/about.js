@@ -5,7 +5,6 @@ import '@fontsource/vt323/latin-400.css'; // VHS-fonten pakkes med (OFL), ingen 
 import './styles/landing-sections.css';
 import './styles/changelog.css';
 import { OBJECTS } from './core/objects.js';
-import { GHOST } from './core/ghost.js';
 import { bindFeedback } from './ui/feedback.js';
 
 function link(text, href) {
@@ -17,7 +16,7 @@ function link(text, href) {
 }
 
 const list = document.getElementById('model-credits');
-for (const o of [...Object.values(OBJECTS), GHOST].filter((def) => def.credit)) {
+for (const o of Object.values(OBJECTS).filter((def) => def.credit)) {
   const li = document.createElement('li');
   const a = o.attribution;
   if (a) {
@@ -27,5 +26,14 @@ for (const o of [...Object.values(OBJECTS), GHOST].filter((def) => def.credit)) 
     li.textContent = `${o.label}: ${o.credit}`;
   }
   list.append(li);
+}
+// I programmet (desktop/preload.cjs): ingen nettstedsmeny eller hjemmeside – én knapp tilbake til
+// simulatoren, og tekstene for programmet (data-app) i stedet for nettleseren (data-web).
+if (window.liminalDesktop) {
+  document.body.classList.add('in-app');
+  const back = Object.assign(document.createElement('a'), { className: 'l-btn l-btn-small', href: '../app/', textContent: '← Back to Liminal' });
+  document.querySelector('.l-nav a[href="../"]')?.remove();
+  document.querySelector('.l-nav a[href="../app/"]')?.replaceWith(back);
+  document.querySelector('.l-top .brand').href = '../app/';
 }
 bindFeedback({ endpoint: '../api/feedback.php', page: 'about' });

@@ -1,9 +1,12 @@
-// Forsiden: kort for hvert eksempel med et ekte planbilde av rommet (generert her, uten
-// three.js), og plassen til reklamebanneret.
+// Forsiden: spillmodusene (Daily level med dagens dato og beste tid i dag), kort for hvert eksempel
+// med et ekte planbilde av rommet (generert her, uten three.js), og plassen til reklamebanneret.
 import './styles/landing.css';
 import '@fontsource/vt323/latin-400.css'; // VHS-fonten pakkes med (OFL), ingen henting fra Google
 import './styles/landing-sections.css';
 import './styles/landing-hall.css';
+import './styles/landing-play.css';
+import { dailyKey, dailyLabel, formatTime } from './gen/daily.js';
+import { loadDaily } from './core/storage.js';
 import { PRESETS } from './gen/index.js';
 import { planImage } from './editor/plan-image.js';
 import { bindFeedback } from './ui/feedback.js';
@@ -59,6 +62,15 @@ function adSlot() {
   else slot.hidden = true;
 }
 
+/** Daily-kortet: dagens dato, og beste tid i dag hvis man har spilt (samme lagring som simulatoren). */
+function dailyCard() {
+  const key = dailyKey();
+  document.getElementById('daily-date').textContent = dailyLabel(key).replace(/ \d{4}$/, ''); // «29 Oct»
+  const best = loadDaily()[key]?.best;
+  if (best !== undefined) document.getElementById('daily-go').textContent = `Your best today: ${formatTime(best)} · play again →`;
+}
+
 fillCards();
+dailyCard();
 adSlot();
 bindFeedback({ endpoint: 'api/feedback.php', page: 'home' });

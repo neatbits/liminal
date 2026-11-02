@@ -2,26 +2,19 @@
 import * as THREE from 'three';
 import { getTheme } from '../core/themes.js';
 import { collectLights, createLightField } from './lighting.js';
-import { buildSurfaces } from './surfaces.js';
 import { createSharedUniforms, toGeometry } from './materials.js';
 import { surfaceChunks } from './chunks.js';
 import { buildFixtures } from './fixtures.js';
 import { createGlossUniforms } from './gloss.js';
 import { createFloorReflection } from './floor-reflection.js';
-import { buildDoors } from './doors.js';
-import { buildRailings } from './railings.js';
-import { buildEscalators } from './escalators.js';
 import { createEscalatorMotion } from './escalator-motion.js';
-import { buildFountains } from './fountains.js';
 import { createFountainSpray } from './fountain-spray.js';
-import { buildMallRoof } from './mall-roof.js';
 import { createSwingDoors } from './swing-doors.js';
-import { buildSlides } from './slides.js';
+import { createLiftDoors } from './lift-doors.js';
 import { createBalls } from './balls.js';
 import { createObjects } from './objects.js';
-import { buildWindows } from './windows.js';
-import { buildShopfronts } from './shopfronts.js';
-import { buildWayfinding } from './wayfinding.js';
+import { surfacesOf } from '../core/looks.js';
+import { buildWorldMeshes, DEFAULT_DOOR } from './world-meshes.js';
 import { buildLedStrips } from './led-strips.js';
 import { buildPanels } from './panels.js';
 import { skyOf } from '../core/windows.js';
@@ -29,7 +22,6 @@ import { worldMaterials } from './world-materials.js';
 import { buildWaterData } from './water/geometry.js';
 import { createWater } from './water/water.js';
 
-const DEFAULT_DOOR = { frame: null, leaf: 'doorFlatCream', closet: null, knob: '#b9b3a6' };
 const DEFAULT_RAILING = { rail: '#8c8a84', bars: '#8c8a84' };
 // Flislagte rom: flisgulv, og fliser på veggene opp til `height` med en list øverst.
 const DEFAULT_TILES = {
@@ -46,7 +38,7 @@ const DEFAULT_TILES = {
  *          doors: dører som kan dreies (createSwingDoors), objects: gjenstandene (createObjects),
  *          balls: ballbingene (createBalls) eller null
  */
-export function buildWorld(level, { anisotropy = 4, waterQuality = true, waterDetail = false, waterWaves = 1 } = {}) {
+export function buildWorld(level, { anisotropy = 4, waterQuality = true, waterDetail = false, waterWaves = 1, prebuilt = null } = {}) {
   const started = performance.now();
   const theme = getTheme(level.theme);
   const lights = collectLights(level);
@@ -54,21 +46,8 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true, waterDe
   const door = { ...DEFAULT_DOOR, ...theme.door };
   const railing = { ...DEFAULT_RAILING, ...theme.railing };
   const tiles = { ...DEFAULT_TILES, ...theme.tiles };
-  const meshes = {
-    ...buildSurfaces(level, field),
-    ...buildDoors(level, door, field),
-    ...buildRailings(level, field),
-    ...buildEscalators(level, field),
-    ...buildFountains(level, field),
-    ...buildMallRoof(level, field),
-    ...buildSlides(level, field),
-    ...buildShopfronts(level, field),
-  };
-  const panes = buildWindows(level, field);
-  meshes.windowFrame = panes.frame;
-  meshes.windowGlass = panes.glass;
-  meshes.sunPatch = panes.sun;
-  meshes.signs = buildWayfinding(level, field);
+  // Flatene med bakt lys: ferdige fra en bakgrunnstråd (prebuilt, packMeshes), eller lages her (world/world-meshes.js).
+  const { meshes, waterData } = prebuilt ?? buildWorldMeshes(level, field);
   const sky = skyOf(level);
   const bars = theme.window?.bars === true; // bare temaer som uttrykkelig bruker sprosser
   const ownTextures = []; // teksturer laget for akkurat dette rommet (himmel, sol)
@@ -77,11 +56,11 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true, waterDe
     ownTextures.push(t);
     return t;
   };
-  const shared = createSharedUniforms(field.color);
+  const shared = createSharedUniforms(field.color, field.ambient);
   const gloss = createGlossUniforms(level, lights, theme); // armaturene speiler seg i blanke fliser
   Object.assign(shared, gloss.uniforms);
   const floorReflection = createFloorReflection(level, shared);
-  const s = theme.surfaces;
+  const s = surfacesOf(level, theme); // bygningens tapet og teppe (core/looks.js)
 
   // Materialene lages bare for flater som finnes (teksturene males første gang de brukes).
   const defs = worldMaterials({ s, theme, door, railing, tiles, shared, anisotropy, own, sky, bars, level });
@@ -95,7 +74,7 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true, waterDe
     const data = meshes[key];
     if (!data.vertexCount) continue;
     materials[key] = make();
-    const parts = surfaceChunks(data);
+    const parts = data.chunks ?? surfaceChunks(data); // delt opp på forhånd i en bakgrunnstråd (world/world-meshes.js presplit)
     const batch = parts.length > 1 ? new THREE.Group() : null;
     if (batch) { batch.name = key; group.add(batch); }
     for (const part of parts) {
@@ -112,14 +91,17 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true, waterDe
   materials.knob ??= defs.knob();
   const doors = createSwingDoors(meshes.swing, materials.leaf, materials.knob);
   group.add(doors.group);
+  if (level.lifts?.length) materials.lift ??= defs.lift();
+  const lifts = createLiftDoors(level.lifts ?? [], field, materials.lift); // heisdørene, -lampene og taklyset (core/elevators.js)
+  group.add(lifts.group);
 
-  const fixtures = buildFixtures(lights.filter((l) => !l.object), theme);
+  const fixtures = buildFixtures(lights.filter((l) => !l.object && !l.bare), theme); // bare: heisen har sin egen lampe
   group.add(fixtures.group);
 
   // Ballbinger (theme.pit === 'balls') fylles med baller; ellers vann med speiling og brytning.
   const balls = theme.pit === 'balls' ? createBalls(level, field, shared, theme.pitColors) : null;
   if (balls) group.add(balls.mesh);
-  const water = balls || theme.pit ? null : createWater(buildWaterData(level, field), theme, shared, { quality: waterQuality, detail: waterDetail, waves: waterWaves });
+  const water = balls || theme.pit ? null : createWater(waterData ?? buildWaterData(level, field), theme, shared, { quality: waterQuality, detail: waterDetail, waves: waterWaves });
   if (water) group.add(water.mesh);
   const spray = createFountainSpray(level, field, shared);
   group.add(spray.group);
@@ -152,6 +134,7 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true, waterDe
     spray,
     stats: { vertices, lights: lights.length, ms: Math.round(performance.now() - started) },
     doors,
+    lifts,
     objects,
     balls,
     /** @param camera valgfritt: brukes til detaljnivå (ballbingene) */
@@ -164,16 +147,20 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true, waterDe
       shared.uTime.value = time;
       shared.uFlick.value.set(flicker[0], flicker[1], flicker[2], flicker[3]);
       fixtures.update(flicker, power, tint);
+      lifts.update(flicker, tint);
       ledStrips.update(power);
       panels.update(power, tint);
     },
+    // Oversikten (boost over 1, view3d/look.js og storeys.js) får omgivelseslyset tilbake der lampene ikke når (world/fill.js).
     setBoost(v) {
       boost = v;
+      shared.uFill.value = v > 1 ? 1 : 0;
       shared.uBoost.value = boost * power;
     },
     setPower(p) {
       power = p;
       shared.uBoost.value = boost * power;
+      lifts.setPower(p);
     },
     setTint(rgb) {
       tint = rgb;
@@ -188,6 +175,7 @@ export function buildWorld(level, { anisotropy = 4, waterQuality = true, waterDe
       escalators.dispose();
       fixtures.dispose();
       doors.dispose();
+      lifts.dispose();
       water?.dispose();
       spray.dispose();
       balls?.dispose();

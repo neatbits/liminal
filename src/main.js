@@ -14,6 +14,7 @@ import './styles/hud-pause.css';
 import './styles/overlays.css';
 import './styles/mobile-player.css';
 import './styles/start-screen.css';
+import './styles/start-menu.css';
 import { decodeLevel } from './core/serialize.js';
 import { loadDraft } from './core/storage.js';
 import { presetById } from './gen/index.js';
@@ -21,7 +22,7 @@ import { App } from './app/app.js';
 import { MobilePlayer } from './app/mobile-player.js';
 import { phoneLayout } from './core/phone.js';
 import { toast } from './ui/toast.js';
-import { newRoom, playGame } from './app/actions.js';
+import { newRoom, playGame, playDaily, playRun } from './app/actions.js';
 import { desktop, startMenu, bindStartMenu } from './app/start-menu.js';
 import { bindFeedback } from './ui/feedback.js';
 
@@ -49,11 +50,11 @@ function presetFromHash() {
   return presetById(m[1])?.make() ?? null;
 }
 
-/** #play – Game mode-knappen på forsiden. */
+/** Spillkortene på forsiden: #play (Game mode), #lights (Lights out), #daily (Daily level). Ellers false. */
 function gameFromHash() {
-  if (location.hash !== '#play') return false;
-  history.replaceState(null, '', location.pathname + location.search);
-  return true;
+  const game = { '#play': 'play', '#lights': 'lights', '#daily': 'daily', '#spot': 'spot', '#descent': 'descent', '#noclip': 'noclip' }[location.hash] ?? false;
+  if (game) history.replaceState(null, '', location.pathname + location.search);
+  return game;
 }
 
 async function start() {
@@ -70,7 +71,9 @@ async function start() {
   app.setLevel(shared ?? preset ?? draft ?? presetById('level0').make());
   if (shared) toast(`Shared room: “${shared.name}”. Press “Walk the room” to explore.`, { ms: 5000 });
   if (desktop()) bindStartMenu(app); // programmet: logoen åpner startmenyen
-  if (game) playGame(app);
+  if (game === 'daily') playDaily(app);
+  else if (game === 'spot' || game === 'descent' || game === 'noclip') playRun(app, game);
+  else if (game) playGame(app, game === 'lights' ? 'lights' : 'tapes');
   else if (!shared && !preset) desktop() ? startMenu(app) : newRoom(app, { startup: true, draft: !!draft });
 }
 

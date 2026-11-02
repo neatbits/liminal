@@ -1,1 +1,1 @@
-{ "join": true, "simplify": 0.006, "simplifyError": 0.05 }
+{ "join": true, "simplify": 0.006, "simplifyError": 0.05, "vertexColors": 7, "matte": true }

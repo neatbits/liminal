@@ -116,7 +116,7 @@ export class MobilePlayer {
         h(
           'span',
           { class: 'mobile-room-copy' },
-          h('strong', { text: 'Game mode' }),
+          h('strong', { text: 'Tape hunt' }),
           h('span', { text: 'Endless levels in this mood. Find every humming VHS tape to open the doors.' }),
         ),
         h('span', { 'aria-hidden': true, text: '▶' }),

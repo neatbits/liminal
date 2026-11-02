@@ -16,7 +16,7 @@ import { getTheme } from '../src/core/themes.js';
 describe('mall display windows and identities', () => {
   it('generates different storefront identities, glazing and two-metre open entrances', () => {
     for (const seed of [1, 3, 7]) {
-      const l = generateLevel({ theme: 'mall', w: 56, h: 40, seed });
+      const l = generateLevel({ theme: 'mall', w: 56, h: 40, seed, layout: 'classic' });
       const fronts = shopfronts(l);
       expect(fronts.length).toBeGreaterThan(4);
       expect(new Set(fronts.map(s => s.style)).size).toBe(4);

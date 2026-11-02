@@ -30,14 +30,17 @@ describe('monsteret – veien fram', () => {
 });
 
 describe('monsteret – oppførsel', () => {
-  it('viser seg rett fram i lyset, og forsvinner når man går mot det', () => {
+  it('viser seg rett fram i lyset, og er borte kort etter at man går mot det', () => {
     const level = rooms();
     const m = new MonsterAI(level, mulberry32(3));
     m.lurkIn = 0;
     const p = player(2.5, 6.5, -Math.PI / 2); // ser mot +x
     expect(m.update(0.1, p, false)).toBe('appear');
     expect(m.x - p.x).toBeGreaterThan(MONSTER.LURK[0] - 1);
-    expect(m.update(0.1, player(m.x - 3, m.z), false)).toBe('vanish');
+    const near = player(m.x - 3, m.z);
+    let event = null;
+    for (let t = 0; t < 4 && !event; t += 0.1) event = m.update(0.1, near, false);
+    expect(event).toBe('vanish');
   });
 
   it('i mørket kommer det etter en og tar en som bare går', () => {

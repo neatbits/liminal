@@ -1,6 +1,9 @@
 // Shaderen for gjenstander: modellens farge (faktor × tekstur) × bakt lys, hjørneskygge fra
 // ARM-teksturen, gjennomsiktige piksler (alphaTest), sne-støy på skjermer (uScreen) og deler som
-// lyser av seg selv (uUnlit: skilt, lyskasser).
+// lyser av seg selv (uUnlit: skilt, lyskasser). Lommelykten legges på til slutt (world/flashlight.js).
+import { FLASH_PARS } from './flashlight.js';
+import { FILL_PARS } from './fill.js';
+
 export const VERT = /* glsl */ `
 attribute vec3 aLight;
 attribute vec4 aFlick;
@@ -9,6 +12,7 @@ uniform vec3 uFlickColor;
 uniform vec3 uTint;
 varying vec2 vUv;
 varying vec3 vLight;
+varying vec3 vWorld;
 #ifdef SOFT_VINYL
 varying vec3 vSoftNormal;
 varying vec3 vSoftView;
@@ -21,6 +25,7 @@ varying vec3 vBackLight;
 #include <fog_pars_vertex>
 void main() {
   vUv = uv;
+  vWorld = (modelMatrix * vec4(position, 1.0)).xyz;
   vLight = (aLight + uFlickColor * dot(aFlick, uFlick)) * uTint; // lysfargen (core/tints.js)
   #ifdef DOUBLE_SIDED
   vBackLight = (aBackLight + uFlickColor * dot(aBackFlick, uFlick)) * uTint;
@@ -50,6 +55,9 @@ uniform vec4 uScreen;
 uniform float uUnlit;
 varying vec2 vUv;
 varying vec3 vLight;
+varying vec3 vWorld;
+${FLASH_PARS}
+${FILL_PARS}
 #ifdef SOFT_VINYL
 varying vec3 vSoftNormal;
 varying vec3 vSoftView;
@@ -67,7 +75,9 @@ void main() {
   #ifdef DOUBLE_SIDED
   light = gl_FrontFacing ? vLight : vBackLight;
   #endif
+  light = withFill(light);
   vec3 col = mix(albedo * ao * light, albedo, uUnlit) * uBoost;
+  col += albedo * ao * flashlight(vWorld) * (1.0 - uUnlit);
   #ifdef SOFT_VINYL
   // Broad, restrained vinyl sheen. Baked light supplies its energy, so dark rooms stay dark.
   vec3 n = normalize(vSoftNormal), eye = normalize(vSoftView);

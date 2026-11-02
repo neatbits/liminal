@@ -10,7 +10,8 @@ import { getTheme } from '../core/themes.js';
 import { fillInterior, fillRect } from './util.js';
 import { furnishShops } from './mall-shops.js';
 import { arcadeLayout, prepareArcades } from './mall-arcades.js';
-import { mallShopRows } from './mall-shop-layout.js';
+import { mallShopRows, MALL_PLANS } from './mall-shop-layout.js';
+import { buildLayout } from './layouts.js';
 
 export const MALL_DECK = 4.4; // gulvet i andre etasje
 
@@ -31,7 +32,8 @@ export function mallLayout(w, h) {
   return { shop, gallery, atrium };
 }
 
-export function mall(level, rand, {layout}={}) {
+export function mall(level, rand, { layout } = {}) {
+  if (!['gallery', 'auto', ...MALL_PLANS].includes(layout) && buildLayout(level, rand, { wanted: layout, doors: { closed: 0.4, ajar: 0.3, open: 0.3 }, flicker: 0.04, broken: 0.05 })) return;
   const { w, h } = level;
   fillInterior(level);
   const { shop, atrium } = mallLayout(w, h);

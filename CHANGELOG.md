@@ -6,7 +6,212 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ukommet]
 
+### Lagt til
+- Poolrooms har fått fargevalget «Pink & cyan»: cyan fliser over og under, og et rosa bånd (0,75–1,125 m over gulvet) rundt alle vegger og søyler.
+  Båndet ligger i den nedre delen av veggen (`split` i `core/looks.js`, `poolTilesBand` i `textures/tiles.js`), så det står i samme høyde overalt.
+  Velges i romfanen, og nye Poolrooms-nivåer får det av og til.
+- Nytt tema, flyplassterminalen («The Terminal», `airport`): mønstret teppe, lyse veggpaneler, himling av metallspiler og glassvegger mot en mørk
+  rullebane (oftest natt). Utsikten er en egen bakketype (6 i `world/landscape-surfaces.js`): forplass med taksebane og blå kantlys, gress,
+  rullebanen med hvite linjer og kantlys som gløder om natta, og bare lave hangarer i horisonten (`core/window-views.js`; gatene ligger en etasje opp). Tre planløsninger (`gen/airport-layouts.js`): en lang gang med
+  gater, kafé, taxfree og toaletter langs sidene, en høy innsjekkingshall med søyler, og en bagasjehall – alene eller to side om side. Møblert etter
+  rommene (`gen/furnish-airport.js`): seterader mot vinduene, skranker med kø-sperrer, bagasjebånd, avgangstavler og traller – fem nye gjenstander av
+  enkle former (`world/props-airport.js`). Gule oversiktsskilt («Gates 1–24 →»), lyd med flyplasspling. Med i de uendelige nivåene, blandede bygg og
+  editoren. Tester: `airport.test.js`.
+- Spesialrom (`gen/specials.js`, `gen/special-rooms.js`, `docs/specials.md`): omtrent to av tre genererte nivåer får ett av 20 uventede rom – oversvømt
+  gulv, et basseng midt i rommet, stoler i rader mot veggen, venterom med TV, helt mørkt, kjempehøyt tak, lavt tak, TV-er i ring, klokker over hele
+  veggene, potteplanter, brusautomater, søyleskog, én seng midt i rommet, trapp inn i veggen, LED-lys, lysende tak, stolhauger, hyllelabyrint,
+  sovesal og altfor mange takvifter. Endringen angres om noe stenges inne. Tester: `specials.test.js`.
+- Ryddigere pausemeny (`view3d/hud-walkbar.js`, `styles/hud-pause.css`): «Paused» med nivå, kassetter og meter øverst, stor Resume, stemningen
+  som like brede valg med en linje om hva den valgte gjør, «Sound and look» med av/på-brytere som viser On/Off, «Extras» (Photo og Drift med
+  tasten), en oversikt over tastene (skjules på lave skjermer) og Exit for seg selv nederst. Utenom pause (berøring) er raden som før.
+- Heiser i bygg med flere etasjer (`core/elevators.js`, `docs/storeys.md`): verktøyet Elevator (Y) legger en sjakt på 4 × 4 m gjennom hele
+  bygget med vogn og dobbel dør; den stopper i etasjene med gulv foran dørene og er massiv i de andre. I gåmodus kaller E ved dørene heisen
+  (knappen lyser, pling når den kommer), inne går E til neste etasje og tallene velger. Dørene glir inn i veggen og stopper for den som står i
+  døråpningen; turen knirker og durer, vognen rister og lyset blafrer (`view3d/lifts.js`, `audio/lift.js`). Metallpaneler, karm, knappepaneler
+  og etasjelamper (`world/lifts.js`, `world/lift-doors.js`). Heisen er lik innvendig i alle etasjer: helt kledd i egne materialer, eget lyspanel
+  i taket i stedet for temaets armatur, og lyset uten temaets farge. Genererte bygg med to eller flere etasjer (nye nivåer, New room,
+  Generate/Random) får av og til en heis i tillegg til trappen eller stigen, helst inne i veggene og med flest mulig stopp, uten å røre
+  forbindelsene eller stenge noe inne (`gen/elevators.js`, tester: `elevator-gen.test.js`). Lagres i rommet som `elevators` uten ny formatversjon. Tester: `elevators.test.js`,
+  nettlesersjekk `check-elevator.mjs`.
+- Ny planløsning i Level 0, `halls` (`gen/level0-layouts.js`): lange, tomme haller etter hverandre med én rad lysrør langs midten, mørke vinduer inn til nabohallen,
+  ventiler i gulvet og en klynge trestoler innerst (`gen/furnish-halls.js`), blekt tapet, sterkere lys og mindre dis. To nye gjenstander av enkle former: mørkt vindu
+  og gulvventil (`world/props-rooms.js`; ventilen er så lav at man går over den). Planløsningene kan legge egne lys etter de vanlige (`ctx.lights`).
+  Hallene får ikke halvvegger. Tester: `level0-halls.test.js`.
+- Ny planløsning i Level 0, `slope`: en stor sal der gulvet skråner jevnt ned 2–3,5 m i hele bredden, med en dør i bunnen og labyrinter oppe og nede. Man starter
+  oppe med åpningen til salen rett foran seg (`autoSpawn` tar et ønsket startsted, `level.start`); av og til står det rader av stoler nede, vendt mot veggen.
+  Alt oppe heves etter at delene er bundet sammen, så planløsningen står alltid alene, og den brukes ikke i Noclip (gangene der går på gulvhøyde 0). Halvvegger settes ikke lenger mot hevet gulv eller der taket er
+  ulikt på sidene. Tester: `level0-slope.test.js`.
+- Ny spillmodus, Noclip (første trinn, `docs/game-modes.md`): man starter i en vanlig møbelbutikk (`gen/noclip.js`, skjult tema `store`), går inn på lageret og
+  lener seg mot en firkant tegnet på veggen (`noclipmark`) – og glir gjennom til Level 0. Derfra går det innover gjennom dørene, uten kassetter, og stemningen blir
+  verre med dybden (Liminal → Abandoned → Uncanny; skikkelsen tar deg ikke). Innenfor er det ingen dører: områdene (Level 0, så andre temaer) ligger
+  etter hverandre med en gang imellom, og midt i gangen glir det ene over i det neste uten svart skjerm (`gen/zones.js`, `view3d/zones.js`, klipping i
+  `world/clip.js`, `storeys.adopt`). Man kan gå tilbake, og på det første nivået er det en firkant tilbake til butikken. Neste område lages i bakgrunnen
+  (`view3d/zone-worker.js`). HUD-en viser nivå og meter; rekord: dypeste nivå og lengste avstand. Et lite kart nede til høyre viser det man har sett
+  (`view3d/minimap.js`, `world/discover.js`), sammenhengende over skjøtene; M (et trykk på berøringsskjerm) gjør det stort. I Noclip er M kartet, ellers lyden.
+  Ekspeditøren bak kassen er en animert CC BY-modell («ANIMATED OLDER MAN WITH BEARD WEARING SHORT» av 360SMS): animerte gjenstander
+  (`animate` i katalogen, `world/animated-objects.js`) beholder skjelettet og spiller animasjonen. Nytt valg `pose` i `model.json` baker heller én stilling
+  inn (`scripts/model-pose.mjs`). Hvert område har alltid en vei fra inngangen til gangen ut til fots – uten å krype, gjennom møbler eller over kanter som er for høye
+  (`gen/zone-paths.js`: `walkReach` tar hensyn til høyder; graves langs korteste vei, med gulvhøyden jevnt fra den ene enden til den andre). I Play-menyen og som `app/#noclip`. `nextLevel` kan få et bestemt tema; Explorer har modusene i `runs`. Tester: `noclip.test.js`, `check-noclip.mjs`.
+- Ramper: gulv som skråner jevnt opp og ned. Rampeverktøyet (G, under Stairs) legges som en trapp, men med glatt flate og skrå sider (`core/ramps.js`,
+  `world/stairs.js`); det lagres som trappens ubrukte «ned uten rulletrapp»-kombinasjon (`RAMP`), så romformatet er det samme. Level 0 får pukler i lange ganger
+  (opp 0,3–0,5 m, et lite platå og ned igjen) og lave hevede flater med en rampe opp i store rom (`gen/ramps.js`, bare nye nivåer; ikke i de lave rommene).
+  Ingen håndlist langs veggen på ramper. Tester: `ramps.test.js`.
+- Rom uten lamper er mørke: omgivelseslyset (temaets `ambient`) følger nå lampene og faller til 12 % der ingen lampe når fram (`AMBIENT` i `world/lighting.js`), så
+  lommelykten trengs. Tåken lyste av seg selv i mørket og under strømbrudd; den følger nå lyset der man står og strømmen (`view3d/fog-light.js`). Opplyste rom er
+  som før, bare med mørkere hjørner langt fra lampene. 3D-oversikten i editoren legger omgivelseslyset tilbake (`world/fill.js`), så et rom man tegner uten lamper
+  fortsatt synes. I Nightmare teller mørke deler i lyse temaer (Poolrooms, kjøpesenter, lekerom, kjeller) nå også som mørke for skikkelsen.
+- Hint om lommelykten: står man 2,5 s i mørket med lykten av, kommer «It’s dark. Press F for your flashlight.» (på mobil: Tap Light), høyst tre ganger og aldri
+  etter at lykten er brukt (`world/flash-hint.js`, `flash-hint.test.js`).
+
+- Toalettet, vasken, køyesengen og vaskemaskinen er ekte modeller (CC BY 4.0: «toilet» av motaman, «Simple Sink» av Andrew.Mischenko, «Bunk Bed» av
+  Aarón Galindo Chavero, «Washing Machine (new)» av nikita.bulgakov) i stedet for enkle former, med samme id, så lagrede rom får dem. Køyesenger står nå
+  også av og til i kjellerens soverom. Vaskemaskinen er forenklet fra 290 000 til 12 300 trekanter (`drop` av skjulte deler). Den første
+  vaskemaskinmodellen (`washing_machine`) har Sketchfab Standard-lisens og er slått av. Vasken henger på veggen med rørene inn i veggen, og et eget speil (`mirror`) henger over vaskene på bad, toaletter og garderober.
+  Krediteringen står på About-siden. Nytt valg `matte` i `model.json` (`scripts/models.mjs`).
+- Kjøpesenteret og kjelleren har fått planløsninger i trekningen med de gamle oppsettene (`docs/layouts.md`). Kjøpesenteret: matsal med kafeer og bord under
+  glasstak (`foodcourt`), døde handlegater der de fleste butikkene er stengt (`promenade`, høyst 16 innredede butikker) og bakganger med lager og personalrom
+  (`service`), i `gen/mall-layouts.js`; atriet er fortsatt det vanligste. Kjelleren: boder (`storage`), fyrrom (`boiler`), tilfluktsrom med sovesaler (`shelter`)
+  og fellesvaskeri (`laundry`), i `gen/basement-layouts.js`. Ny byggekloss `corridorRows` (`gen/floorplan.js`), møblering i `gen/furnish-cellar.js`, og to
+  gjenstander av enkle former: fyrkjel og køyeseng (`world/props-cellar.js`). Tester: `cellar-layouts.test.js`, bilder i `check-layouts.mjs`.
+- Ti nye endringer i «Make it wrong» (`gen/wrong-more.js`): en gjenstand har flyttet seg, er blitt to eller har veltet, et vindu er murt igjen, en søyle mangler i
+  rekken, et hull i veggen, et gulv som er 10–15 cm for høyt, to lys der det skulle vært ett, flisene på et bad er borte og en dør uten dørblad. Spot the wrong
+  bruker de fleste av dem. Ingen av dem kan sperre en gang eller stenge noe inne (`wrong-more.test.js`).
+
+- Hovedmenyen i programmet er ny: et Level 0 i 3D bak menyen (`gen/menu-room.js`, `view3d/menu-scene.js`), med blinkende lysrør, et kamera som
+  glir sakte innover hallen og følger musa litt, og VHS-utseende. Tittelen blafrer med lyset (`--menu-light`). Menyen er samlet til Play, Create,
+  Settings, About & credits og Quit, med spillene og romvalgene på undersider. Mus og piltaster har samme markør, Esc og pil venstre går en
+  side tilbake, og forklaringen står på én linje under valgene. Spillsidene og innstillingene ligger som et ark foran samme rom.
+  Scenen har eget lerret og egen grafikkontekst (`app/menu-backdrop.js`), tegner 30 bilder i sekundet, hviler editorens visning (`viewer.resting`)
+  og slipper alt når menyen lukkes. Uten WebGL eller ved tapt kontekst står den gule tapeten. `prefers-reduced-motion` gir stille lys og kamera.
+  Fra et spill kommer man tilbake til spillene, ikke til toppen. Tester: `menu-room.test.js`, nettlesersjekken `check-menu-backdrop.mjs`.
+- To nye spillmoduser (`docs/game-modes.md`). Spot the wrong (`gen/spot.js`, `view3d/spot.js`): samme gang igjen og igjen; er noe feil, snur du, ellers går du videre.
+  Åtte riktige på rad for å komme ut, ett feil svar og du starter på null, og spillet forteller hva du overså. The Descent (`gen/descent.js`, `view3d/descent.js`): ett liv, stadig
+  verre nivåer, begrenset batteri i lykten, batterier å finne, og fra nivå 4 kan skikkelsen avslutte forsøket. Begge har egne sider før og etter (`ui/run-dialogs.js`) og lagrer
+  rekorder (`loadRuns`). `quietMood` setter stemningen uten å røre spillerens valg. Tester: `spot.test.js`, `descent.test.js`, nettlesersjekken `check-modes.mjs`.
+- Skolen, sykehuset, parkeringskjelleren og Level 0 har fått egne planløsninger, i trekning med de gamle oppsettene (`gen/school-layouts.js`,
+  `gen/ward-layouts.js`, `gen/garage-layouts.js`, `gen/level0-layouts.js`, møbler i `gen/furnish-institutions.js`). Skole: klasseromsfløy, gymsal
+  med tribune, aula med stigende rader, bibliotek og kantine. Sykehus: åpne sengesaler, operasjonsfløy bak glass, isolat og likhus. Parkering:
+  biler under presenning, oversvømt plan og lav krypt. Level 0: labyrint, søylehall, høye kløfter og lave rom; de vanlige gule rommene er fortsatt det
+  vanligste, og tapetet er oftest det samme. Nye gjenstander av enkle former: bokhylle, basketkurv, operasjonsbord og -lampe, likskuffer,
+  båre og tildekket bil. Nye utseender under Style i alle fire temaene. Tester: `institution-layouts.test.js`.
+- Poolrooms og lekerommet har fått ekstreme planløsninger (`gen/pool-layouts.js`, `gen/play-layouts.js`), i trekning med de gamle oppsettene.
+  Poolrooms: katedral med 9–14 m takhøyde og søyler på 3 m, vannpark med fire høye sklier, avgrunn med smale gangbroer over 3 m dypt vann (svarte
+  fliser, dempet lys, ingen badeting), og lave, oversvømte kanaler. Lekerommet: ballhav med øyer (høyst 1800 ruter), lav labyrint med krypehull,
+  klatretårn med sklier fra opptil 6 m og mørkt rom med bare LED-striper. Begge temaene har fått utseender under Style: fliser i Seafoam, Blush, Sand og
+  Black, og Pastel, Faded og Neon i lekerommet. `addPoolSlide` kan bygge høye plattformer. Tester: `extreme-layouts.test.js`.
+- Hotell og kontor bygges nå på åtte ulike måter (`gen/layouts.js`, `gen/hotel-layouts.js`, `gen/office-layouts.js`, byggeklosser i
+  `gen/floorplan.js`). Hotell: romfløy med like, speilvendte rom (bad, entré, soverom med seng og nattbord), lobby med søyler og resepsjon,
+  konferansefløy med ballsal, og trange personalganger med vaskerom og lager. Kontor: åpent landskap med båser av halvvegger
+  (`gen/cubicles.js`), cellekontorer rundt en kjerne med heis, toaletter og kopirom, konferanseetasje med glassvegger, og mørkt arkiv med
+  hyllerader. Store bygg får ofte to planløsninger side om side. Rommene møbleres etter funksjonen (`gen/furnish-rooms.js`, `level.plan`).
+  Nye gjenstander: dobbeltseng (Victorian Bed, BATRIC_18, CC BY 4.0, skalert og forenklet), nattbord, toalett, vask med speil,
+  vaskemaskin, kopimaskin, arkivhylle, heisdører og glassvegg (`glasswall`: stopper deg, men ikke lyset; `world/glass-walls.js`).
+  Hver bygning får egen tapet og teppefarge (`core/looks.js`, `textures/looks.js`, `level.look`), med velgeren Style i romfanen.
+  Eksemplene er uendret. Se `docs/layouts.md`. Tester: `layouts.test.js`, nettlesersjekken `check-layouts.mjs`.
+- Lommelykt: F (Light-knappen på mobil) slår den av og på i gåmodus, med et lite klikk. En stråle med hard kjerne og svak ring, ca.
+  15 m lang, som henger litt etter blikket. Den sitter ved øyet, så den trenger verken skygger eller baking, og den
+  legges på etter det bakte lyset, så den virker også under strømbrudd og i Lights out (`world/flashlight.js`, `view3d/flashlight.js`;
+  felles uniformer for alle etasjene). Flater, gjenstander, baller, vann, kassetter og sikringsskap lyser opp. Av ved utgang fra
+  gåmodus. Se `docs/flashlight.md`. Tester: `flashlight.test.js`, nettlesersjekken `check-flashlight.mjs`.
+- Krype og krypeganger: C (Crawl-knappen på mobil) tar deg ned på alle fire, og du kommer gjennom lave, mørke ganger
+  (ny rutetype `TILE.CRAWL`, 0,9 m høy, romformat v5; v1–v4 leses som før). Du kommer ikke inn oppreist, får hint ved åpningen, og reiser
+  deg ikke før det er plass (`core/crawl.js`). Genererte nivåer får ganger gjennom egne, massive blokker (`gen/crawlways.js`): snarveier
+  eller blindganger med en liten utvidelse, der det ofte ligger en kassett. Sterkere stemninger gir flere. Blokkene stenger
+  aldri noe man når uten å krype. Skikkelsen kommer ikke inn: den går til åpningen, blir stående en stund og forsvinner.
+  Drømmegangen bruker dem ikke, og eksemplene har ingen. Editoren har fått verktøyet Crawlway (V). Se `docs/crawlways.md`.
+  Tester: `crawl.test.js`, `crawlways.test.js`, `crawl-figure.test.js` og nettlesersjekken `check-crawl.mjs`.
+- Velg antall etasjer når du lager et rom: New room har fått Floors (1–8) og valget «A different theme on each floor»
+  (`gen/new-building.js`). Randomly generated gir et ferdig bygg med trapp eller stige mellom etasjene, One big room
+  haller med forbindelse, og Empty tomme etasjer. I rom på minst 4096 ruter er grensen 3 etasjer, unntatt Empty.
+  Generate og 🎲 Random lager nå hele bygget, med valget Floors: Random (1–3), 1–3 etasjer eller «This floor only» (som før:
+  bare etasjen som tegnes). Samme frø gir samme bygg, og alt kan angres med Ctrl+Z. Tester: `new-building.test.js` og `check-mixed-floors.mjs`.
+- Mer variasjon i nye nivåer: opptil tre etasjer, oftest med hvert sitt tema (`gen/mixed-floors.js`: 1 etasje 55 %,
+  2 etasjer 30 %, 3 etasjer 15 %; høyst 2 i rom på minst 4096 ruter; Mall står utenfor). I temaene som kan ha det, er en tredjedel av
+  byggene fortsatt nesten like etasjer. Etasjene bindes sammen med trapp eller stige etter høyden: trappen blir
+  lengre i høye etasjer (ca. 0,65 m per rute), og over 4,5 m blir det stige. Hver forbindelse må ligge der man kan
+  gå, og må ikke stenge noe av (`reachableCells` har fått `blocked`), så alle etasjene kan nås. Størrelsen varierer også
+  fra nivå til nivå, 0,75–1,3 ganger og litt mer avlangt, innenfor Small–Huge for temaet (`variedDims`). Daily
+  level er som før. Tester: `mixed-floors.test.js`, nettlesersjekken `check-mixed-floors.mjs` (går opp et ekte bygg og skriver byggetiden).
+- Lights out (Game mode, ny modus ved siden av «Find the tapes»): på hvert nivå er strømmen borte og dørene til
+  ingensteds låst; 2–4 sikringsskap på veggene (`gen/fuses.js`: ved gulv man kan gå til, langt fra start og fra
+  hverandre) slår lyset på igjen, litt mer for hvert. E ved et skap: klunk, lyset blinker seg tilbake (`view3d/
+  lights-out.js`); skapene (`view3d/fuses.js`) har en lampe som lyser rødt i mørket og grønt når de er på, og
+  summer når man er nær. Erstatter strømbruddene; i Nightmare jakter monsteret mens det er mørkt. Game mode-
+  dialogen er flyttet til `ui/game-dialog.js` og har valg av modus. `WalkMode.interact` er en ny krok for ting
+  man bruker med E. Tester: `fuses.test.js`, nettlesersjekken `check-lights-out.mjs`.
+- Daily level: ett nytt nivå hver dag, likt for alle med samme dato (`gen/daily.js`: frø fra datoen gir tema,
+  rom, «feil» og kassettenes plass; fast stemning Liminal og fast størrelse). Finn alle kassettene og gå
+  gjennom døren – klokken går når man ikke har pause (`view3d/daily.js`; drømmegangen teller ikke). Resultatet
+  viser tid, beste tid i dag, dager på rad og en tekst å dele (`ui/daily-dialog.js`); rekordene lagres lokalt
+  (`loadDaily`/`saveDaily`). Start fra forsiden (`app/#daily`), Game mode-dialogen, View-menyen og
+  startmenyen i programmet. `Explorer.arrive` er felles for nye nivåer. Tester: `daily.test.js`,
+  nettlesersjekken `check-daily.mjs`.
+- Stiger mellom etasjer (`core/ladders.js`): verktøyet Ladder (A, type i Stairs-familien) setter en stige på en
+  gulvrute under etasjen over (`meta`: `LADDER` + retningen man går av og på, lagres med rommet). Stigen står mot
+  motsatt kant av hullet (helst med ryggen mot en vegg), og man klatrer på siden mot utgangen, vendt mot stigen –
+  så man blir på sin side både opp og ned. Nytt klikk snur den, høyreklikk fjerner. `applyLadders` (fra
+  `walkLevels`) lager et rundt hull uten rekkverk der oppe (vegg for kollisjonen; `seams.hole`: gulvet rundt
+  hullet og taket over det tegnes av etasjen over) og åpner ruten under (`seams.hatch`: himling rundt hullet
+  og rund sjakt gjennom etasjeskillet, `world/holes.js`; lånt lys). 3D (`world/ladders.js`): vanger og trinn
+  med håndtak over gulvet der oppe. Gåing (`view3d/climb.js`): E ved foten, eller ved hullet ovenfra fra alle
+  sider (bak stigen flyttes man rundt til klatresiden); W/S klatrer, av automatisk øverst (bakover ut på
+  kanten) og nederst. Veggtoppene i etasjen under går aldri over undersiden av etasjeskillet (`capMax`,
+  `world/caps.js`), så en vegg ved siden av stigen eller trapperommet stikker ikke opp i etasjen over. Skissen viser stigen og
+  hullet med pil (`editor/render-ladders.js`). Tester: `ladders.test.js`, nettlesersjekken `check-ladders.mjs`.
+- Eget tema per etasje: temaet er ikke lenger felles for bygget (`SHARED`), men hører til etasjen
+  (`OWN`, flyttes med ved kjeller/fjerning). Theme-velgeren i Room-fanen gjelder etasjen som tegnes
+  («Theme · floor 2»); nye etasjer får rommets tema, kopier sitt eget. Lagres per etasje bare når det er et
+  annet enn rommets; eldre filer bruker rommets. Generering og «Fill with lights» bruker etasjens tema.
+
 ### Endret
+
+- Prosjektregel (CLAUDE.md): filer skal helst være under 250 linjer, med 300 som tak og opptil 400 bare når en deling ville gjort koden
+  vanskeligere å følge (med begrunnelse i toppkommentaren). Del etter ansvar, ikke press kode sammen.
+- Kilden til vaskemaskinen med Sketchfab Standard-lisens (`3dmodels/washing_machine`, ikke i bruk) holdes utenfor git som de andre slike
+  kildene: bare `model.json` følger med (`.gitignore`).
+- Monsteret i Nightmare er litt svakere (`gen/moods.js`): det vet ikke lenger alltid hvor du er, men går etter sporet (`world/monster-trail.js`: ser deg innenfor 7 m med
+  fri sikt, ellers en oppdatering hvert 6. sekund), så det kan ristes av rundt et hjørne. Lavere fart (2 → 1,7 m/s), kortere utfall i fart (4 → 3,6 m/s), lengre pause (3 → 4,5 s), det dukker opp lenger unna
+  (12–22 m) og strømbruddene er kortere (16–28 s). Målt med en simulert spiller i `world/`-logikken. The Descent bruker de samme tallene i Nightmare-dypet.
+- Settings har fått Music On/Off, så musikken kan slås av fra hovedmenyen. HUD-en og musikknappen følger innstillingen.
+
+- Butikkfronter ble lest som stiger når etasjen over hadde gulv på samme sted (de deler bit i `meta`); `isLadder` skiller dem nå.
+- «Make it wrong» holder startpunktet fritt: før kunne en søyle havne akkurat der man starter. Bygg som ikke får bundet en etasje til den under, prøver inntil fire ulike etasjer før de blir lavere (`linkFloors`).
+- Plasseringen av kassetter og sikringsskap, og ryddingen foran dører, regner ut gjenstandene én gang i stedet for per rute.
+- Nightmare: etter at du våkner, holder skikkelsen seg borte i 8 sekunder. Før kunne jakten starte med en gang hvis startområdet var mørkt.
+- Settings fra hovedmenyen er en side i hele vinduet, så editoren ikke er innom; Done og Esc går tilbake til hovedmenyen. Fra View-menyen er den som før.
+- Spøkelset er byttet ut med en sort skikkelse: en høy, tynn og diffus silhuett uten munn, tegnet i en shader (`view3d/figure-material.js`, `core/figure.js`)
+  med røykaktig kant, bein som løser seg opp mot gulvet og svake øyne bare i mørket. Den er sort nær deg og glir inn i tåken på avstand. Den er også den som står
+  utenfor vinduene (`view3d/figure-snapshot.js`). Modellen, kildefilene (ca. 97 MB) og krediteringen er fjernet.
+  Ny oppførsel (`world/monster-ai.js`): i lyset lister den seg til et sted man ikke ser, og er rask bort når man kommer nær; i mørket lister den seg
+  på avstand (1,3 m/s, Nightmare 2) og gjør raske utfall innenfor 6 m med fri sikt (3,4 m/s, Nightmare 4), to sekunder av gangen. Se `docs/figure.md`.
+- Spillene starter uten omveier: Tape hunt, Lights out og Daily level har egne sider i hele vinduet, i samme stil som hovedmenyen (`startPage` i
+  `ui/game-dialog.js`), så editoren ikke er innom. Modusen velges ikke på nytt, verken fra hovedmenyen, forsiden eller View-menyen: siden har bare stemningen
+  og Start game (Daily: dato, beste tid og Start). Daily-knappen i Game mode-dialogen er borte. Fra hovedmenyen går Back, Esc og å gå ut av spillet
+  tilbake til hovedmenyen (`app.afterGame`), og Daily-resultatet vises på samme slags side. Klikk ved siden av knappene lukker ikke sidene.
+- Level 0 er gulere: tapetet er mer mettet (`#d8c47e` → `#d9bd5e`), og himlingen er gulnet i stedet for nesten hvit (`#e3dfcf` → `#dec97c`). `ceilingTiles` har fått `base` og `grid`, så temaene som deler himlingen, er uendret.
+- Stemningen (`moodLevel`) gjelder nå alle etasjene: ødelagte lys, «Make it wrong» og mørke deler også i øvre etasjer, aldri
+  der man kommer inn. `makeWrong` tar `keep`: rutene der trapper og stiger går av og på (`linkCells`), er urørt. Dype bassenger bare i etasje 0.
+- Etasjer med bare stige får også kassett: `storeyEntry` (`core/stairwells.js`) finner veien inn via stiger, ikke bare trapper.
+- Kassettjakten heter «Tape hunt», på linje med «Lights out» og «Daily level» (startmenyen i programmet,
+  View-menyen, forsiden, Game mode-dialogen og mobilen). Før het den «Game mode», som også er navnet på
+  dialogen der man velger modus og stemning, så det så ut som Lights out og Daily level var noe annet.
+- Forsiden: to tydelige valg i toppen («▶ Open the simulator» og «📼 Play a game») i stedet for fire knapper, og
+  en ny seksjon «Play» med de tre spillmodusene som mørke VHS-kort – Game mode (`app/#play`), Lights out (ny
+  lenke `app/#lights`) og Daily level (`app/#daily`, med dagens dato og beste tid i dag fra `loadDaily`).
+  «Play» i menyen øverst. Den tomme reklameplassen tok 122 px (`display: flex` overstyrte `hidden`); nå ingen.
+  Mobil: eksemplene to i bredden med bare bilde og navn (6500 → 4200 px), knappene i full bredde
+  (`styles/landing-play.css`).
+- Nettlesersjekken for spøkelset i Nightmare venter til det usynlige oppvarmingsbildet faktisk er tegnet
+  (høyst 3 s) i stedet for to skjermoppdateringer – den feilet av og til på en presset maskin.
+- Lydnivåene for TV-sus og lysrørsurr er flyttet fra `walkmode.js` til `view3d/walk-sounds.js`.
+- Programmet (Electron) har minst mulig nettstedspreg: lenker til forsiden (logoen og «Home» på About)
+  går til simulatoren (`insteadOfFrontPage` i `desktop/files.mjs`), og About-siden viser «← Back to Liminal»
+  i stedet for nettstedsmenyen og bunnteksten, med tekster for programmet («on this computer», bildene i
+  Pictures) i stedet for nettleseren (`data-app`/`data-web`, `src/about.js`). Sjekk: `check-start-menu.mjs`.
+- Lekerommet: de to hoppeslottene «Bounce house» og «Bounce house with slide» er fjernet (katalog, møblering,
+  objektvelger, GLB-er og `split` i `3dmodels/bounce_house_three_models/model.json`). Senere også hinderløypa fra samme
+  kildemodell (`bouncecourse`, `models/bounce_course.glb`); kilden er `disabled`, så `npm run models --all` lager den ikke igjen.
+  Rom som hadde dem, åpnes uten dem.
 - Ryddigere editor (runde 1 og 2 av grensesnittet), uten at noe er fjernet:
   - Nære verktøy deler én knapp med typen i en rad under (`TOOL_FAMILIES` i `ui/tool-info.js`):
     Light (på, blinkende, ødelagt), Stairs (vanlig, opp en etasje, rulletrapp) og Door (åpning, dør).
@@ -23,6 +228,9 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Pause (runde 4): alle fem stemningene som valg på egen rad (utenom pause, på berøringsskjerm, fortsatt
   én knapp som går rundt, og X). Sound, Music og VHS viser av/på med ikon og farge og har `aria-pressed`.
   Hjelpen («Click anywhere …») står nederst i panelet i stedet for som egen boble; beskjeder står under panelet.
+- Pussing (runde 5): byggetid og antall vertekser står under Key figures i stedet for i statuslinjen
+  (`Sidebar.syncBuild`); verktøytips på 2D / 2D + 3D / 3D; fokusmarkering også på sammenleggbare
+  overskrifter og lenker; «LED strip»; litt luft mellom forklaringer og feltene under dem.
 - Mye lettere fysikk i store nivåer (stolhauger i Level 0, baller i Poolrooms, klosser i Playroom): 9 → 2,0 ms,
   17 → 4,1 ms og ~15 → 9,8 ms (1,5 ms når klossene har falt til ro) per bilde i Huge-nivåer. Egen broadphase
   som bare søker fra det som beveger seg, mot faste vegger i et rutenett rundt seg
@@ -36,6 +244,43 @@ bruker [semantisk versjonering](https://semver.org/lang/no/).
 - Startpunktet i et bygg med flere etasjer: de andre etasjene viser det svakt med «Start · floor N», så det
   ikke ser borte ut når det står i en annen etasje (før vistes det bare i startetasjen). Spawn-verktøyet
   forklarer at man starter i etasjen der startpunktet settes. Nettlesersjekk: `check-spawn-storey.mjs`.
+
+### Rettet
+- Hakk i overgangen mellom områdene i Noclip (målt på ekte GPU: før opptil 1,2 s og serier av bilder på 100 ms, nå byttet på 3–5 ms og de
+  fleste overganger uten bilder over 50 ms). Bakgrunnstråden lager også flatene med bakt lys, ferdig delt i biter (`world/world-meshes.js`,
+  `buildWorld` med `prebuilt`); teksturene males og lastes opp litt om gangen (`world/texture-warm.js`); gjenstandene bakes i et felles
+  tidsbudsjett per bilde (`world/frame-budget.js`, også i vanlige rom); skyggeleggerne kompileres i bakgrunnen mot etterbehandlingens buffer
+  (mot skjermen ble feil variant kompilert), og området legges inn litt om gangen (`view3d/zone-show.js`). Romklangen gjenbrukes og lages på
+  forhånd (`audio/space.js`), og de skumle lydene lages i en bakgrunnstråd (`audio/eerie-worker.js`, `audio/eerie-pool.js`) – de tok opptil
+  100 ms hver gang en spilte, også utenfor Noclip.
+- Yuccaen var helt hvit: modellen har fargene i hjørnene (`COLOR_0`), som spillet ikke bruker. Modellverktøyet har fått `vertexColors: k`
+  (`scripts/model-colors.mjs`): trekantene samles i k fargegrupper med hvert sitt ensfargede materiale, etter forenklingen. Yuccaen er bygget på
+  nytt med 7 farger (16 000 trekanter, 107 kB, som før).
+- To trykk på Esc avsluttet spillet: det andre trykket (på pausemenyen) gikk rett tilbake til editoren eller hovedmenyen. Nå lukker Esc
+  pausemenyen og fortsetter når nettleseren gir musa tilbake (ellers står pausen, og et klikk fortsetter); bare Exit går ut
+  (`viewer._escape`, `walk.relock`). Pausemenyen sier «Exit to leave» i stedet for «Esc again to exit». Nettlesersjekken trykker Esc to ganger.
+- Brede ramper hadde mørke striper: mellom banene ble det en loddrett kile i øvre halvdel av hver rute (naboens høyde ble målt bare midt på kanten), og
+  rampens for- og bakkant fikk millimeterhøye flater (`world/stairs.js`, `world/surfaces.js`). Gulvlisten langs en rampe gikk i trinn per rute (sagtenner);
+  nå følger veggen foten av rampen.
+- «Make it wrong»: en søyle som mangler i rekken, beholdt søylens metabiter (diameteren) på gulvruten, og store søyler ble da en falsk stige
+  (`pillarGone` i `gen/wrong-more.js`).
+- Stemningens «Make it wrong» var treg (opptil et halvt sekund per nivå i Nightmare): flere endringer spurte etter gjenstander rute for rute, og hvert
+  spørsmål gikk gjennom alle gjenstandene. Rutene gjenstandene dekker regnes nå ut én gang (`footprintCells` i `gen/wrong.js`, `gen/wrong-more.js`): 30–80 ganger raskere.
+- Klipping i Noclip (`world/clip.js`) satte inn kode uten linjeskift etter, så shadere som fortsatte på samme linje (ballbingene) ikke kompilerte.
+- Stolhaugene i Level 0 kunne legges inn under et kafébord: de sjekket bare midten av rutene, men stolene ligger forskjøvet og bordet når inn i
+  naborutene. Nå sjekkes boksene (`gen/chair-piles.js`, `chair-piles.test.js`).
+
+- Modeller med bare fargede materialer kunne bli mørke: paletten fra `gltf-transform optimize` fikk en metall/ruhet-tekstur, og den røde kanalen ble lest som
+  skygge. Den stående tavla har sett mørkegrå ut og er nå hvit (`matte` i `3dmodels/whiteboard_standing/model.json`).
+- En stige utenfor kjøpesenteret kunne bli borte når gulvet ved siden av fikk fliser på bare den ene siden (et bad, eller «Make it wrong» i Nightmare): den ble
+  lest som en butikkfront. `isLadder` ser bare etter butikkfronter i kjøpesenteret. Funnet av `mixed-floors.test.js` med de nye kjellerne.
+
+- Musikken kunne ikke slås av: bryteren gikk av, men musikken spilte videre. Tonen brukte skjermbilder, og første bilde kunne ha et tidsstempel før tastetrykket, så volumet ble negativt,
+  nettleseren kastet en feil, og tonen stoppet før musikken ble satt på pause. Musikken ble da også liggende på fullt volum uten inntoning. Tonen går nå på klokke, er ferdig også i skjult vindu, og `fadeStep` går aldri baklengs.
+
+- Lights out: sikringsskap legges ikke lenger ved en stige eller et hull, der E går til klatring og skapet ikke kunne slås på (3 av 2851 nivåer etter at nivåene fikk stiger).
+- Nettlesersjekken feiler ikke lenger fordi Windows nekter å slette den midlertidige profilen etter en vellykket kjøring.
+- Hovedmenyen i programmet lukkes ikke lenger av et klikk ved siden av menypunktene (da havnet man i editoren): `openModal` har fått `persistent`. Esc og Continue lukker den som før.
 
 ## [0.5.0] – 2026-10-28
 

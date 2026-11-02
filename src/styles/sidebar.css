@@ -175,6 +175,12 @@
   margin: 8px 0 0;
 }
 
+/* Luft mellom en forklaring og feltene under den (Room-fanen). */
+.side-hint + .row,
+.side-hint + .row-2 {
+  margin-top: 10px;
+}
+
 /* «Make it wrong» (styrke og knapp) og generering (frø og knapper) på én linje hver. */
 .wrong-row,
 .seed-row {
@@ -231,4 +237,10 @@
   grid-template-columns: none;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
+}
+
+.tool-options .variant-row button {
+  padding: 5px 3px;
+  font-size: 12px;
+  white-space: nowrap;
 }

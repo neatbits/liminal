@@ -7,6 +7,8 @@ const ROOMS_KEY = 'liminal.rooms.v1';
 const DRAFT_KEY = 'liminal.draft.v1';
 const SETTINGS_KEY = 'liminal.settings.v1';
 const PROGRESS_KEY = 'liminal.progress.v1';
+const DAILY_KEY = 'liminal.daily.v1';
+const RUNS_KEY = 'liminal.runs.v1';
 
 function store() {
   try {
@@ -160,4 +162,30 @@ export function loadProgress() {
 /** Returnerer false når den ikke ble lagret (fremgangen er ikke kritisk; spillet går videre). */
 export function saveProgress({ deepest, tapes }) {
   return writeJSON(PROGRESS_KEY, { deepest, tapes });
+}
+
+/** Daily level (gen/daily.js): beste tid og antall runder per dato, { '2026-10-29': { best, plays } }. */
+export function loadDaily() {
+  const d = readJSON(DAILY_KEY, {});
+  const out = {};
+  for (const [key, v] of Object.entries(d && typeof d === 'object' ? d : {})) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(key) && Number.isFinite(v?.best) && v.best >= 0) out[key] = { best: v.best, plays: Math.max(1, Math.floor(v.plays) || 1) };
+  }
+  return out;
+}
+
+/** Returnerer false når de ikke ble lagret (ikke kritisk). */
+export function saveDaily(records) {
+  return writeJSON(DAILY_KEY, records);
+}
+
+/** Rekordene i Spot the wrong og The Descent: { spot, descent }. */
+export function loadRuns() {
+  const data = readJSON(RUNS_KEY, {});
+  return data && typeof data === 'object' ? data : {};
+}
+
+/** Returnerer false når de ikke ble lagret (ikke kritisk). */
+export function saveRuns(runs) {
+  return writeJSON(RUNS_KEY, runs);
 }

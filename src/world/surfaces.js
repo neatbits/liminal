@@ -7,8 +7,9 @@ import { waterCell } from '../core/pillar-water.js';
 import { floorAt, topFloorAt, ceilingAt, edgeHeight, pillarBottom } from '../core/heights.js';
 import { MeshData } from './mesher.js';
 import { SIDES, addCaps } from './caps.js';
-import { buildSteps, surfaceHeight, stepBreaks, stairWallSpans } from './stairs.js';
+import { buildSteps, surfaceHeight, stepBreaks, stairWallSpans, rampSide } from './stairs.js';
 import { shaftWall, buildShaftWall, buildEntrance } from './shaft-walls.js';
+import { holeRing, holeShaft } from './holes.js';
 import { getTheme } from '../core/themes.js';
 import { isEscalator } from '../core/escalators.js';
 import { FINISH } from '../core/zones.js';
@@ -77,6 +78,7 @@ function horizontal(mesh, cx, cz, y, S, facingUp, closes, step, gain = 1) {
 function cliffs(mesh, level, cx, cz, s, L, R) {
   const nx = cx + s.dx;
   const nz = cz + s.dz;
+  if (rampSide(mesh, level, cx, cz, nx, nz, s, L, R)) return;
   const cuts = [0, 1, ...stepBreaks(level, cx, cz, L, R), ...stepBreaks(level, nx, nz, L, R)].sort((a, b) => a - b);
   const at = (f) => [L[0] + (R[0] - L[0]) * f, L[1] + (R[1] - L[1]) * f];
   const n = [-s.n[0], 0, -s.n[2]];
@@ -86,7 +88,7 @@ function cliffs(mesh, level, cx, cz, s, L, R) {
     const [mx, mz] = at((a + b) / 2);
     const mine = surfaceHeight(level, cx, cz, mx - s.dx * 1e-3, mz - s.dz * 1e-3);
     const theirs = surfaceHeight(level, nx, nz, mx + s.dx * 1e-3, mz + s.dz * 1e-3);
-    if (mine <= theirs + 1e-4) continue;
+    if (mine <= theirs + 2e-3) continue; // målt 1 mm inn på hver side: en rampe stiger litt på de 2 mm (ekte kanter er minst 1 dm)
     const [ax, az] = at(a);
     const [bx, bz] = at(b);
     // Vendt mot naboen: motsatt omløp av veggene sett innenfra.
@@ -123,6 +125,8 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
   for (const t of level.tiles) if (t !== TILE.WALL) open++;
   const S = subdivide ?? (open > 5000 ? 1 : 2);
   const isWall = (x, z) => getTile(level, x, z) === TILE.WALL;
+  // Hjørneskygge: et hull til en stige er vegg for kollisjonen, men gulvet rundt det fortsetter.
+  const shades = (x, z) => isWall(x, z) && !level.seams?.hole.has(z * level.w + x);
   // Formede hjørner (world/corners.js) skygges med de samme reglene som horizontal() under, så
   // gulvet og taket i hjørneruten glir over i naborutene uten skjøt.
   const cornerShade = ({ fy, cy }) => ({
@@ -140,6 +144,13 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
       const t = getTile(level, cx, cz);
       // Skrå/avrundet hjørne (core/corners.js): veggruten er åpnet mot hjørnet, gulvruten får en kile.
       const shape = t === TILE.WALL || t === TILE.FLOOR ? cornerShape(level, cx, cz) : null;
+      const hole = level.seams?.hole.get(cz * level.w + cx); // rundt hull til en stige (core/ladders.js)
+      if (hole) {
+        holeRing(out.floor, cx, cz, hole.y, hole.r, true);
+        horizontal(out.ceiling, cx, cz, ceilingAt(level, cx, cz), S, false, () => false, 0, CEILING_GAIN); // taket over hullet: denne etasjens
+      }
+      const hatch = level.seams?.hatch.get(cz * level.w + cx);
+      if (hatch) (holeRing(out.ceiling, cx, cz, hatch.y0, hatch.r, false), holeShaft(out.wall, cx, cz, hatch.r, hatch.y0, hatch.y1));
       if (t === TILE.WALL) {
         if (shape) buildCorner(shape, { floor: out.floor, ceiling: out.ceiling, wall: out.wall }, [{ lo: shape.fy, hi: shape.cy, base: shape.fy }], wallUV, cornerShade(shape));
         continue;
@@ -160,7 +171,7 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
       } else if (t === TILE.STAIRS) {
         if (!isEscalator(level, cx, cz)) buildSteps(floorMesh, level, cx, cz);
       } else if (!shape && hasFloor(level, cz * level.w + cx)) {
-        const closes = (x, z) => isWall(x, z) || topFloorAt(level, x, z) > fy + 0.01;
+        const closes = (x, z) => shades(x, z) || topFloorAt(level, x, z) > fy + 0.01;
         horizontal(floorMesh, cx, cz, fy, S, true, closes, 0.12);
       }
       // Taket får mindre direkte lys – ellers blir det overeksponert rundt armaturene.
@@ -188,6 +199,7 @@ export function buildSurfaces(level, field, { subdivide } = {}) {
         const spans = seamSpans(level, cz * level.w + cx, s, cellSpans); // trapperom mellom etasjer
         if (isWall(nx, nz)) {
           if (isShopfront(level, nx, nz) && shopfrontNormal(level, nx, nz)) continue;
+          if (level.seams?.hole.has(nz * level.w + nx)) continue; // hullet til en stige (core/ladders.js)
           // Siden ligger i veggkilen, eller naboveggen er åpnet mot oss: ingen vegg her.
           if (sideOpened(shape, s.dx, s.dz) || sideOpened(cornerShape(level, nx, nz), -s.dx, -s.dz)) continue;
           const left = isWall(cx - s.ux, cz - s.uz) ? 0.8 : 1;

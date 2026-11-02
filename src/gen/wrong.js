@@ -6,36 +6,18 @@ import { ceilingAt } from '../core/heights.js';
 import { fillZone, FINISH } from '../core/zones.js';
 import { DOOR, doorInfo } from '../core/doors.js';
 import { placeStairs } from '../core/stairs.js';
-import { OBJECTS, placeObject, objectsAt, objectFits } from '../core/objects.js';
+import { OBJECTS, placeObject, objectFits } from '../core/objects.js';
+import { footprintCells } from '../core/object-pose.js';
 import { canHoldWindow, paintWindows } from '../core/windows.js';
 import { addExits } from './exits.js';
+import { DIRS, pick, cellsOf, floorCells, roomy } from './wrong-cells.js';
+import { MORE_CHANGES, MORE_WEIGHTS, MORE_MAX } from './wrong-more.js';
 
 export const STRENGTHS = {
   subtle: { label: 'Subtle', count: [5, 8] },
   wrong: { label: 'Wrong', count: [9, 14] },
   very: { label: 'Very wrong', count: [15, 20] },
 };
-
-const DIRS = [
-  [0, -1],
-  [1, 0],
-  [0, 1],
-  [-1, 0],
-];
-
-const pick = (rand, list) => list[Math.floor(rand() * list.length)];
-const cellsOf = (level, test) => {
-  const out = [];
-  for (let z = 1; z < level.h - 1; z++) for (let x = 1; x < level.w - 1; x++) if (test(x, z, z * level.w + x)) out.push([x, z]);
-  return out;
-};
-const floorCells = (level) => cellsOf(level, (x, z, i) => level.tiles[i] === TILE.FLOOR);
-/** Gulvruter med gulv på alle åtte sider – midt i et rom, ikke i en gang. */
-const roomy = (level) =>
-  cellsOf(level, (x, z) => {
-    for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) if (getTile(level, x + dx, z + dz) !== TILE.FLOOR) return false;
-    return true;
-  });
 
 /** Gulvruter innenfor radius r fra (x, z) i samme åpne område (en «flekk» av rommet). */
 function blob(level, x, z, r) {
@@ -127,7 +109,8 @@ const CHANGES = {
   },
   /** En ensom gjenstand midt i et stort rom, der den ikke hører hjemme. */
   outOfPlace(level, rand) {
-    const spots = roomy(level).filter(([x, z]) => !objectsAt(level, x, z).length);
+    const taken = footprintCells(level); // én gang, ikke per rute (det går gjennom alle gjenstandene)
+    const spots = roomy(level).filter(([x, z]) => !taken.has(z * level.w + x));
     if (!spots.length) return null;
     const [x, z] = pick(rand, spots);
     // Et TV, en boombox – eller en badeand på tørt gulv.
@@ -136,13 +119,15 @@ const CHANGES = {
   },
   /** En trapp som går opp i taket (en trapp til ingensteds). */
   stairsNowhere(level, rand) {
+    let taken = null;
     for (let k = 0; k < 30; k++) {
       const [x, z] = pick(rand, floorCells(level));
       const [dx, dz] = pick(rand, DIRS);
       // Tre gulvruter fram mot en vegg, med gulv på sidene (ikke i en smal gang).
       const run = [0, 1, 2].map((s) => [x + dx * s, z + dz * s]);
       const wall = getTile(level, x + dx * 3, z + dz * 3) === TILE.WALL;
-      const ok = run.every(([cx, cz]) => getTile(level, cx, cz) === TILE.FLOOR && !objectsAt(level, cx, cz).length && getTile(level, cx - dz, cz + dx) === TILE.FLOOR && getTile(level, cx + dz, cz - dx) === TILE.FLOOR);
+      taken ??= footprintCells(level);
+      const ok = run.every(([cx, cz]) => !level.keep?.has(cz * level.w + cx) && getTile(level, cx, cz) === TILE.FLOOR && !taken.has(cz * level.w + cx) && getTile(level, cx - dz, cz + dx) === TILE.FLOOR && getTile(level, cx + dz, cz - dx) === TILE.FLOOR);
       if (!wall || !ok) continue;
       placeStairs(level, run[0], run[2]);
       return { what: 'Stairs that go up into the ceiling', cells: run };
@@ -151,7 +136,8 @@ const CHANGES = {
   },
   /** En enslig søyle midt i et rom uten søyler. */
   lonePillar(level, rand) {
-    const spots = roomy(level).filter(([x, z]) => !objectsAt(level, x, z).length && !level.lights[z * level.w + x]);
+    const taken = footprintCells(level);
+    const spots = roomy(level).filter(([x, z]) => !taken.has(z * level.w + x) && !level.lights[z * level.w + x]);
     if (!spots.length) return null;
     const [x, z] = pick(rand, spots);
     level.tiles[z * level.w + x] = TILE.PILLAR;
@@ -183,13 +169,22 @@ const CHANGES = {
     level.bright = Math.max(0.4, (level.bright ?? 1) * (0.86 + rand() * 0.06));
     return { what: 'The light is a little dimmer', cells: [] };
   },
+  ...MORE_CHANGES, // gen/wrong-more.js
 };
 
 export const CHANGE_NAMES = Object.keys(CHANGES);
+
+/** Én navngitt endring (Spot the wrong, gen/spot.js). keep: ruter som ikke skal røres. Returnerer { what, cells } eller null. */
+export function applyChange(level, name, rand, keep = null) {
+  level.keep = keep;
+  const done = CHANGES[name](level, rand);
+  delete level.keep;
+  return done;
+}
 // Lys- og takendringer er de vanligste; luft og lysstyrke bare én gang hver.
-const WEIGHTS = { lightOut: 3, lightFlicker: 2, lightOffGrid: 2, ceilingUp: 2, ceilingDown: 1, doorChanged: 2, facingWall: 2, outOfPlace: 1, extraDoor: 1, stairsNowhere: 1, lonePillar: 1, tilePatch: 1, extraWindow: 1, fog: 1, dimmer: 1 };
+const WEIGHTS = { lightOut: 3, lightFlicker: 2, lightOffGrid: 2, ceilingUp: 2, ceilingDown: 1, doorChanged: 2, facingWall: 2, outOfPlace: 1, extraDoor: 1, stairsNowhere: 1, lonePillar: 1, tilePatch: 1, extraWindow: 1, fog: 1, dimmer: 1, ...MORE_WEIGHTS };
 // Høyst så mange av hver, så endringene spres på flere slags.
-const MAX = { ceilingUp: 2, ceilingDown: 1, fog: 1, dimmer: 1, stairsNowhere: 1, lonePillar: 1, tilePatch: 1, outOfPlace: 2, extraDoor: 2, extraWindow: 2 };
+const MAX = { ceilingUp: 2, ceilingDown: 1, fog: 1, dimmer: 1, stairsNowhere: 1, lonePillar: 1, tilePatch: 1, outOfPlace: 2, extraDoor: 2, extraWindow: 2, ...MORE_MAX };
 
 /** Én markering per endring: midten av rutene og en radius som dekker dem, { x, z, r }. */
 export function changeMarkers(changes) {
@@ -203,16 +198,25 @@ export function changeMarkers(changes) {
     });
 }
 
+/** Rutene som må være som de er, pluss startpunktet: ingen søyle der man våkner. */
+function withSpawn(level, keep) {
+  const out = new Set(keep ?? []);
+  if (level.spawn) out.add(Math.floor(level.spawn.z) * level.w + Math.floor(level.spawn.x));
+  return out;
+}
+
 /**
  * Gjør rommet feil. strength: 'subtle' | 'wrong' | 'very'.
+ * @param keep Set med ruter som må være som de er (der trapper og stiger går av og på), eller null
  * @returns {Array<{ what, cells }>} endringene som ble gjort
  */
-export function makeWrong(level, strength = 'wrong', rand = Math.random) {
+export function makeWrong(level, strength = 'wrong', rand = Math.random, keep = null) {
   const [lo, hi] = (STRENGTHS[strength] ?? STRENGTHS.wrong).count;
   const target = lo + Math.floor(rand() * (hi - lo + 1));
   const done = [];
   const used = {};
   const bag = Object.entries(WEIGHTS).flatMap(([name, w]) => Array(w).fill(name));
+  level.keep = withSpawn(level, keep);
   for (let tries = 0; done.length < target && tries < target * 8; tries++) {
     const name = pick(rand, bag);
     if ((used[name] ?? 0) >= (MAX[name] ?? Infinity)) continue;
@@ -222,5 +226,6 @@ export function makeWrong(level, strength = 'wrong', rand = Math.random) {
     used[name] = (used[name] ?? 0) + 1;
     done.push({ name, ...change });
   }
+  delete level.keep;
   return done;
 }

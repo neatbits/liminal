@@ -5,7 +5,8 @@ import { randInt } from '../core/rng.js';
 import { fillRect } from './util.js';
 import { openArcadeCourt } from './mall-arcades.js';
 
-function shops(level, rand, x0, x1, z0, z1, front, court = -1, recess = false) {
+/** En rad butikker langs x med fasaden i raden front. closedShare: andelen som er stengt (bare en dør). */
+export function shops(level, rand, x0, x1, z0, z1, front, court = -1, recess = false, closedShare = 0.2) {
   const doors = [],
     list = [],
     north = front > z1;
@@ -17,7 +18,7 @@ function shops(level, rand, x0, x1, z0, z1, front, court = -1, recess = false) {
     let b = a + randInt(rand, 7, 11) - 1;
     if (x1 - b < 8) b = x1;
     if (b < x1) fillRect(level, b + 1, z0, b + 1, z1, TILE.WALL);
-    const closed = rand() < 0.2;
+    const closed = rand() < closedShare;
     if (list.length === court && b < x1) {
       openArcadeCourt(level, { x0: a, x1: b, front }, north);
       a = b + 2;

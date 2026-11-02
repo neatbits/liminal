@@ -13,6 +13,13 @@ import { Darkness, wakeAtStart } from './nightmare.js';
 import { Scary } from './scary.js';
 import { ShiftPlay } from './shifts.js';
 import { waitWhileWalking } from './walk-session.js';
+import { DailyRun } from './daily.js';
+import { LightsOut } from './lights-out.js';
+import { SpotRun } from './spot.js';
+import { DescentRun } from './descent.js';
+import { NoclipRun } from './noclip.js';
+import { placeLevelTapes } from './tape-placing.js';
+import { DESCENT } from '../gen/descent.js';
 
 const NEVER = { first: [1e9, 1e9], every: [1e9, 1e9] };
 
@@ -22,11 +29,18 @@ export class Explorer {
     this.tapes = new Tapes();
     viewer.scene.add(this.tapes.group);
     this.hunt = new TapeHunt(this); // låste dører til kassettene er funnet, summing, fremgang
-    this.windowGhost = new WindowGhost(viewer); // spøkelset utenfor vinduene (Uncanny/Nightmare)
+    this.windowGhost = new WindowGhost(viewer); // skikkelsen utenfor vinduene (Uncanny/Nightmare)
     this.darkness = new Darkness(viewer); // står man i mørket? (Nightmare: der jakter monsteret)
     this.levelFound = 0; // kassetter funnet før dette nivået (Nightmare: tatt = de herfra er tapt)
     this.scary = new Scary(viewer);
     this.shifts = new ShiftPlay(this); // rommet endrer seg bak ryggen på en (world/shifts.js)
+    this.daily = new DailyRun(this); // dagens nivå på tid (view3d/daily.js)
+    this.lightsOut = new LightsOut(this); // Game mode uten strøm: sikringsskap i stedet for kassetter
+    viewer.walk.interact = this.lightsOut; // E ved et sikringsskap (view3d/walkmode.js)
+    this.spot = new SpotRun(this); // samme gang igjen og igjen (gen/spot.js)
+    this.descent = new DescentRun(this); // ett forsøk, stadig dypere (gen/descent.js)
+    this.noclip = new NoclipRun(this); // fra en butikk gjennom veggen og innover (gen/noclip.js)
+    this.tapeCount = null; // (dybde) → kassetter på nivået, når modusen bestemmer det
     this.blackout = this._newBlackout();
     this.depth = 0; // 0 = rommet fra editoren
     this.home = null; // rommet fra editoren mens man er på et generert nivå
@@ -39,6 +53,10 @@ export class Explorer {
   get mood() {
     return getMood(this.v.settings.mood);
   }
+
+  /** Modusene med egen tilstand: den aktive styrer HUD-linjen og kan gripe inn når nivåer lages (beforeLevel, theme, prepare, arrive). */
+  get runs() { return [this.spot, this.descent, this.daily, this.noclip]; }
+  _run() { return this.runs.find((r) => r.active) ?? null; }
 
   /**
    * Gåmodus starter i rommet fra editoren – i sterkere stemninger en kopi med ødelagte lys og små
@@ -70,6 +88,7 @@ export class Explorer {
   /** Ut av gåmodus: tilbake til rommet fra editoren. */
   exit() {
     this._cancelTransition();
+    for (const r of [...this.runs, this.lightsOut]) r.stop();
     this.tapes.clear();
     this.hunt.stop();
     this.windowGhost.reset();
@@ -87,6 +106,7 @@ export class Explorer {
   /** Editoren har byttet rom mens man var på et generert nivå: det gjelder ikke lenger. */
   abandon() {
     this._cancelTransition();
+    for (const r of [...this.runs, this.lightsOut]) r.stop();
     this.home = null;
     this.depth = 0;
   }
@@ -102,7 +122,7 @@ export class Explorer {
       if (!this.mood.monster) this.scary.hide();
     }
     const event = this.blackout.update(dt);
-    const p = this.blackout.power;
+    const p = this.lightsOut.active ? this.lightsOut.update(dt) : this.blackout.power;
     v.storeys.setPower(p); // hele bygget
     v.walk.power = p;
     this.tapes.setPower(p);
@@ -110,11 +130,11 @@ export class Explorer {
     const monster = this.mood.monster;
     if (monster && !this.busy) {
       const { chase } = this.mood;
-      const dark = this.blackout.phase === 'dark' || (!!chase?.inDarkness && this.darkness.update());
-      const caught = chase?.caught === 'restart' ? () => wakeAtStart(this) : () => this.noclip();
-      this.scary.update(dt, p, dark, monster === 'lurk', caught, chase);
+      const dark = this.blackout.phase === 'dark' || this.lightsOut.dark || (!!chase?.inDarkness && this.darkness.update());
+      const caught = this.descent.active ? () => this.descent.die() : chase?.caught === 'restart' ? () => wakeAtStart(this) : () => this.noclip();
+      this.scary.update(dt, p, dark, monster === 'lurk' && !this.descent.lethal, caught, chase);
     }
-    if (!this.busy) this.shifts.update(dt);
+    if (!this.busy && !this.noclip.active) this.shifts.update(dt); // Noclip: ombygging ville brutt skjøtene
     if (!this.busy) this.windowGhost.update(dt, this.mood);
     const w = v.walk.walker;
     const got = this.tapes.pickUp(w.x, w.floorY, w.z, v.storeys.current);
@@ -124,7 +144,13 @@ export class Explorer {
       this.hunt.pickedUp(got);
     }
     if (!this.busy) this.hunt.update();
-    v.hud.setExtra([this.depth ? `LEVEL ${this.depth}` : null, this.total ? `📼 ${this.found}/${this.total}` : null, this.hunt.extra()].filter(Boolean).join(' · '));
+    if (!this.busy && this.lightsOut.active) this.lightsOut.hum();
+    for (const r of this.runs) r.update(dt);
+    const run = this._run();
+    const where = run ? run.extra() : this.depth ? `${this.lightsOut.active ? 'LIGHTS OUT · ' : ''}LEVEL ${this.depth}` : null;
+    const goal = this.spot.active || this.noclip.active ? null : this.lightsOut.active ? this.lightsOut.extra() : this.total ? `📼 ${this.found}/${this.total}` : null;
+    const deepest = run || this.lightsOut.active ? null : this.hunt.extra();
+    v.hud.setExtra([where, goal, deepest].filter(Boolean).join(' · '));
   }
 
   /** Monsteret tok deg: bildet rives opp, og du våkner et annet sted. */
@@ -141,6 +167,8 @@ export class Explorer {
   async goDeeper({ title = null, wait = 650, door = null } = {}) {
     const v = this.v;
     if (this.busy || v.walk.paused) return;
+    if (this.daily.active) return this.daily.leave(door); // Daily level: døren er målet
+    if (this.spot.active) return this.spot.leave(door); // Spot the wrong: døren er svaret
     if (door && !this.hunt.tryExit()) return; // låst til kassettene er funnet (noclip slipper gjennom)
     const transition = {};
     this._transition = transition;
@@ -153,25 +181,49 @@ export class Explorer {
       if (!(await waitWhileWalking(v, wait, current))) return;
       this.home ??= v.level;
       this.depth++;
+      const run = this._run();
+      run?.beforeLevel?.(this.depth);
       const { anomalies } = this.mood;
       const { scale } = getLevelSize(v.settings.levelSize);
-      const next = nextLevel(this.depth, v.world.theme.id, Math.random, anomalies, scale);
+      const next = nextLevel(this.depth, v.world.theme.id, Math.random, this.descent.active ? { corridor: 0 } : anomalies, this.descent.active ? scale * DESCENT.SCALE : scale, run?.theme?.(this.depth));
       const { label, kind } = next;
       // Genererte nivåer gjøres feil etter stemningen (ikke korridorene – de må beholde mønsteret).
       const level = ((kind === 'room' || kind === 'halls') && moodLevel(next.level, v.settings.mood, Math.random)) || next.level;
-      v.setLevel(level, { explorer: true });
-      v.walk.enter();
-      this.blackout = this._newBlackout();
-      this.scary.reset(true);
-      this.shifts.reset();
-      this.windowGhost.reset();
-      this._placeTapes();
+      run?.prepare?.(level, this.depth);
+      this.arrive(level);
       this.hunt.reached(this.depth);
       v.hud.title(title ?? `LEVEL ${this.depth}`, title ? `Level ${this.depth} – ${label}` : label);
       await waitWhileWalking(v, 250, current);
     } finally {
       if (current()) this._cancelTransition();
     }
+  }
+
+  /**
+   * Inn på et nytt nivå: verdenen, gåingen, hendelsene og kassettene. rand: tilfeldighetene for
+   * kassettene; loops: false gjør plasseringen uavhengig av de uendelige gangene (likt for alle).
+   */
+  arrive(level, rand = Math.random, { loops = true } = {}) {
+    const v = this.v;
+    v.setLevel(level, { explorer: true });
+    v.walk.enter();
+    this.blackout = this._newBlackout();
+    this.scary.reset(true);
+    this.shifts.reset();
+    this.windowGhost.reset();
+    this._placeTapes(rand, loops);
+    if (this.lightsOut.active) {
+      // Lights out: ingen kassetter – sikringsskapene er målet.
+      this.tapes.clear();
+      this.found = this.total = 0;
+      this.lightsOut.arrive();
+    }
+    if (this.spot.active) {
+      // Spot the wrong: bare gangen. Ingen kassetter, ingen hendelser.
+      this.tapes.clear();
+      this.found = this.total = 0;
+    }
+    this._run()?.arrive?.();
   }
 
   _cancelTransition() {
@@ -182,24 +234,11 @@ export class Explorer {
   }
 
   _newBlackout() {
-    return new Blackout(Math.random, this.mood.blackout ?? NEVER);
+    return new Blackout(Math.random, this.lightsOut?.active ? NEVER : this.mood.blackout ?? NEVER); // Lights out styrer strømmen selv
   }
 
-  /** Nye kassetter på nivået; de man ikke fant på forrige nivå, telles ikke lenger. */
-  _placeTapes() {
-    const v = this.v;
-    this.levelFound = this.found;
-    // Ikke i uendelige ganger: der ville kassettene hoppet når man flyttes én periode.
-    const loops = v.walk.loops?.loops ?? [];
-    const inLoop = (x, z) => loops.some((l) => (l.axis === 'x' ? x >= l.u0 && x <= l.u1 && z >= l.v0 - 3 && z <= l.v1 + 3 : z >= l.u0 && z <= l.u1 && x >= l.v0 - 3 && x <= l.v1 + 3));
-    // Med etasjer: én kassett i hver av de andre etasjene, der den kan nås fra trappen (view3d/storeys.js).
-    const s = v.storeys;
-    const floors = s.levels.map((level, k) => {
-      if (k === s.current) return { level: v.walk.level, field: v.world.field, spawn: v.walk.walker, skip: inLoop, base: s.at[k] };
-      const spawn = s.entry(k);
-      return { level, field: s.all[k].field, spawn, base: s.at[k], count: spawn ? 1 : 0 };
-    });
-    this.total = this.found + this.tapes.placeFloors(floors, Math.random);
+  _placeTapes(rand = Math.random, avoidLoops = true) {
+    placeLevelTapes(this, rand, avoidLoops);
   }
 
   _hasExits() {

@@ -3,6 +3,14 @@
 // med (view3d/explore.js); ødelagte lys og «Make it wrong» gjelder fra neste rom.
 import { getMood, MOODS } from '../gen/moods.js';
 
+/** Stemningen for en spillmodus: spilleren ser ingen melding, og valget i innstillingene røres ikke. */
+export function quietMood(viewer, id) {
+  if (!MOODS[id]) return;
+  viewer.settings.mood = id;
+  viewer.walk.mood = getMood(id);
+  viewer._applyLook();
+}
+
 export function setMood(viewer, id) {
   if (!MOODS[id]) return;
   const m = getMood(id);

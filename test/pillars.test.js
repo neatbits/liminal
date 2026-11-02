@@ -169,7 +169,7 @@ describe('round Poolrooms pillars', () => {
   it('generates broad columns in spacious halls without furnishing inside them', () => {
     const diameters = new Set();
     for (const seed of [3, 7, 11, 21]) {
-      const l = generateLevel({ theme: 'pool', w: 64, h: 52, seed });
+      const l = generateLevel({ theme: 'pool', w: 64, h: 52, seed, layout: 'classic' });
       for (let i = 0; i < l.tiles.length; i++)
         if (l.tiles[i] === TILE.PILLAR) diameters.add(pillarInfo(l, i % l.w, Math.floor(i / l.w)).radius * 2);
       for (const o of l.objects) expect(objectFits(l, o)).toBe(true);

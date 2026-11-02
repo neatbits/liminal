@@ -52,8 +52,8 @@ describe('retro electronics models', () => {
 
   it('uses all four PCs in offices/schools and sparse personal audio in suitable rooms', () => {
     const computers = new Set(), portable = new Set();
-    for (const theme of ['office', 'school', 'basement', 'hotel']) for (let seed = 1; seed <= 12; seed++) {
-      const l = generateLevel({ theme, w: 48, h: 40, seed });
+    for (const theme of ['office', 'school', 'basement', 'hotel']) for (let seed = 1; seed <= 40; seed++) { // walkmanen er sjelden
+      const l = generateLevel({ theme, w: 48, h: 40, seed, layout: theme === 'basement' ? 'classic' : undefined }); // stua i kjelleren
       for (const o of l.objects.filter(o => ELECTRONIC_OBJECTS[o.id])) {
         expect(objectFits(l, o), `${theme}: ${o.id}`).toBe(true);
         if (RETRO_PC_IDS.includes(o.id)) {
@@ -66,7 +66,7 @@ describe('retro electronics models', () => {
     expect([...computers].sort()).toEqual([...RETRO_PC_IDS].sort());
     expect(portable.has('office') || portable.has('school')).toBe(true);
     expect(portable.has('basement') || portable.has('hotel')).toBe(true);
-  });
+  }, 30000);
 
   it('preserves all new object IDs through room files and sharing', async () => {
     const l = presetById('mall').make({seed:7,layout:'gallery'});

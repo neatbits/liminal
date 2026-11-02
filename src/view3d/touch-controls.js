@@ -1,4 +1,4 @@
-// Phone controls: a floating joystick (WalkInput's left half), Run/Jump/Use and a menu button.
+// Phone controls: a floating joystick (WalkInput's left half), Run/Jump/Crawl/Light/Use and a menu button.
 import { h } from '../ui/dom.js';
 
 export class TouchControls {
@@ -53,13 +53,38 @@ export class TouchControls {
       dataset: { control: 'use' },
       onclick: () => walk.useDoor(),
     });
+    // Crawl is a toggle too: you stay down until you tap it again.
+    this.crawl = h('button', {
+      type: 'button',
+      class: 'touch-crawl',
+      text: 'Crawl',
+      'aria-label': 'Crawl',
+      'aria-pressed': 'false',
+      dataset: { control: 'crawl' },
+      onclick: () => {
+        walk.session.crawl();
+        this.showCrawl();
+      },
+    });
+    this.light = h('button', {
+      type: 'button',
+      class: 'touch-light',
+      text: 'Light',
+      'aria-label': 'Flashlight',
+      'aria-pressed': 'false',
+      dataset: { control: 'light' },
+      onclick: () => {
+        walk.session.flash();
+        this.showCrawl();
+      },
+    });
     this.knob = h('div', { class: 'touch-knob' });
     this.stick = h('div', { class: 'touch-stick', 'aria-hidden': 'true' }, this.knob);
     this.root = h(
       'div',
       { class: 'touch-controls' },
       this.stick,
-      h('div', { class: 'touch-action-pad' }, this.run, hold('jump', 'Jump', 'Jump', 'Space'), use),
+      h('div', { class: 'touch-action-pad' }, this.run, hold('jump', 'Jump', 'Jump', 'Space'), this.crawl, this.light, use),
       h('button', {
         type: 'button',
         class: 'touch-menu',
@@ -79,6 +104,14 @@ export class TouchControls {
     else this.walk.input.buttons.delete('ShiftLeft');
     this.run.classList.toggle('held', on);
     this.run.setAttribute('aria-pressed', String(on));
+  }
+
+  /** Crawl and Light stay on, so their buttons show the real state (a new level can reset it). */
+  showCrawl() {
+    for (const [b, on] of [[this.crawl, this.walk.walker.wantDown], [this.light, this.walk.flashlight.on]]) {
+      b.classList.toggle('held', on);
+      b.setAttribute('aria-pressed', String(on));
+    }
   }
 
   /** The stick rests faintly bottom left and jumps to wherever the thumb lands. */
@@ -101,6 +134,7 @@ export class TouchControls {
     this.pointers.clear();
     this.walk.input.buttons.clear();
     this.setRunning(false);
+    this.showCrawl();
     this._showStick(null);
     for (const [id, { b }] of held) {
       b.classList.remove('held');

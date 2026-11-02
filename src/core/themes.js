@@ -8,6 +8,7 @@
 // ({ amount, grid = fliser per teksturflate }) gjør flisene blanke (world/gloss.js). De nyeste temaene
 // ligger i themes-more.js.
 import { MORE_THEMES } from './themes-more.js';
+import { AIRPORT_THEMES } from './themes-airport.js';
 
 export const THEMES = {
   backrooms: {
@@ -146,6 +147,7 @@ export const THEMES = {
     plan: { floor: '#f0ddd6', water: '#a9cbd6' },
   },
   ...MORE_THEMES,
+  ...AIRPORT_THEMES, // flyplassterminalen (themes-airport.js)
 };
 
 // Skjulte temaer (hidden) finnes bare i den uendelige utforskingen: ikke i lister eller vanlige nivåer.

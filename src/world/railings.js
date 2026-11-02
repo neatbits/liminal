@@ -8,6 +8,8 @@ import { MeshData, faceQuad } from './mesher.js';
 import { orientedBox } from './mesher.js';
 import { stepProfile, surfaceHeight } from './stairs.js';
 import { getTheme } from '../core/themes.js';
+import { buildLadders } from './ladders.js';
+import { buildLifts, neutralField } from './lifts.js';
 
 const INSET = 0.05; // vernets senterlinje innenfor kanten
 const WALL_GAP = 0.07; // håndlist på vegg: avstand fra veggen
@@ -142,5 +144,14 @@ export function buildRailings(level, field) {
       for (const side of railSides(level, x, z)) railing(out, level, x, z, side);
     }
   }
+  buildLadders(level, out.rail); // stiger mellom etasjer og rekkverket rundt hullet (world/ladders.js)
+  return { ...out, ...liftMeshes(level, field) };
+}
+
+/** Heisene i egne, faste materialer (ikke temaets rekkverk), så de er like i alle etasjer (world/lifts.js). */
+function liftMeshes(level, field) {
+  const neutral = neutralField(field); // uten temaets lysfarge
+  const out = { lift: new MeshData(neutral), liftFloor: new MeshData(neutral) };
+  buildLifts(level, out.lift, out.liftFloor);
   return out;
 }

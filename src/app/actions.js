@@ -1,12 +1,21 @@
 // Fil-handlinger: nytt rom, eksempler, lagring, deling, import/eksport og generering.
+import { spotDialog, descentDialog, runResultDialog, noclipDialog } from '../ui/run-dialogs.js';
+import { startRun } from '../view3d/game-mode.js';
+import { loadRuns } from '../core/storage.js';
 import { applySnapshot } from '../core/history.js';
 import { cloneLevel } from '../core/level.js';
 import { randomSeed, parseSeed } from '../core/rng.js';
 import { encodeLevel, levelFromJSON, levelToJSON } from '../core/serialize.js';
 import { listRooms, loadRoom, saveRoom, deleteRoom } from '../core/storage.js';
-import { generateLevel, levelFromTemplate } from '../gen/index.js';
-import { newRoomDialog, examplesDialog, myRoomsDialog, shareDialog, gameModeDialog } from '../ui/dialogs.js';
-import { startGame } from '../view3d/game-mode.js';
+import { generateLevel } from '../gen/index.js';
+import { generateBuilding, newBuilding } from '../gen/new-building.js';
+import { storeyCount } from '../core/storeys.js';
+import { newRoomDialog, examplesDialog, myRoomsDialog, shareDialog } from '../ui/dialogs.js';
+import { gameModeDialog } from '../ui/game-dialog.js';
+import { startGame, startDaily } from '../view3d/game-mode.js';
+import { dailyDialog, dailyResultDialog } from '../ui/daily-dialog.js';
+import { dailyKey, dailyLabel, streak } from '../gen/daily.js';
+import { loadDaily } from '../core/storage.js';
 import { confirmDialog } from '../ui/modal.js';
 import { SHARE_PARAM, WEB_APP, shareUrl } from '../core/share-link.js';
 import { openSharedLinkDialog } from './shared-link.js';
@@ -28,7 +37,7 @@ async function confirmReplace(app) {
 /** draft: ved oppstart med et utkast fra forrige gang (da er «Continue» hovedvalget). */
 export function newRoom(app, { startup = false, draft = false } = {}) {
   newRoomDialog({
-    theme: app.level.theme,
+    theme: app.editor.level.theme,
     startup,
     draft: draft ? app.level.name : null,
     onExamples: () => openExamples(app),
@@ -36,17 +45,61 @@ export function newRoom(app, { startup = false, draft = false } = {}) {
     onCreate: async (o) => {
       if (!(await confirmReplace(app))) return;
       const seed = parseSeed(o.seed) ?? randomSeed();
-      app.setLevel(levelFromTemplate(o.template, { ...o, seed, name: 'New room' }));
-      if (o.template === 'random') toast(`New random room – seed ${seed}`);
+      const { template, ...options } = o;
+      const room = newBuilding(template, { ...options, seed, name: 'New room' });
+      app.setLevel(room);
+      const n = storeyCount(room);
+      if (n < o.floors) toast(`Only ${n} of ${o.floors} floors could be joined by stairs or ladders in this room size.`, { error: true });
+      else if (template === 'random') toast(`New random room – seed ${seed}${n > 1 ? ` · ${n} floors` : ''}`);
     },
   });
 }
 
-/** Game mode (forsiden → app/#play, og menyen): velg stemning, så rett inn på Level 1. */
-export function playGame(app) {
+/** Etter et spill (app.afterGame) og når det ikke gikk å starte: tilbake dit man kom fra. */
+function startedGame(app, started, back) {
+  if (started) app.afterGame = back ?? null;
+  else if (back) {
+    toast('This room has no floor to start from – continue the room and draw some first.', { error: true, ms: 5000 });
+    back();
+  }
+}
+
+/**
+ * Tape hunt og Lights out (forsiden → app/#play, app/#lights, og menyene): velg stemning, så rett inn på
+ * Level 1. back: fra hovedmenyen; Back, Esc og å gå ut av spillet går tilbake dit, ikke til editoren.
+ */
+export function playGame(app, mode = 'tapes', { back } = {}) {
   gameModeDialog({
     mood: app.settings.mood,
-    onStart: (mood) => startGame(app.viewer, mood, () => (app.walk(), app.viewer.mode === 'walk')),
+    mode,
+    onBack: back,
+    onStart: (mood) => startedGame(app, startGame(app.viewer, mood, () => (app.walk(), app.viewer.mode === 'walk'), mode), back),
+  });
+}
+
+/** Spot the wrong og The Descent (menyene, app/#spot, app/#descent): side med rekorden, så rett inn. back: som playGame. */
+export function playRun(app, run, { back } = {}) {
+  const again = () => playRun(app, run, { back });
+  app.viewer.options.onRun = (result) => runResultDialog(result, { again, onBack: back });
+  const dialog = { spot: spotDialog, noclip: noclipDialog }[run] ?? descentDialog;
+  dialog({
+    records: loadRuns()[run],
+    onBack: back,
+    onStart: () => startedGame(app, startRun(app.viewer, run, () => (app.walk(), app.viewer.mode === 'walk')), back),
+  });
+}
+
+/** Daily level (forsiden → app/#daily og menyene): dagens nivå på tid, likt for alle. back: som playGame. */
+export function playDaily(app, { back } = {}) {
+  const key = dailyKey();
+  const records = loadDaily();
+  app.viewer.options.onDaily = (result) => dailyResultDialog(result, { again: () => playDaily(app, { back }), onBack: back });
+  dailyDialog({
+    date: dailyLabel(key),
+    best: records[key]?.best ?? null,
+    days: streak(records, key),
+    onBack: back,
+    onStart: () => startedGame(app, startDaily(app.viewer, () => (app.walk(), app.viewer.mode === 'walk')), back),
   });
 }
 
@@ -162,13 +215,30 @@ export function importFile(app) {
   input.click();
 }
 
-/** Genererer et rom i samme tema og størrelse fra frøet (eller et tilfeldig), kan angres. */
-export function generateInto(app, seed = null) {
-  const { theme, w, h } = app.level;
+/**
+ * Genererer i samme størrelse fra frøet (eller et tilfeldig), kan angres. floors: 'this' = bare etasjen som
+ * tegnes, ellers hele bygget i rommets tema, med 'random' (1–3) eller så mange etasjer.
+ */
+export function generateInto(app, seed = null, floors = 'random') {
+  const { w, h, height, waterDepth, name } = app.level;
+  const ed = app.editor;
   const s = parseSeed(seed) ?? randomSeed();
-  const fresh = generateLevel({ theme, w, h, seed: s });
-  app.editor.checkpoint();
-  applySnapshot(app.editor.level, fresh); // etasjen som tegnes
+  if (floors === 'this') {
+    const fresh = generateLevel({ theme: ed.level.theme, w, h, seed: s }); // etasjen med sitt tema
+    ed.checkpoint();
+    applySnapshot(ed.level, fresh);
+    app.mutated();
+    toast(`Generated from seed ${s} – Ctrl+Z to undo`);
+    return;
+  }
+  const wanted = floors === 'random' ? floors : +floors;
+  const fresh = generateBuilding({ theme: app.level.theme, w, h, seed: s, floors: wanted, height, waterDepth, name });
+  ed.checkpoint(true);
+  applySnapshot(app.level, fresh);
+  app.level.storeys = fresh.storeys ?? [];
+  app.level.spawnStorey = 0;
+  ed.setStorey(0);
   app.mutated();
-  toast(`Generated from seed ${s} – Ctrl+Z to undo`);
+  const n = storeyCount(app.level);
+  toast(`Generated ${n > 1 ? `${n} floors` : '1 floor'} from seed ${s} – Ctrl+Z to undo`);
 }

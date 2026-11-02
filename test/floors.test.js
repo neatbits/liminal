@@ -57,6 +57,9 @@ describe('bygg med flere etasjer', () => {
       if (storeyCount(level) > 1) multi.push(level);
     }
     expect(multi.length).toBeGreaterThan(0);
-    for (const level of multi) expect(stairwells(level)).toHaveLength(storeyCount(level) - 1);
+    for (const level of multi) {
+      const { levels, wells } = walkLevels(level);
+      expect(wells.length + levels.flatMap((l) => l.ladders).length).toBe(storeyCount(level) - 1);
+    }
   });
 });

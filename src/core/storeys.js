@@ -11,8 +11,8 @@ import { waterCell } from './pillar-water.js';
 
 /** Flest etasjer i et rom, med etasje 0. */
 export const MAX_STOREYS = 8;
-/** Egenskaper som hører til bygget, ikke etasjen. */
-export const SHARED = ['theme', 'sky', 'tint', 'fog', 'bright'];
+/** Egenskaper som hører til bygget, ikke etasjen. Temaet hører til etasjen (eldre rom: rommets). */
+export const SHARED = ['sky', 'tint', 'fog', 'bright'];
 
 export function storeyCount(room) {
   return 1 + (room.storeys?.length ?? 0);
@@ -29,6 +29,7 @@ export function storeyLevel(room, k) {
   const s = room.storeys?.[k - 1];
   if (!s) return null;
   for (const key of SHARED) s[key] = room[key];
+  s.theme ??= room.theme;
   return s;
 }
 
@@ -49,6 +50,7 @@ export function copyStorey(room, k) {
   s.id = null;
   delete s.storeys;
   delete s.seed;
+  delete s.elevators; // heisene hører til bygget (core/elevators.js)
   s.slides = s.slides.filter((slide) => !slide.drop);
   for (let i = 0; i < s.tiles.length; i++) {
     if (s.tiles[i] !== TILE.STAIRS || !(s.meta[i] & STAIR_THROUGH)) continue;
@@ -73,7 +75,7 @@ export function insertStorey(room, at, storey = emptyStorey(room)) {
 }
 
 /** Fjern disse når en etasje byttes ut: de hører til etasjen, ikke bygget (se insertBelow). */
-const OWN = ['slides', 'objects', 'spawn', 'height', 'waterDepth', 'seed'];
+const OWN = ['theme', 'slides', 'objects', 'spawn', 'height', 'waterDepth', 'seed'];
 
 /**
  * Ny tom etasje nederst (kjeller): rommet selv er etasje 0, så innholdet i det flyttes opp til
@@ -83,6 +85,7 @@ export function insertBelow(room) {
   if (storeyCount(room) >= MAX_STOREYS) return -1;
   const old = cloneLevel({ ...room, storeys: undefined });
   delete old.storeys;
+  delete old.elevators; // blir i rommet: heisene hører til bygget
   old.id = null;
   const empty = emptyStorey(room);
   for (const key of [...LAYERS, ...OWN]) room[key] = empty[key];

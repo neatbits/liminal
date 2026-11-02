@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import path from 'node:path';
-import { START, fileFor, isFeedback, isExternal } from '../desktop/files.mjs';
+import { START, fileFor, isFeedback, isExternal, insteadOfFrontPage } from '../desktop/files.mjs';
 import { loadWindowState, saveWindowState } from '../desktop/window-state.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -40,6 +40,13 @@ describe('programmet (Electron): adressene', () => {
     expect(isExternal('https://sketchfab.com/3d-models/x')).toBe(true);
     expect(isExternal('mailto:hello@liminalsimulator.com')).toBe(true);
     expect(isExternal('app://liminal/about/')).toBe(false);
+  });
+
+  it('forsiden vises ikke i programmet: lenker dit går til simulatoren', () => {
+    for (const url of ['app://liminal/', 'app://liminal/index.html', 'app://liminal/?x=1#top']) expect(insteadOfFrontPage(url), url).toBe(START);
+    for (const url of ['app://liminal/about/', 'app://liminal/app/', START, 'https://liminalsimulator.com/', 'app://other/', 'not a url']) {
+      expect(insteadOfFrontPage(url), url).toBeNull();
+    }
   });
 });
 

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createLevel } from '../src/core/level.js';
-import { saveRoom, loadRoom, listRooms, deleteRoom, saveDraft, loadDraft, saveSettings, loadSettings } from '../src/core/storage.js';
+import { saveRoom, loadRoom, listRooms, deleteRoom, saveDraft, loadDraft, saveSettings, loadSettings, loadDaily, saveDaily } from '../src/core/storage.js';
 
 const ROOMS = 'liminal.rooms.v1';
 let data;
@@ -89,5 +89,15 @@ describe('lokal lagring', () => {
     }
     saveSettings({ waterWaves: 'invalid' });
     expect(loadSettings().waterWaves).toBe(1);
+  });
+
+  it('Daily level: rekordene lagres, og ødelagte oppføringer leses ikke', () => {
+    expect(loadDaily()).toEqual({});
+    expect(saveDaily({ '2026-10-29': { best: 250, plays: 2 } })).toBe(true);
+    expect(loadDaily()).toEqual({ '2026-10-29': { best: 250, plays: 2 } });
+    data.set('liminal.daily.v1', JSON.stringify({ '2026-10-28': { best: 'x' }, bad: { best: 1 }, '2026-10-27': { best: 90 } }));
+    expect(loadDaily()).toEqual({ '2026-10-27': { best: 90, plays: 1 } });
+    data.set('liminal.daily.v1', '{not json');
+    expect(loadDaily()).toEqual({});
   });
 });

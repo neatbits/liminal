@@ -18,7 +18,7 @@ const doorsOf = (level) => {
 
 describe('skolen', () => {
   it('har korridorer med skap (belegg) og mange klasserom med dører', () => {
-    const level = generateLevel({ theme: 'school', w: 52, h: 40, seed: 6 });
+    const level = generateLevel({ theme: 'school', w: 52, h: 40, seed: 6, layout: 'classic' });
     const lockers = level.tiles.filter((t, i) => t === TILE.FLOOR && level.finish[i]).length;
     expect(lockers).toBeGreaterThan(150);
     expect(doorsOf(level).length).toBeGreaterThan(12);
@@ -27,7 +27,7 @@ describe('skolen', () => {
   });
 
   it('gjenstandene står i klasserommene, ikke i korridorene (bortsett fra brusautomater)', () => {
-    const level = generateLevel({ theme: 'school', w: 52, h: 40, seed: 6 });
+    const level = generateLevel({ theme: 'school', w: 52, h: 40, seed: 6, layout: 'classic' });
     expect(level.objects.length).toBeGreaterThan(3);
     // Unntak: brusautomater står i korridorene, ved skapene.
     for (const o of level.objects) if (o.id !== 'soda') expect(level.finish[o.z * level.w + o.x]).toBe(0);
@@ -42,7 +42,7 @@ describe('skolen', () => {
 
 describe('sykehuset', () => {
   it('har pasientrom med for det meste lukkede dører, og noen små bad med fliser', () => {
-    const level = generateLevel({ theme: 'ward', w: 48, h: 36, seed: 2 });
+    const level = generateLevel({ theme: 'ward', w: 48, h: 36, seed: 2, layout: 'classic' });
     const doors = doorsOf(level);
     expect(doors.length).toBeGreaterThan(15);
     expect(doors.filter((d) => d.state === DOOR.CLOSED).length).toBeGreaterThan(doors.length * 0.3);

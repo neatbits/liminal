@@ -16,10 +16,13 @@ export const NEIGHBOURS = [
   [-1, -1],
 ];
 
-/** Kan man gå gjennom ruten? Ikke vegg, søyle eller lukket dør (og ikke vann med noWater). */
-export function passable(level, x, z, noWater = false) {
+/**
+ * Kan man gå gjennom ruten? Ikke vegg, søyle eller lukket dør (og ikke vann med noWater). Krypeganger
+ * teller med mindre noCrawl er satt – drømmegangen bruker dem ikke, og skikkelsen kommer ikke inn.
+ */
+export function passable(level, x, z, noWater = false, noCrawl = noWater) {
   const t = getTile(level, x, z);
-  if (t === TILE.WALL || t === TILE.PILLAR || (noWater && t === TILE.WATER)) return false;
+  if (t === TILE.WALL || t === TILE.PILLAR || (noWater && t === TILE.WATER) || (noCrawl && t === TILE.CRAWL)) return false;
   if (pillarContains(level, x + .5, z + .5, .3)) return false;
   if (halfWallContains(level, x + .5, z + .5, .3)) return false;
   if (t === TILE.DOOR) return doorInfo(level, x, z)?.state !== DOOR.CLOSED;
@@ -27,14 +30,14 @@ export function passable(level, x, z, noWater = false) {
 }
 
 /** Kan man ta et diagonalt steg (dx, dz) fra (x, z)? Bare når begge rutene ved siden av er åpne. */
-export function canStep(level, x, z, dx, dz, noWater = false) {
-  if (!passable(level, x + dx, z + dz, noWater)) return false;
-  return !(dx && dz) || (passable(level, x + dx, z, noWater) && passable(level, x, z + dz, noWater));
+export function canStep(level, x, z, dx, dz, noWater = false, noCrawl = noWater) {
+  if (!passable(level, x + dx, z + dz, noWater, noCrawl)) return false;
+  return !(dx && dz) || (passable(level, x + dx, z, noWater, noCrawl) && passable(level, x, z + dz, noWater, noCrawl));
 }
 
 /** Veilengde (antall steg, diagonalt teller som 1,4) fra (x, z) til alle ruter: Float32Array. */
-export function distanceMap(level, x, z, noWater = false) {
-  const pass = (px, pz) => passable(level, px, pz, noWater);
+export function distanceMap(level, x, z, noWater = false, noCrawl = noWater) {
+  const pass = (px, pz) => passable(level, px, pz, noWater, noCrawl);
   const { w, h } = level;
   const dist = new Float32Array(w * h).fill(Infinity);
   if (!pass(x, z)) return dist;

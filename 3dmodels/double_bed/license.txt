@@ -1,0 +1,11 @@
+Model Information:
+* title:	Victorian Bed
+* source:	https://sketchfab.com/3d-models/victorian-bed-c56b0776992041648ba5c1615f6e1fed
+* author:	BATRIC_18 (https://sketchfab.com/BATRIC_18)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Victorian Bed" (https://sketchfab.com/3d-models/victorian-bed-c56b0776992041648ba5c1615f6e1fed) by BATRIC_18 (https://sketchfab.com/BATRIC_18) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

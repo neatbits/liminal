@@ -5,11 +5,16 @@ import { ceilingAt, HEADROOM } from '../core/heights.js';
 import { MAX_OBJECTS, objectFits } from '../core/objects.js';
 
 function fits(level, x, z, dx, dz) {
+  let ceil = null;
   for (let k = -2; k <= 2; k++) {
     if (getTile(level, x + k * dx, z + k * dz) !== TILE.WALL) return false;
     if (Math.abs(k) === 2) continue;
     for (const n of [-2, -1, 1, 2]) {
-      if (getTile(level, x + k * dx - n * dz, z + k * dz + n * dx) !== TILE.FLOOR) return false;
+      const [cx, cz] = [x + k * dx - n * dz, z + k * dz + n * dx];
+      if (getTile(level, cx, cz) !== TILE.FLOOR || level.floors[cz * level.w + cx]) return false; // ikke mot hevet gulv (salen med bakke ned)
+      // Like høyt tak på begge sider: ellers henger overliggeren høyt oppe på veggen til en høy sal.
+      ceil ??= ceilingAt(level, cx, cz);
+      if (Math.abs(ceilingAt(level, cx, cz) - ceil) > 0.5) return false;
     }
   }
   return true;

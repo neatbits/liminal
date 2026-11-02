@@ -6,7 +6,7 @@
 // hverandre – nede fra gulvet opp til undersiden av platen (deck − SLAB), oppe fra dekket
 // opp til taket. floorAt/topFloorAt/ceilingAt gjelder hele søylen (nederste gulv, øverste
 // tak); groundAt/headAt tar høyden man står i (y) og gir gulvet/taket i den etasjen.
-import { TILE, DOOR_HEIGHT, DOOR_ARCH, ARCH_TOP, getTile, inBounds } from './level.js';
+import { TILE, DOOR_HEIGHT, DOOR_ARCH, ARCH_TOP, CRAWL_HEIGHT, getTile, inBounds } from './level.js';
 import { fountainRimAt } from './fountains.js';
 import { submergedPillar, pillarPoolDepth, waterCell } from './pillar-water.js';
 import { pillarInfo, pillarTouchesBox } from './pillars.js';
@@ -105,10 +105,12 @@ export function topFloorAt(level, x, z) {
 /**
  * Takhøyden i ruten: sonens egen høyde, ellers rommets – men minst HEADROOM over det
  * høyeste gulvet. Døråpninger er DOOR_HEIGHT over sitt gulv, buede åpninger toppen av buen (ARCH_TOP).
+ * Krypeganger er det eneste unntaket: taket står alltid CRAWL_HEIGHT over gulvet.
  */
 export function ceilingAt(level, x, z) {
   const dm = inBounds(level, x, z) ? level.ceilings[z * level.w + x] : 0;
   const top = topFloorAt(level, x, z);
+  if (getTile(level, x, z) === TILE.CRAWL) return top + CRAWL_HEIGHT;
   const h = Math.max(dm ? dm / 10 : level.height, top + HEADROOM, deckAt(level, x, z) + HEADROOM);
   if (getTile(level, x, z) !== TILE.DOOR) return h;
   const meta = level.meta[z * level.w + x];

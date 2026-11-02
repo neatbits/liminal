@@ -17,6 +17,7 @@ import { applyLook, OVERVIEW_BG } from './look.js';
 import { resizeView, frameDue } from './display.js';
 import { Music } from '../audio/music.js';
 import { activeTint, tintFactor } from '../core/tints.js';
+import { FogLight } from './fog-light.js';
 
 export class Viewer {
   /** @param options { settings, onModeChange(mode), onSettingsChange(settings) } */
@@ -41,6 +42,7 @@ export class Viewer {
     this.scene.fog = new THREE.FogExp2(0x000000, 0);
     this.scene.background = OVERVIEW_BG.clone();
     this.camera = new THREE.PerspectiveCamera(45, 1, 0.05, 500);
+    this.fogLight = new FogLight(this); // tåken følger lyset der man står
     this.postfx = createPostFX(renderer, this.scene, this.camera);
     this.postfx.setQuality(this.settings.effects !== 'reduced');
     this.overview = new OverviewCamera(this.camera, renderer.domElement);
@@ -72,7 +74,7 @@ export class Viewer {
     this.hud.setToggles(this.settings);
 
     // Pause: Esc slipper musa (og i Firefox/Safari også fullskjermen) – menyen står da midt på
-    // skjermen (hud.js). Et klikk eller «Resume» fortsetter i fullskjerm; Esc én gang til går ut.
+    // skjermen (hud.js). Et klikk, «Resume» eller Esc fortsetter; bare Exit går ut.
     this._pausedAt = 0;
     renderer.domElement.addEventListener('click', () => {
       if (this.mode === 'walk' && !this.walk.locked) this.walkFullscreen();
@@ -178,10 +180,14 @@ export class Viewer {
     return true;
   }
 
-  /** Esc: med musa låst pauser den (bare med Keyboard Lock); på pause går den ut av gåmodus. */
+  /**
+   * Esc: med musa låst pauser den (bare med Keyboard Lock); på pause lukker den menyen og fortsetter – når nettleseren
+   * gir musa tilbake (Esc gir ikke alltid lov til det; da står pausen, og et klikk fortsetter). Esc går aldri ut av
+   * spillet: det gjør bare Exit, så to trykk på Esc ikke avslutter ved et uhell.
+   */
   _escape() {
     if (this.walk.locked) document.exitPointerLock();
-    else if (performance.now() - this._pausedAt > 300) this.exitWalk(); // ikke det samme trykket som pauset
+    else if (performance.now() - this._pausedAt > 300) this.walk.relock(); // ikke det samme trykket som pauset
   }
 
   // Fotomodus (P, photo.js) og stemningen i gåmodus (Normal … Nightmare, mood.js).
@@ -202,6 +208,8 @@ export class Viewer {
     this.walk.walker.sensitivity = this.settings.sensitivity;
     this.audio.setVolume(this.settings.volume);
     this.music.setVolume(this.settings.volume);
+    this.music.setOn(this.settings.music);
+    this.hud.setToggles(this.settings);
     this.world?.water?.setQuality(this.settings.waterReflections);
     this.world?.water?.setDetail(this.settings.waterDetail);
     this.world?.water?.setWaves(this.settings.waterWaves);
@@ -220,7 +228,8 @@ export class Viewer {
   }
 
   _tick(timestamp) {
-    if (this.hidden && this.mode !== 'walk') return; // bare 2D-skissen vises (app._show3D)
+    // Bare 2D-skissen vises (app._show3D), eller hovedmenyen dekker alt (app/menu-backdrop.js).
+    if ((this.hidden || this.resting) && this.mode !== 'walk') return;
     if (!frameDue(this, timestamp)) return; // begrenset bildefrekvens
     this._timer.update(timestamp);
     const dt = this.mode === 'walk' && this.walk.paused ? 0 : Math.min(0.05, this._timer.getDelta());
@@ -234,6 +243,7 @@ export class Viewer {
     this.storeys.update(this.time, this.flicker.values, this.camera, tint);
     if (this.mode === 'walk') {
       this.walk.update(dt, this.camera, this.flicker.values, changed);
+      this.fogLight.update(dt);
       this.storeys.follow(); // trapperom: bytt etasje midt på reposet
       if (!this.walk.paused) this.explorer.update(dt);
     }

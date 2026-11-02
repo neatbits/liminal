@@ -6,7 +6,7 @@ import { DOOR, doorInfo, canHoldDoor, setDoor, closedDoorFaces, leafPose, doorIn
 import { levelFromJSON, levelToJSON } from '../src/core/serialize.js';
 import { buildDoors, closedLeafBox } from '../src/world/doors.js';
 import { moveCircle } from '../src/world/collision.js';
-import { createLightField } from '../src/world/lighting.js';
+import { createLightField, AMBIENT } from '../src/world/lighting.js';
 import { hexToLinear } from '../src/world/color.js';
 import { doorsInWalls } from '../src/gen/doors.js';
 
@@ -153,9 +153,10 @@ describe('dører', () => {
     const ambient = hexToLinear(theme.light.ambient)[0];
     const lit = () => createLightField(level, theme).sample(4.5, 0, 6.2, 0, 1, 0)[0];
     const open = lit();
-    expect(open).toBeGreaterThan(ambient * 1.2);
     setDoor(level, 4, 4, DOOR.CLOSED);
-    expect(lit()).toBeCloseTo(ambient, 5);
+    const closed = lit();
+    expect(closed).toBeCloseTo(ambient * AMBIENT.FLOOR, 5); // ingen lampe når fram: bare resten av omgivelseslyset
+    expect(open).toBeGreaterThan(closed * 3);
   });
 
   it('dørene lagres og leses igjen', () => {

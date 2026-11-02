@@ -1,4 +1,5 @@
 // Lagring/deling av rom: lesbar JSON (eksport) og komprimert base64url (lenker).
+import { clampLook } from './looks.js';
 import {
   createLevel,
   clampHeight,
@@ -20,12 +21,13 @@ import { objectsFromJSON } from './objects.js';
 import { SKIES } from './windows.js';
 import { TINTS } from './tints.js';
 import { storeysToJSON, storeysFromJSON, spawnStoreyFromJSON } from './serialize-storeys.js';
+import { elevatorsToJSON, elevatorsFromJSON } from './elevators.js';
 
 export const FORMAT = 'liminal-room';
 const LEGACY_FORMATS = ['liminal-rom']; // første versjon brukte norsk formatnavn
 // v3: sonelag som to heksadesimale tegn per rute (hele Uint8-området); v4: etasjer (`storeys`), som
-// eldre versjoner ellers ville mistet uten å si fra.
-export const VERSION = 4;
+// eldre versjoner ellers ville mistet uten å si fra; v5: krypeganger (TILE.CRAWL), som eldre versjoner avviser.
+export const VERSION = 5;
 const CHAR0 = 48; // '0'. Verdi = tile | light << 3 → tegn '0'..'O'
 
 // v3 lagrer rå desimeter/metadata som to heksadesimale tegn; 00 = standard.
@@ -122,6 +124,7 @@ export function levelToJSON(level) {
     bright: level.bright,
     sky: level.sky ?? undefined,
     tint: level.tint ?? undefined,
+    look: level.look || undefined,
     seed: level.seed ?? undefined,
     spawn: [round3(s.x), round3(s.z), round3(s.a)],
     rows,
@@ -130,6 +133,7 @@ export function levelToJSON(level) {
     objects: level.objects?.length ? level.objects.map(({ id, x, z, rot, v, tip, lift, off }) => ({ id, x, z, rot, ...(v !== undefined ? { v } : {}), ...(tip ? { tip } : {}), ...(lift ? { lift } : {}), ...(off ? { off } : {}) })) : undefined,
     storeys: storeysToJSON(level, levelToJSON),
     spawnStorey: level.spawnStorey || undefined,
+    elevators: elevatorsToJSON(level),
   };
 }
 
@@ -161,6 +165,7 @@ export function levelFromJSON(data) {
   level.bright = clamp(data.bright, 0.2, 3, 1);
   level.sky = SKIES[data.sky] ? data.sky : null;
   level.tint = TINTS[data.tint] && data.tint !== 'theme' ? data.tint : null;
+  level.look = clampLook(theme, data.look);
   if (Number.isInteger(data.seed) && data.seed >= 0) level.seed = data.seed;
   for (let z = 0; z < h; z++) {
     const row = String(data.rows[z]);
@@ -179,6 +184,7 @@ export function levelFromJSON(data) {
   level.objects = objectsFromJSON(level, data.objects);
   storeysFromJSON(level, data.storeys, levelFromJSON, { format: FORMAT, v: version });
   spawnStoreyFromJSON(level, data.spawnStorey);
+  elevatorsFromJSON(level, data.elevators);
   const [sx, sz, sa] = Array.isArray(data.spawn) ? data.spawn : [];
   level.spawn = {
     x: clamp(sx, 0.5, w - 0.5, w / 2),

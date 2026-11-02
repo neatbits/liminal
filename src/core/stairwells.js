@@ -10,6 +10,8 @@ import { storeyCount, storeyLevel, storeyElevations, poolsOver } from './storeys
 import { dm, opening, shaft } from './storey-seams.js';
 import { clearObjects } from './object-pose.js';
 import { applyDrops } from './slide-drops.js';
+import { applyLadders } from './ladders.js';
+import { applyElevators } from './elevators.js';
 
 /** Meta-bit på trapperuter: løpet går opp til etasjen over. */
 export const THROUGH = STAIR_THROUGH;
@@ -78,6 +80,8 @@ export function walkLevels(room) {
     levels.push(copy);
   }
   const at = storeyElevations(room);
+  // Veggtoppene i en etasje med en etasje over går aldri over undersiden av etasjeskillet (world/caps.js).
+  levels.forEach((level, k) => k < levels.length - 1 && (level.capMax = at[k + 1] - at[k] - SLAB));
   // Bassenger henger ned som en kasse i rommet under: taket der senkes til undersiden av bassenget.
   for (let k = 1; k < levels.length; k++) {
     const [lower, upper] = [levels[k - 1], levels[k]];
@@ -99,7 +103,44 @@ export function walkLevels(room) {
     shaft(lower, upper, run, gap + head);
   }
   applyDrops(room, levels, at); // sklier ned fra etasjen over (core/slide-drops.js)
+  applyLadders(room, levels, at); // stiger opp gjennom et hull i gulvet (core/ladders.js)
+  applyElevators(room, levels); // heiser (core/elevators.js)
   return { levels, wells };
+}
+
+/**
+ * Der man kommer inn i etasje k (i etasjene fra walkLevels): reposet fra trappen nedenfra, utgangen fra
+ * stigen nedenfra, ellers foten av trappen eller stigen opp. { x, z } eller null.
+ */
+export function storeyEntry(levels, wells, k) {
+  const { w } = levels[0];
+  const cell = (i) => ({ x: (i % w) + 0.5, z: Math.floor(i / w) + 0.5 });
+  const below = wells.find((well) => well.k + 1 === k);
+  if (below) return cell(below.landing);
+  const hole = levels[k].holes?.[0];
+  if (hole) return { x: hole.x + hole.dir[0] + 0.5, z: hole.z + hole.dir[1] + 0.5 };
+  const above = wells.find((well) => well.k === k);
+  if (above) return cell(above.run[0]);
+  const foot = levels[k].ladders?.[0];
+  return foot ? cell(foot.i) : null;
+}
+
+/**
+ * Rutene i hver etasje der trapper og stiger går av og på (i etasjene fra walkLevels): rutene som ikke
+ * må stenges av noe som legges inn etterpå (gen/wrong.js). Liste med et Set per etasje.
+ */
+export function linkCells(levels, wells) {
+  const { w } = levels[0];
+  const keep = levels.map(() => new Set());
+  for (const { k, dir, run, landing } of wells) {
+    keep[k].add(run[0] - dir[0] - dir[1] * w).add(landing);
+    keep[k + 1].add(landing);
+  }
+  levels.forEach((level, k) => {
+    for (const { i, dir } of [...(level.ladders ?? []), ...(level.holes ?? [])]) keep[k].add(i).add(i + dir[0] + dir[1] * w);
+    for (const { landing } of level.lifts ?? []) for (const [x, z] of landing) keep[k].add(z * w + x); // reposet foran heisen
+  });
+  return keep;
 }
 
 /** Etasjen man er i etter å ha stått i (x, z) i etasje k: man bytter midt på reposet. */

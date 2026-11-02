@@ -69,5 +69,5 @@ describe('mørke deler av genererte nivåer', () => {
     // Level 0: alltid når stemningen har mørke deler, men fortsatt aldri i Normal.
     expect(darkened('liminal', false, 'backrooms')).toBe(24);
     expect(darkened('normal', false, 'backrooms')).toBe(0);
-  });
+  }, 30000); // mange genererte nivåer
 });

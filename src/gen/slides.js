@@ -12,9 +12,10 @@ const ROOM_HEADROOM = 2.5; // takhøyde over plattformen i rommet med sklien
 
 /**
  * @param room { x0, z0, x1, z1 } et rom med basseng og (minst) to ruter gulv rundt
+ * @param o steps: trapperuter opp til plattformen (planløsningene med høye tårn), ellers to til fire
  * @returns true hvis sklien ble lagt inn
  */
-export function addPoolSlide(level, room, rand) {
+export function addPoolSlide(level, room, rand, o = {}) {
   const corners = [
     [false, false],
     [true, false],
@@ -22,7 +23,7 @@ export function addPoolSlide(level, room, rand) {
     [true, true],
   ];
   // Plattformen er 1,2, 1,8 eller 2,4 m høy (to til fire trapperuter).
-  const steps = 2 + Math.floor(rand() * 3);
+  const steps = o.steps ?? 2 + Math.floor(rand() * 3);
   const height = steps * STEP;
   const start = Math.floor(rand() * 4);
   for (let k = 0; k < 4; k++) {
@@ -33,12 +34,12 @@ export function addPoolSlide(level, room, rand) {
     const stairs = Array.from({ length: steps }, (_, n) => at(0, 2 + n));
     const isFloor = ([x, z]) => getTile(level, x, z) === TILE.FLOOR;
     const isWall = ([x, z]) => getTile(level, x, z) === TILE.WALL;
-    if (![...deck, ...stairs].every(isFloor)) continue;
+    if (![...deck, ...stairs].every(isFloor) || deck.some(([x, z]) => level.floors[z * level.w + x])) continue;
     // Ingen åpning i veggen ved siden av plattformen og trappen.
     const outside = [at(0, -1), at(1, -1), ...Array.from({ length: steps + 2 }, (_, n) => at(-1, n))];
     if (!outside.every(isWall) || !isFloor(at(1, 1 + steps)) || !isFloor(at(0, 2 + steps))) continue;
-    for (const straight of [2, 3, 4]) {
-      for (const diagonal of [3, 4, 2]) {
+    for (const straight of o.steps ? [4, 6, 8, 10, 3] : [2, 3, 4]) {
+      for (const diagonal of o.steps ? [4, 6, 3, 8] : [3, 4, 2]) {
         const points = [at(1, 1)];
         for (let s = 1; s <= straight; s++) points.push(at(1 + s, 1));
         for (let d = 1; d <= diagonal; d++) points.push(at(1 + straight + d, 1 + d));

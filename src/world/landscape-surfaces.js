@@ -40,6 +40,30 @@ vec3 groundColor(vec3 p, vec3 rd) {
     vec3 water = mix(uGround, uSkyBottom, 0.2 + 0.25 * pow(1.0 - abs(rd.y), 3.0));
     water *= 0.97 + 0.03 * sin(p.x * 1.4 + sin(p.z * 0.7));
     col = mix(uStone * (0.94 + grain * 0.035), water, (1.0 - rim) * across);
+  } else if (GROUND_STYLE == 6) {
+    // Flyplassen: forplass i betong med taksebane (gul midtlinje, blå kantlys), gress, rullebanen (45 m, hvite linjer og
+    // kantlys) og gress bak. Lysene gløder mest om natta; de holdes minst et par piksler store langt unna.
+    vec3 grass = uGround * vec3(0.62, 0.86, 0.52) * (0.85 + broad * 0.25 + grain * 0.08);
+    vec3 asphalt = uGround * (0.72 + broad * 0.12 + grain * 0.06);
+    float apron = 1.0 - smoothstep(30.0, 31.0, p.z), runway = step(45.0, p.z) * (1.0 - step(90.0, p.z));
+    col = mix(grass, uStone * (0.78 + grain * 0.05 + broad * 0.06), apron);
+    col = mix(col, asphalt, runway);
+    col = mix(col, vec3(0.78, 0.62, 0.16) * uStone * 1.4, lineAt(abs(p.z - 22.0), 0.2) * apron);
+    float dash = step(abs(mod(p.x, 50.0) - 25.0), 15.0);
+    float paint = max(lineAt(abs(p.z - 46.5), 0.45), lineAt(abs(p.z - 88.5), 0.45));
+    paint = max(paint, lineAt(abs(p.z - 67.5), 0.45) * dash);
+    col = mix(col, uStone * 1.25, paint * runway);
+    // Lysene: små prikker, minst to piksler i hver retning (ellers blir de streker der bakken er flat i bildet).
+    vec2 rad = max(vec2(0.3), 2.0 * vec2(fwidth(p.x), fwidth(p.z)));
+    float lamp = 0.0, blue = 0.0;
+    for (int k = 0; k < 2; k++) {
+      vec2 e = vec2(mod(p.x, 60.0) - 30.0, p.z - (k == 0 ? 45.5 : 89.5)) / rad;
+      vec2 t = vec2(mod(p.x, 30.0) - 15.0, p.z - (k == 0 ? 18.0 : 26.0)) / rad;
+      lamp = max(lamp, exp(-dot(e, e)));
+      blue = max(blue, exp(-dot(t, t)));
+    }
+    float glow = 0.35 + 0.65 * uNight;
+    col += (vec3(1.0, 0.92, 0.75) * lamp * 2.2 + vec3(0.25, 0.45, 1.0) * blue * 1.8) * glow;
   }
   return col;
 }

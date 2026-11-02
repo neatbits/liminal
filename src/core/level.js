@@ -8,8 +8,8 @@
 // Høyder per rute og punkt regnes ut i heights.js.
 import { getTheme, DEFAULT_THEME } from './themes.js';
 
-export const TILE = Object.freeze({ WALL: 0, FLOOR: 1, WATER: 2, PILLAR: 3, DOOR: 4, STAIRS: 5 });
-export const TILE_COUNT = 6;
+export const TILE = Object.freeze({ WALL: 0, FLOOR: 1, WATER: 2, PILLAR: 3, DOOR: 4, STAIRS: 5, CRAWL: 6 });
+export const TILE_COUNT = 7; // høyst 8: serialize.js lagrer typen i tre biter
 export const LIGHT = Object.freeze({ NONE: 0, ON: 1, FLICKER: 2, BROKEN: 3 });
 export const LIGHT_COUNT = 4;
 
@@ -18,6 +18,7 @@ export const MAX_SIZE = 128;
 export const HEIGHT_MIN = 2.2;
 export const HEIGHT_MAX = 20; // høye haller (lyset bakes da som en søyle ned mot gulvet, se world/lighting.js)
 export const DOOR_HEIGHT = 2.1;
+export const CRAWL_HEIGHT = 0.9; // taket i en krypegang (core/crawl.js), over gulvet der
 // En åpning uten dørblad (DOOR.NONE) med denne meta-biten er en bue (core/doors.js, world/arches.js):
 // toppen av buen står ARCH_TOP over gulvet, eller like under taket i lavere rom.
 export const DOOR_ARCH = 16;
@@ -81,6 +82,7 @@ export function createLevel({ name = 'Untitled', theme = DEFAULT_THEME, w = 48, 
     objects: [], // gjenstander (core/objects.js) – byttes ut, endres aldri på stedet
     sky: null, // tiden på døgnet for lyset i vinduene (core/windows.js), null = dag
     tint: null, // lysfargen (core/tints.js), null = temaets
+    look: 0, // bygningens tapet og teppe (core/looks.js), 0 = temaets
   };
   for (const key of LAYERS) level[key] = new Uint8Array(w * h);
   return level;
@@ -105,9 +107,9 @@ export function getLight(level, x, z) {
   return inBounds(level, x, z) ? level.lights[z * level.w + x] : LIGHT.NONE;
 }
 
-/** Lys kan bare henge over ruter med tak og uten søyle. */
+/** Lys kan bare henge over ruter med tak og uten søyle – og krypeganger skal være mørke. */
 export function canHaveLight(tile) {
-  return tile !== TILE.WALL && tile !== TILE.PILLAR;
+  return tile !== TILE.WALL && tile !== TILE.PILLAR && tile !== TILE.CRAWL;
 }
 
 /** Setter en rute. Returnerer true hvis noe endret seg. Fjerner ugyldige lys. */
@@ -152,6 +154,7 @@ export function resizeLevel(level, w, h) {
   out.bright = level.bright;
   out.sky = level.sky ?? null;
   out.tint = level.tint ?? null;
+  out.look = level.look ?? 0;
   const ox = Math.floor((w - level.w) / 2);
   const oz = Math.floor((h - level.h) / 2);
   for (let z = 0; z < level.h; z++) {
@@ -172,6 +175,8 @@ export function resizeLevel(level, w, h) {
     a: level.spawn.a,
   };
   if (level.storeys?.length) out.storeys = level.storeys.map((s) => resizeLevel(s, w, h));
+  // Heisene (core/elevators.js): 4 × 4 ruter som må ligge helt innenfor.
+  if (level.elevators?.length) out.elevators = level.elevators.map((e) => ({ ...e, x: e.x + ox, z: e.z + oz })).filter((e) => e.x >= 0 && e.z >= 0 && e.x + 3 < w && e.z + 3 < h);
   return out;
 }
 

@@ -7,6 +7,7 @@ import { OBJECTS, objectsAt } from '../core/objects.js';
 import { windowInfo } from '../core/windows.js';
 import { SHAPES } from '../editor/tools.js';
 import { isEscalator, ESCALATOR_DOWN } from '../core/escalators.js';
+import { isRamp } from '../core/ramps.js';
 import { $ } from '../ui/dom.js';
 import { FINISH, FINISHES } from '../core/finishes.js';
 
@@ -17,6 +18,7 @@ const NAMES = {
   [TILE.PILLAR]: 'Pillar',
   [TILE.DOOR]: 'Doorway',
   [TILE.STAIRS]: 'Stairs',
+  [TILE.CRAWL]: 'Crawlway',
 };
 const DOOR_NAMES = { [DOOR.CLOSED]: 'Closed', [DOOR.AJAR]: 'Ajar', [DOOR.OPEN]: 'Open' };
 const m = (v) => `${+v.toFixed(1)} m`;
@@ -26,7 +28,7 @@ export function hoverText(level, cell) {
   if (!cell || !level || !inBounds(level, cell[0], cell[1])) return '';
   const [x, z] = cell;
   const tile = level.tiles[z * level.w + x];
-  const name = isEscalator(level, x, z) ? `Escalator (${level.meta[z * level.w + x] & ESCALATOR_DOWN ? 'down' : 'up'})` : NAMES[tile];
+  const name = isEscalator(level, x, z) ? `Escalator (${level.meta[z * level.w + x] & ESCALATOR_DOWN ? 'down' : 'up'})` : isRamp(level, x, z) ? 'Ramp' : NAMES[tile];
   const parts = [`x ${x} m`, `y ${z} m`, windowInfo(level, x, z) ? 'Window' : name];
   const door = doorInfo(level, x, z);
   if (door?.state) parts.push(door.oneSided ? `${DOOR_NAMES[door.state]} door to nowhere` : `${DOOR_NAMES[door.state]} door`);
@@ -54,6 +56,8 @@ export function toolText({ tool, shape, brush, zone, doorState, slideTube, slide
   if (tool.kind === 'door') return `${tool.label} (${DOOR_NAMES[doorState].toLowerCase()}) · click a wall or doorway`;
   if (tool.kind === 'object') return `${tool.label} (${OBJECTS[objectId]?.label}) · click a floor cell, click again to turn`;
   if (tool.escalator) return `${tool.label} (${escalatorDown ? 'down' : 'up'}) · drag from lower to upper landing, ${brush} m wide`;
+  if (tool.kind === 'ladder') return `${tool.label} · click a floor cell under the floor above, click again to turn it`;
+  if (tool.kind === 'elevator') return `${tool.label} · click to place a 4 × 4 m shaft through the building, click again to turn it`;
   if (tool.kind === 'stairs') return `${tool.label} · drag from bottom to top, ${brush} m wide`;
   if (tool.kind === 'slide') return `${tool.label} (${slideColor} ${slideTube ? 'tube' : 'open'}) · drag from a raised floor to the water`;
   const shapeLabel = SHAPES.find((s) => s.id === shape)?.label;

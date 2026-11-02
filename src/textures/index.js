@@ -16,8 +16,12 @@ import { mallMosaic, fountainStone } from './fountains.js';
 import { shopSigns } from './shop-signs.js';
 import { arcadeCarpet, arcadeWall, arcadePanel } from './arcade-room.js';
 import { retailFloor, electronicsFloor, electronicsWall, cafeFloor, cafeTiles } from './retail-room.js';
+import { LOOK_PAINTERS } from './looks.js';
+import { airportCarpet, airportWall, airportCeiling, airportSigns } from './airport.js';
 
 const PAINTERS = {
+  ...LOOK_PAINTERS,
+  airportCarpet, airportWall, airportCeiling, airportSigns,
   arcadeCarpet, arcadeWall, arcadePanel,
   retailFloor, electronicsFloor, electronicsWall, cafeFloor, cafeTiles,
   shopSigns,

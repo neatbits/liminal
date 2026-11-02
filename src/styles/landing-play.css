@@ -1,0 +1,112 @@
+/* Forsiden: «Play» – spillmodusene som mørke VHS-kort (Game mode, Lights out, Daily level), og et
+   tettere oppsett av eksemplene på mobil. */
+.l-modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 18px;
+}
+
+.l-mode {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 22px 20px;
+  border-radius: 12px;
+  border: 1px solid #3d3725;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px),
+    linear-gradient(160deg, #332d1e, #221e14);
+  color: #efe6c8;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+
+.l-mode:hover,
+.l-mode:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--l-yellow);
+  box-shadow: 0 12px 30px rgba(40, 32, 10, 0.3);
+  outline: none;
+}
+
+.l-mode-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.l-mode h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 6px;
+  font-size: 19px;
+  color: #fff6dc;
+}
+
+.l-mode p {
+  flex: 1;
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: rgba(239, 230, 200, 0.72);
+}
+
+.l-mode-go {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--l-yellow);
+}
+
+/* Dagens dato på Daily-kortet, som teksten på en kassett. */
+.l-mode-date {
+  padding: 1px 8px;
+  border-radius: 4px;
+  background: rgba(217, 194, 122, 0.16);
+  color: var(--l-yellow);
+  font: 18px/1.2 'VT323', monospace;
+  letter-spacing: 0.04em;
+}
+
+.l-mode-date:empty {
+  display: none;
+}
+
+.l-note a {
+  color: inherit;
+}
+
+/* Mobil: to eksempler i bredden, bare bilde og navn – siden blir en tredjedel så lang. «.landing» foran:
+   i bygget kan denne filen komme før landing.css, og da må reglene vinne på spesifisitet. */
+@media (max-width: 560px) {
+  .landing .l-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .landing .l-thumb {
+    height: 120px;
+    padding: 10px;
+  }
+
+  .landing .l-thumb canvas {
+    max-height: 100px;
+  }
+
+  .landing .l-card-body {
+    padding: 10px 12px 12px;
+  }
+
+  .landing .l-card h3 {
+    margin: 0;
+    font-size: 14px;
+  }
+
+  .landing .l-card p,
+  .landing .l-card-go {
+    display: none;
+  }
+
+  .landing .l-cta .l-btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}

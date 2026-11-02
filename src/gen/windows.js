@@ -10,20 +10,22 @@ const PLANS = {
   playroom: { run: 2, gap: 2, chance: 0.8 },
   school: { run: 3, gap: 1, chance: 0.9 },
   ward: { run: 1, gap: 1, chance: 0.85 },
+  airport: { run: 6, gap: 1, chance: 1, density: 0.8 }, // lange glassvegger mot rullebanen
 };
 const DENSITY = 0.25; // omtrent en fjerdedel av den tidligere mengden; håndmalte vinduer er urørt
 
-// Tiden på døgnet: oftest dag og gyllen time, av og til skumring, sjelden natt.
+// Tiden på døgnet: oftest dag og gyllen time, av og til skumring, sjelden natt. Flyplassen: oftest natt.
 const SKY_ODDS = [
   ['day', 0.4],
   ['golden', 0.35],
   ['dusk', 0.2],
   ['night', 0.05],
 ];
+const NIGHT_ODDS = [['night', 0.6], ['dusk', 0.25], ['golden', 0.1], ['day', 0.05]];
 
-export function pickSky(rand) {
+export function pickSky(rand, odds = SKY_ODDS) {
   let r = rand();
-  for (const [id, p] of SKY_ODDS) if ((r -= p) < 0) return id;
+  for (const [id, p] of odds) if ((r -= p) < 0) return id;
   return 'day';
 }
 
@@ -105,9 +107,9 @@ export function addWindows(level, rand) {
     for (const [x, z] of line) {
       k = (k + 1) % (plan.run + plan.gap);
       if (k >= plan.run) continue;
-      if (rand() < plan.chance * DENSITY) n += paintWindows(level, [[x, z]], true);
+      if (rand() < plan.chance * (plan.density ?? DENSITY)) n += paintWindows(level, [[x, z]], true);
     }
   }
-  if (n) level.sky = pickSky(rand);
+  if (n) level.sky = pickSky(rand, level.theme === 'airport' ? NIGHT_ODDS : SKY_ODDS);
   return n;
 }

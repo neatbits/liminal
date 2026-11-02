@@ -175,4 +175,33 @@ export const MORE_THEMES = {
       eerie: ['monitor', 'footsteps', 'phone', 'whisper', 'monitor', 'knocks'] },
     plan: { floor: '#dbe8e3', water: '#a9d3df' },
   },
+
+  // Møbelbutikken i Noclip (gen/noclip.js): helt normal. Skjult (ikke et nivå man havner på); lageret har betong (belegget).
+  store: {
+    id: 'store',
+    label: 'The Store',
+    description: 'Bright showrooms, a quiet checkout and a storeroom in the back. A perfectly normal Saturday.',
+    hidden: true,
+    surfaces: {
+      wall: { tex: 'plaster', size: [2, 2] },
+      base: { h: 0.1, color: '#d9d6cf' },
+      floor: { tex: 'retailFloor', size: [2.4, 2.4] },
+      ceiling: { tex: 'ceilingTiles', size: [1.2, 1.2] },
+      basin: { tex: 'retailFloor', size: [2.4, 2.4] },
+    },
+    tiles: { floor: { tex: 'concreteFloor', size: [2, 2] }, wall: { tex: 'concreteWall', size: [2, 2] }, height: 4, trim: '#8a8a86' },
+    defaultHeight: 3.2,
+    lightSpacing: 3,
+    light: { color: '#fff6ea', intensity: 0.66, falloff: 3, radius: 10, ambient: '#4e4c47' },
+    fixture: { shape: 'panel', size: [1.2, 0.04, 0.6], color: '#ffffff', glow: 2.8, frame: '#d8d8d4' },
+    door: { frame: '#cfcac0', leaf: 'doorFlatWhite', knob: '#b9bdc0', kick: true },
+    railing: { rail: '#9a9a96', bars: '#9a9a96' },
+    window: { sill: 0.3, head: 2.8, merge: true }, // butikkvinduer
+    fog: { color: '#bdbab2', density: 0.004 },
+    exposure: 0.92,
+    bloom: 0.22,
+    water: { tint: '#4a5a5a', absorb: [0.8, 0.6, 0.5], wave: 0.1 },
+    sound: { hum: 0.02, buzz: 0.02, room: 0.02, reverb: 0.25, reverbTime: 1.2, step: 'tile', eerie: ['footsteps', 'chime', 'muzak'] },
+    plan: { floor: '#efece4', water: '#a9cbd6' },
+  },
 };

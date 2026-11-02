@@ -27,9 +27,35 @@ vesentlig; teksturer reduseres til 512–1024 px WebP og geometrien bruker Mesho
 | medicalscreen | hospital_curtain_emergency | Ved noen pasientsenger | 275 | 7 754 |
 | medicalcabinet | hospital_medical_treatment_cabinet | Sykehusrom | 176 | 14 487 |
 | medicaltrolley | hospital_medical_trolley | Ved senger og i sykehusrom | 71 | 10 273 |
+| double_bed | double_bed | Soverommene i hotellets romfløy (`gen/furnish-rooms.js`) | 357 | ca. 9 000 |
+| toilet | toilet | Bad, toaletter og garderober (`gen/furnish-rooms.js`, `furnish-institutions.js`) | 58 | ca. 4 000 |
+| bunkbed | bunk_bed | Sovesalene i tilfluktsrommet (`gen/furnish-cellar.js`), sjelden i kjellerens soverom (`PLANS`) | 12 | 896 |
+| washer | washing_machine_2 | Vaskerom, tørkerom, vaskerier og hotellets personalrom | 77 | 12 278 |
+| cashier | man_behind_desk | Ekspeditøren bak kassen i Noclip-butikken (`gen/noclip.js`), animert; ikke i `PLANS` | 260 | 4 780 |
+| sink | simple_sink | Samme rom, kjøkken, vaskeri og vaskerom ved operasjonsstuene; henger på veggen (`mount`, `lift` 0,51 m) | 36 | ca. 2 700 |
 
 Samlet: 104,49 MB originalmodell, geometri og teksturer → 2,71 MB GLB (97,4 % mindre).
 Katalogmål er målt fra den faktiske geometrien etter `scale`/`turn`, med forsiden mot +z.
+Toalettet (motaman) er skalert fra 8,6 enheter til 0,8 m. Vasken (Andrew.Mischenko) er i centimeter og dreid −90°, så rørene går
+inn i veggen; kanten står 85 cm over gulvet. Speilet over vasken (`mirror`) bygges av enkle former og settes over vasker på bad,
+toaletter og garderober. Køyesengen (Aarón Galindo Chavero) er skalert til 2 m lengde og dreid 90°, så lengden går ut fra veggen. Alle tre erstatter de gamle
+formene med samme id, så lagrede rom får modellene. `washing_machine` i `3dmodels/` har Sketchfab Standard-lisens og er slått av
+(`disabled`). Vaskemaskinen er `washing_machine_2` (nikita.bulgakov, 290 000 trekanter i kilden): `drop` fjerner slangene bak,
+fjærene under, trommelen inni (glassdøra er ugjennomsiktig) og en ledning over toppen, og resten forenkles til 12 300 trekanter. Dreid
+−90° (døra mot +z), 0,85 m høy.
+
+`model.json.pose` (sekunder) baker én stilling fra skjelettanimasjonen inn i geometrien og fjerner skjelettet (`scripts/model-pose.mjs`): spillet tegner
+modeller stillestående, og ellers står en animert figur i grunnstillingen. `animate: true` i katalogen spiller i stedet den første animasjonen i løkke (`world/animated-objects.js`): skjelettet beholdes, lyset hentes
+fra lysfeltet der gjenstanden står (ikke per vertex), og lommelykten lyser den opp. Ekspeditøren (360SMS) er animert slik.
+
+`model.json.matte: true` nullstiller metall/ruhet i materialer uten tekstur før optimaliseringen. Ellers kan paletten
+(`gltf-transform optimize` slår fargede materialer sammen) få en metall/ruhet-tekstur, og den røde kanalen der leses som skygge i
+`world/objects.js` (`arm`): modellen blir mørk. Gjelder `simple_sink` og `whiteboard_standing` (tavla var mørkegrå før).
+`model.json.vertexColors: k` er for modeller som har fargene i hjørnene (`COLOR_0`) i stedet for teksturer, ofte skannede
+modeller delt i biter på 65k hjørner. Spillet bruker bare posisjon, normal og uv (`world/object-parts.js`), så de ble hvite.
+`scripts/model-colors.mjs` samler trekantene i k fargegrupper (k-means) og gir hver et ensfarget materiale; med `join` blir det
+k deler. Det skjer etter `simplify` (kantene mellom fargegruppene ville ellers låst forenklingen). Gjelder yuccaen
+(`potted_plant_03`, k = 7: 16 000 trekanter og 107 kB, som før).
 Skapet og skjermbrettet har skjeve lokale akser; behold deres korrigerte dreining.
 Småting står ett om gangen på en pult, så automatisk møblering ikke plasserer dem i hverandre.
 Dette er statiske møbler; de nye modellene har ikke løs fysikk eller animasjon.

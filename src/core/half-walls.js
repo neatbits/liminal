@@ -3,6 +3,8 @@
 import { floorAt } from './heights.js';
 
 export const HALF_WALL = { width: 3, height: 1.1, depth: 0.28, bodyDepth: 0.22, cap: 0.035 };
+// Glass walls share the footprint and navigation; only the low sill stops light (world/glass-walls.js).
+export const GLASS_WALL = { height: 2.05, depth: 0.08, sill: 0.08 };
 
 // Object lists are immutable. Avoid scanning every shop item for each navigation cell.
 const cache = new WeakMap(), empty = [];
@@ -10,7 +12,7 @@ function wallObjects(level) {
   const objects = level.objects;
   if (!objects) return empty;
   let walls = cache.get(objects);
-  if (!walls) { walls = objects.filter(o => o.id === 'halfwall'); cache.set(objects, walls); }
+  if (!walls) { walls = objects.filter(o => o.id === 'halfwall' || o.id === 'glasswall'); cache.set(objects, walls); }
   return walls;
 }
 
@@ -23,7 +25,8 @@ export function halfWallBox(o, depth = HALF_WALL.depth) {
 export function halfWalls(level) {
   return wallObjects(level).map(o => {
     const bottom = floorAt(level, o.x, o.z);
-    return { box: halfWallBox(o), bodyBox: halfWallBox(o, HALF_WALL.bodyDepth), bottom, top: bottom + HALF_WALL.height };
+    const height = o.id === 'glasswall' ? GLASS_WALL.sill : HALF_WALL.height;
+    return { box: halfWallBox(o), bodyBox: halfWallBox(o, HALF_WALL.bodyDepth), bottom, top: bottom + height };
   });
 }
 

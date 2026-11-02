@@ -2,6 +2,7 @@
 // firkanter mot kameraet der fragmentshaderen tegner en rund, belyst kule (impostor).
 // Begge bruker samme kjølvann og samme lysformel, så overgangen ikke synes.
 import { WAKE_POINTS, WAKE_RADIUS } from './ball-layout.js';
+import { FLASH_PARS } from './flashlight.js';
 
 // Kjølvann: baller nær et punkt skyves utover og hoper seg opp i en ring; rett under
 // spilleren synker de litt ned. Gir `off` (lokalt) for ballen med sentrum `centre`.
@@ -29,13 +30,16 @@ export const VERT = /* glsl */ `
 uniform vec4 uWake[${WAKE_POINTS}];
 varying vec3 vColor;
 varying float vShade;
+varying vec3 vWorld;
 #include <fog_pars_vertex>
 void main() {
   vec3 n = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * normal);
   vShade = ${SHADE('n')};
   vColor = instanceColor;
 ${WAKE}
-  vec4 mvPosition = viewMatrix * modelMatrix * (instanceMatrix * vec4(position, 1.0) + vec4(off, 0.0));
+  vec4 world = modelMatrix * (instanceMatrix * vec4(position, 1.0) + vec4(off, 0.0));
+  vWorld = world.xyz;
+  vec4 mvPosition = viewMatrix * world;
   gl_Position = projectionMatrix * mvPosition;
   #include <fog_vertex>
 }`;
@@ -45,9 +49,11 @@ uniform float uBoost;
 uniform vec3 uTint;
 varying vec3 vColor;
 varying float vShade;
+varying vec3 vWorld;
+${FLASH_PARS}
 #include <fog_pars_fragment>
 void main() {
-  gl_FragColor = vec4(vColor * vShade * uBoost * uTint, 1.0);
+  gl_FragColor = vec4(vColor * (vShade * uBoost * uTint + flashBeam(vWorld)), 1.0);
 ${OUTPUT}
 }`;
 
@@ -57,12 +63,15 @@ uniform vec4 uWake[${WAKE_POINTS}];
 uniform float uRadius;
 varying vec3 vColor;
 varying vec2 vDisc;
+varying vec3 vWorld;
 #include <fog_pars_vertex>
 void main() {
   vColor = instanceColor;
   vDisc = position.xy / uRadius;
 ${WAKE}
-  vec4 mvPosition = viewMatrix * modelMatrix * (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0) + vec4(off, 0.0));
+  vec4 world = modelMatrix * (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0) + vec4(off, 0.0));
+  vWorld = world.xyz;
+  vec4 mvPosition = viewMatrix * world;
   mvPosition.xy += position.xy;
   gl_Position = projectionMatrix * mvPosition;
   #include <fog_vertex>
@@ -73,12 +82,14 @@ uniform float uBoost;
 uniform vec3 uTint;
 varying vec3 vColor;
 varying vec2 vDisc;
+varying vec3 vWorld;
+${FLASH_PARS}
 #include <fog_pars_fragment>
 void main() {
   float r2 = dot(vDisc, vDisc);
   if (r2 > 1.0) discard;
   // Kulenormalen i visningsrommet, tilbake til verden (viewMatrix er en ren rotasjon + flytting).
   vec3 n = normalize((vec4(vDisc, sqrt(1.0 - r2), 0.0) * viewMatrix).xyz);
-  gl_FragColor = vec4(vColor * ${SHADE('n')} * uBoost * uTint, 1.0);
+  gl_FragColor = vec4(vColor * (${SHADE('n')} * uBoost * uTint + flashBeam(vWorld)), 1.0);
 ${OUTPUT}
 }`;

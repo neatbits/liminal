@@ -21,6 +21,8 @@ export function createBalls(level, field, shared, colors) {
   const uniforms = Object.assign(THREE.UniformsUtils.merge([THREE.UniformsLib.fog]), {
     uBoost: shared.uBoost,
     uTint: shared.uTint,
+    uFlashPos: shared.uFlashPos,
+    uFlashDir: shared.uFlashDir,
     uWake: { value: Array.from({ length: WAKE_POINTS }, () => new THREE.Vector4()) },
     uRadius: { value: BALL_RADIUS },
   });

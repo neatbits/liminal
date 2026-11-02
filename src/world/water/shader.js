@@ -3,6 +3,8 @@
 // (world/ripples.js). USE_DETAIL legger til flere små bølger (glitring). Uten USE_RT faller den
 // tilbake til en enkel, gjennomsiktig flate (for svake maskiner).
 import { RIPPLES, RIPPLE_SPEED } from '../ripples.js';
+import { FLASH_PARS } from '../flashlight.js';
+import { FILL_PARS } from '../fill.js';
 
 export const WATER_VERT = /* glsl */ `
 attribute vec3 aLight;
@@ -32,6 +34,8 @@ void main() {
 }`;
 
 export const WATER_FRAG = /* glsl */ `
+${FLASH_PARS}
+${FILL_PARS}
 uniform sampler2D tReflection;
 uniform sampler2D tRefraction;
 uniform sampler2D tRefractionDepth;
@@ -116,7 +120,7 @@ void main() {
   }
 #endif
   vec3 trans = exp(-uAbsorb * path);
-  vec3 scatter = uTint * vLight * uBoost;
+  vec3 scatter = uTint * withFill(vLight) * uBoost + flashBeam(vWorld) * 0.3; // lommelykten i vannet
 
 #ifdef USE_RT
   #ifdef FOG_EXP2

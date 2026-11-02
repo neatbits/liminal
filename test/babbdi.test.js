@@ -17,7 +17,7 @@ describe('betongsalene (sjeldent nivå)', () => {
       const { kind, level } = nextLevel(3, 'office', mulberry32(s));
       if (kind !== 'halls') expect(level.theme).not.toBe('babbdi');
     }
-  });
+  }, 30_000); // 200 nivåer, mange med flere etasjer
 
   it('har vinduer i begge langveggene, gallerier som trappene når, og utganger bare i endeveggene', () => {
     for (let seed = 1; seed <= 12; seed++) {

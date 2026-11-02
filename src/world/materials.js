@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { getTexture } from '../textures/index.js';
 import { WATER_DEPTH } from '../core/level.js';
 import { GLOSS_PARS } from './gloss.js';
+import { FLASH, FLASH_PARS } from './flashlight.js';
+import { FILL_PARS } from './fill.js';
 
 // Kaustikk: lysnettet på bassengbunnen. Kantene mellom celler (Worley F2 − F1) med punkter som
 // beveger seg, i to lag med ulik skala, vridd så nettet ikke blir regelmessig.
@@ -43,10 +45,12 @@ uniform vec3 uTint;
 varying vec2 vUv;
 varying vec3 vLight;
 varying vec3 vPos;
+varying vec3 vWorld;
 #include <fog_pars_vertex>
 void main() {
   vUv = uv;
   vPos = position;
+  vWorld = (modelMatrix * vec4(position, 1.0)).xyz;
   vLight = (aLight + uFlickColor * dot(aFlick, uFlick)) * uTint; // lysfargen (core/tints.js)
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
   gl_Position = projectionMatrix * mvPosition;
@@ -78,6 +82,9 @@ uniform vec3 uBaseColor;
 varying vec2 vUv;
 varying vec3 vLight;
 varying vec3 vPos;
+varying vec3 vWorld;
+${FLASH_PARS}
+${FILL_PARS}
 #ifdef USE_GLOSS
 uniform vec4 uFlick;
 uniform vec2 uGloss; // blankhet, fliser per teksturflate
@@ -103,7 +110,7 @@ void main() {
   #ifdef USE_BASE
   if (vUv.y > -0.01 && vUv.y < uBaseH) albedo = uBaseColor;
   #endif
-  vec3 col = albedo * vLight * uBoost;
+  vec3 col = albedo * withFill(vLight) * uBoost;
   #ifdef USE_GLOSS
   vec2 glossUv = vUv / uTexSize * uGloss.y;
   float glossy = uGloss.x;
@@ -120,6 +127,7 @@ void main() {
   float fade = exp(min(vPos.y + ${WATER_DEPTH.toFixed(2)}, 0.0) * 0.8);
   col += vLight * caustic(vPos.xz, uTime) * 0.24 * fade;
   #endif
+  col += albedo * flashlight(vWorld);
   gl_FragColor = vec4(col, 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
@@ -127,13 +135,16 @@ void main() {
 }`;
 
 /** Uniforms som deles av alle materialer i verdenen (oppdateres én gang per ramme). */
-export function createSharedUniforms(flickColor) {
+export function createSharedUniforms(flickColor, ambient = [0, 0, 0]) {
   return {
+    uAmbient: { value: new THREE.Vector3(...ambient) }, // oversiktslyset (world/fill.js)
+    uFill: { value: 0 },
     uFlick: { value: new THREE.Vector4(1, 1, 1, 1) },
     uFlickColor: { value: new THREE.Color().setRGB(...flickColor) },
     uTime: { value: 0 },
     uBoost: { value: 1 },
     uTint: { value: new THREE.Vector3(1, 1, 1) }, // lysfargen (core/tints.js, world.setTint)
+    ...FLASH, // lommelykten, felles for alle etasjene (world/flashlight.js)
   };
 }
 

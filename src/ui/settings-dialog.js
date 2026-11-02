@@ -29,8 +29,12 @@ function select(options, value, onChange) {
   );
 }
 
-/** @param apply (patch) → lagrer og bruker endringene */
-export function settingsDialog(settings, apply) {
+/**
+ * @param apply (patch) → lagrer og bruker endringene
+ * @param onBack fra hovedmenyen: en side i hele vinduet (som spillsidene, så editoren ikke er innom), og
+ *               Done og Esc går tilbake dit
+ */
+export function settingsDialog(settings, apply, onBack = null) {
   const rows = GRAPHICS.map((g) => [
     h('div', { class: 'row' }, h('label', { text: g.label }), select(g.options, settings[g.key], (v) => apply({ [g.key]: v }))),
     g.hint ? h('p', { class: 'side-hint', text: g.hint }) : null,
@@ -66,6 +70,8 @@ export function settingsDialog(settings, apply) {
   const body = h(
     'div',
     { class: 'settings' },
+    onBack ? h('p', { class: 'start-kicker', text: 'REC ● 03:14 AM' }) : null,
+    onBack ? h('h1', { class: 'start-title', text: 'Settings' }) : null,
     h('div', { class: 'side-label', text: 'Graphics' }),
     ...rows.flat(),
     h('div', { class: 'row' }, h('label', { text: 'Water' }), water),
@@ -80,6 +86,8 @@ export function settingsDialog(settings, apply) {
     sens.row,
     fov.row,
     vol.row,
+    h('div', { class: 'row' }, h('label', { text: 'Music' }), select([[true, 'On'], [false, 'Off']], !!settings.music, (v) => apply({ music: v }))),
   );
-  openModal({ title: 'Settings', body, actions: [{ label: 'Done', primary: true }] });
+  const page = onBack ? { className: 'start-screen start-page', persistent: true, onClose: onBack } : {};
+  openModal({ title: 'Settings', body, actions: [{ label: 'Done', primary: true }], ...page });
 }

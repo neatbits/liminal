@@ -5,6 +5,8 @@ import { normRect } from '../core/ops.js';
 import { storeyCount, storeyLevel } from '../core/storeys.js';
 import { addSlide, slidesAt, slidePath } from '../core/slides.js';
 import { dropTarget, removeDropsAt } from '../core/slide-drops.js';
+import { toggleLadder } from '../core/ladders.js';
+import { toggleElevator } from '../core/elevators.js';
 import { paintAt, paintLine, applyRect, applyFill, applyStairs, applySlide, extendSlidePath, placeSpawn, aimSpawn } from './tools.js';
 
 const OBJECT_HELP = 'Objects stand on floor cells (not on water, stairs, pillars or in doorways).';
@@ -42,8 +44,15 @@ function onDown(ed, e) {
     ed.room.spawnStorey = ed.storey; // man starter i etasjen startpunktet står i
     ed.stroke = { type: 'spawn' };
     ed.changed('live');
+  } else if (tool.kind === 'ladder' || tool.kind === 'elevator') {
+    ed.checkpoint(true); // hullet er i etasjen over; heisen hører til hele bygget
+    const toggle = tool.kind === 'ladder' ? () => toggleLadder(ed.room, ed.storey, cell[0], cell[1], erase) : () => toggleElevator(ed.room, cell[0], cell[1], erase);
+    const { problem } = toggle();
+    if (problem) ed.options.onHint?.(problem);
+    ed.settle();
+    ed.changed('commit');
   } else if (tool.kind === 'stairs') {
-    ed.stroke = { type: 'stairs', a: cell, b: cell, erase, escalator: tool.escalator, down: tool.down, through: tool.through };
+    ed.stroke = { type: 'stairs', a: cell, b: cell, erase, escalator: tool.escalator, down: tool.down, through: tool.through, ramp: tool.ramp };
   } else if (tool.kind === 'slide') {
     ed.stroke = { type: 'slide', points: [cell], erase };
   } else if (tool.kind === 'door' || tool.kind === 'object' || tool.kind === 'corner') {

@@ -74,7 +74,8 @@ det gis løfter om bildefrekvens. SwiftShader egner seg til funksjonskontroll, i
 - Level 0 (`textures/yellow.js`) har jevnere, lysere tapet og teppe uten mørke fuktflekker
   eller vannringer. `carpetDamp` er beholdt som historisk teksturnøkkel. Den renere himlingen
   har egen nøkkel, `levelZeroCeiling`; ikke bytt ut den delte `ceilingTiles` for andre temaer.
-  Gulfarge, mønster, matte fibre og lysrør er fortsatt en del av uttrykket. Materialendringene
+  Gulfarge, mønster, matte fibre og lysrør er fortsatt en del av uttrykket. Tapet og himling er gule (ca. `#d9bd5e` og
+  `#dec97c`), og `ceilingTiles` tar `base` og `grid`, så fargen ikke smitter over på temaene som deler himlingen. Materialendringene
   krever ingen nye renderpass. Sammenlign med `node scripts/check-scenes.mjs level0 windows-day`;
   uten argumenter kontrollerer skriptet alle referansescenene.
 - Tema-id `office` og lagrede romnavn er uendret. Temaets etikett er «The Office»;

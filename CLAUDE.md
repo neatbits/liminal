@@ -2,7 +2,7 @@
 
 Liminal-simulator i three.js: brukeren tegner rom i en 2D-skisse (rutenett, 1 rute = 1 m),
 ser dem synkronisert i en 3D-forhåndsvisning, og kan gå i rommet (`walkFullscreen` i viewer).
-Esc pauser; Resume fortsetter; Esc på pause eller Exit går tilbake til editoren.
+Esc pauser; Resume, et klikk eller Esc fortsetter (Esc bare når nettleseren gir musa tilbake – ellers står pausen); bare Exit går tilbake til editoren (til hovedmenyen når spillet ble startet der), så to trykk på Esc aldri avslutter.
 Fullskjerm brukes der det støttes, ellers fungerer gåmodus i panelet.
 Rom kan lagres lokalt, eksporteres som JSON og deles som lenke (`#room=...`; gamle
 `#rom=`-lenker og formatnavnet `liminal-rom` leses fortsatt).
@@ -14,7 +14,7 @@ reklameplass `#ad-slot`), simulatoren `app/index.html` (`src/main.js`) og
 `about/index.html` (`src/about.js`, personvern og kreditering). Forhåndsbildet for lenker er
 `public/og-image.jpg` (lag nytt med fotomodus, `view3d/photo.js`, i 1200 × 630). Gamle lenker til
 roten med `#room=`/`#rom=` sendes videre til `app/`; `app/#example=<id>` åpner et eksempel, og `app/#play`
-(Game mode-knappen) stemningsvalget og så Level 1 i utforskingen (`view3d/game-mode.js`).
+(Game mode-knappen) stemningsvalget og så Level 1 i utforskingen (`view3d/game-mode.js`). Modusen er valgt før siden med stemningen (`startPage`, `ui/game-dialog.js`), og editoren skal ikke vises på veien inn.
 
 ## Kommandoer
 
@@ -32,7 +32,7 @@ roten med `#room=`/`#rom=` sendes videre til `app/`; `app/#example=<id>` åpner 
 - `npm run models` – gjør kildemodellene i `3dmodels/<navn>/` (glTF) om til komprimerte
   `models/<navn>.glb` (bare endrede; `--all` for alle; mappenavn velger bestemte). Forbehandler spec/gloss → metal/rough,
   emissive-teksturer uten fargetekstur, og `model.json` med `drop` (fjern deler), `textureSize`,
-  `simplify` (andel trekanter for tunge modeller; `join` slår sammen biter først) og `split` (én fil med flere modeller → én .glb
+  `simplify` (andel trekanter for tunge modeller; `join` slår sammen biter først), `matte` (fargede materialer uten tekstur, ellers kan de bli mørke), `vertexColors` (farger i hjørnene blir k ensfargede materialer – ellers blir modellen hvit), `pose` (baker én stilling fra en skjelettanimasjon) og `split` (én fil med flere modeller → én .glb
   per modell; lisensen ligger i kildemappen). `disabled` utelater kilder også ved `--all`. Se `docs/models.md`. Sjekk alltid
   størrelse (`scale`) og retning (`turn`) visuelt – modeller fra Sketchfab har ofte rare enheter.
 - `npm run desktop` / `desktop:check` / `desktop:dist` – programmet (Electron, `desktop/`): åpne, selvsjekk
@@ -46,8 +46,11 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
 
 ## Faste regler
 
-1. **Små filer: maks 200–250 linjer per fil.** Nærmer en fil seg grensen, del den opp
-   etter ansvar før du legger til mer. Gjelder også CSS og tester.
+1. **Små filer: mål under 250 linjer, tak 300.** Nærmer en fil seg taket, del den opp etter ansvar
+   (der det naturlig skiller lag), ikke bare for å komme under grensen – og ikke press kode sammen
+   (énlinjere, tette uttrykk) for å få plass. Gjelder også CSS og tester.
+   **Unntak opp til 400** bare når en deling ville gjort koden vanskeligere å følge: én sammenhengende
+   shader, en tilstandsmaskin, en stor datatabell eller katalog. Skriv i toppkommentaren hvorfor filen er større.
 2. **Endringslogger skal vedlikeholdes.** Bruker- og arkitekturendringer føres detaljert i
    `CHANGELOG.md` under `[Ukommet]`; ved versjonsbump flyttes de til en datert versjonsseksjon.
    Offentlig «What's new» i `about/index.html#changelog` får bare store nyheter og vesentlige
@@ -62,7 +65,7 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
    `src/view3d/events.js`, `src/audio/acoustics.js`, `src/audio/director.js`,
    `src/world/softphysics.js`, `src/world/anomalies.js`, `src/world/lamp-map.js`,
    `src/world/shifts.js`, `src/world/ripples.js`, `src/world/light-grid.js`, `src/world/wayfinding.js`, `src/world/chunks.js`,
-   `src/world/sightline.js`, `src/world/window-ghost.js`) slik at den
+   `src/world/sightline.js`, `src/world/window-ghost.js`, `src/world/monster-trail.js`, `src/world/flash-hint.js`, `src/world/discover.js`, `src/gen/zone-paths.js`) slik at den
    kan testes i Node.
 5. Brukergrensesnittet er på **engelsk** (all tekst brukeren ser: knapper, menyer,
    dialoger, feilmeldinger, temanavn og eksempler). Kode, identifikatorer og kommentarer
@@ -71,7 +74,7 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
    (`OBJECTS` i `core/objects.js`), skal den også legges inn i `PLANS` i `gen/furnish.js`
    for de temaene der den passer naturlig (f.eks. kontorstol på kontoret, vannkjøler på
    kontor/kjøpesenter, benk i kjøpesenteret), med en tetthet som passer stemningen –
-   glissent i de tomme rommene. Passer den ingen steder, holdes den utenfor `PLANS`.
+   glissent i de tomme rommene. Gjenstander som hører til et bestemt rom i hotell og kontor, møbleres i `gen/furnish-rooms.js` i stedet. Passer den ingen steder, holdes den utenfor `PLANS`.
    Oppdater testene i `test/furnish.test.js` om nødvendig.
 
 ## Videre arbeid og regresjoner
@@ -83,8 +86,8 @@ undermappe. `public/.htaccess` sender http:// videre til https:// (Apache hos on
   Nettlesersjekken bygger selv. I Windows PowerShell kan `npm.cmd` brukes hvis `npm.ps1` er blokkert.
 - Bekreft hva som er testet og hva som gjenstår. Blokkert WebGL må bevare 2D/lagring (`docs/graphics-recovery.md`). Shaderfeil/konteksttap skal feile nettlesersjekken; bruk flyttall i GLSL-vektorer. Node-tester og SwiftShader sier ikke hva
   bildefrekvensen blir på en fysisk GPU eller hvordan native fullskjerm virker på mobil/Safari.
-- **Romformat v4**: sonelag er rå byteverdier som to heksadesimale tegn per rute (`00` = standard),
-  og `storeys` holder etasjene over (v4). Les fortsatt v1/v2 med ett tegn per rute og v3 uten etasjer. Endre `VERSION` ved inkompatible formatendringer;
+- **Romformat v5**: sonelag er rå byteverdier som to heksadesimale tegn per rute (`00` = standard),
+  `storeys` holder etasjene over (v4), og rutetypen `CRAWL` kom i v5 (typen har tre biter: plass til én til). Les fortsatt v1/v2 med ett tegn per rute og v3 uten etasjer. Endre `VERSION` ved inkompatible formatendringer;
   behold gamle innlesere. Test hele lovlige høydeområdet via JSON, delingslenke og lokal lagring
   (`serialize-heights.test.js`, `storage.test.js`), særlig når høydegrenser eller lag endres.
 - **Lagring**: suksess krever en faktisk skriving. Manglende/blokkert/full lagring skal gi
@@ -129,7 +132,7 @@ src/
   som vegg. Verdensenhet = meter, x = kolonne, z = rad. Nye lag legges i `LAYERS` (da
   følger kopiering, størrelsesendring og angre med) og i `LAYERS` i `serialize.js`.
 - **Etasjer** (`core/storeys.js`): rommet er etasje 0, `level.storeys` etasjene over (samme størrelse,
-  delt tema/himmel/lysfarge via `storeyLevel`). Høyden regnes ut så bassenger får plass. Editoren tegner
+  delt himmel/lysfarge via `storeyLevel`; temaet er per etasje). Stiger: `core/ladders.js` (hull i etasjen over, `view3d/climb.js`). Heiser: `core/elevators.js` (sjakt på 4 × 4 gjennom bygget, i `room.elevators`; `view3d/lifts.js`). Høyden regnes ut så bassenger får plass. Editoren tegner
   i `editor.level` (= etasjen), `editor.room` er hele rommet; angre per etasje eller `'all'`.
   Trapp opp (meta-bit `STAIR_THROUGH`) binder etasjene sammen: `core/stairwells.js` lager etasjene slik de
   bygges og gås i (`walkLevels`, med `seams`); bytte midt på reposet. 3D og gåing: `view3d/storeys.js`
@@ -169,7 +172,7 @@ src/
   `walk` (stupebrettet) gjør en stripe langs gjenstanden til en flate man går på (`core/object-walk.js`:
   `objectGround` for gange/klatring, `walkBlockers` for kollisjon; slike gjenstander snus aldri av
   andre), og `shift` flytter gjenstanden fram fra ruten.
-  `mount: 'ceiling'|'wall'` (+ `lift`) henger gjenstanden under taket eller på veggen bak, `spin`
+  `animate: true` spiller modellens animasjon (`world/animated-objects.js`, lys fra feltet, ikke bakt). `mount: 'ceiling'|'wall'` (+ `lift`) henger gjenstanden under taket eller på veggen bak, `spin`
   får den til å snurre (takvifte). `soft` = lekeklosser: de
   stables på klossene før seg i listen, er ikke faste hindringer, og i gåmodus styres de av
   fysikk (`world/softphysics.js` med cannon-es, lastet dynamisk av `view3d/softplay.js`).
@@ -178,6 +181,13 @@ src/
   Veltede gjenstander: `o.tip` (på ryggen/siden), `o.lift` og `o.off` (`core/object-tip.js`, lagres i rommet);
   `tipFrame` er felles for pose, 3D og fysikk. Stolhauger i Level 0: `gen/chair-piles.js` – prøv nye
   oppsett i fysikken (`chair-piles.test.js`); øverst på en liggende stol er det bare beina.
+- **Hovedmenyen** (`app/start-menu.js`, bare i programmet): sidene Play/Create er data i `pages`. 3D-bakgrunnen er egen kontekst: `view3d/menu-scene.js` tegner `gen/menu-room.js`, og `app/menu-backdrop.js` holder den i live så lenge en `.start-screen`-side er åpen, hviler viewer (`resting`) og slipper konteksten etterpå. Uten 3D: gul tapet (`start-screen.css`).
+- **Spot the wrong, The Descent og Noclip** (`gen/spot.js`, `gen/descent.js`, `gen/noclip.js` og `view3d/`-filene med samme navn): moduser med egen tilstand i `Explorer` (`runs`; den aktive kan gripe inn i `goDeeper`; Noclip har én sammenhengende verden av områder uten dører: `gen/zones.js`, `view3d/zones.js`, `world/clip.js`), stemning via `quietMood` og rekorder i `loadRuns`. Se `docs/game-modes.md`.
+- **Spesialrom** (`gen/specials.js`, katalog i `gen/special-rooms.js`): omtrent to av tre genererte nivåer får et rom som er noe uventet (oversvømt, klokker, LED, TV-ring …); endringen angres om noe stenges inne. Se `docs/specials.md`.
+- **Flyplassterminalen** (`airport`, `core/themes-airport.js`, `gen/airport.js`, `gen/airport-layouts.js`, `gen/furnish-airport.js`, gjenstander i `world/props-airport.js`): oftest natt i vinduene; ingen krypeganger.
+- **Planløsninger** (`gen/layouts.js`): hotell, kontor, Poolrooms, lekerom, skole, sykehus, parkering, Level 0, kjøpesenter, kjeller og flyplass bygges etter tre til fem planløsninger hver (`LAYOUTS`, med `classic` for de gamle oppsettene unntatt i hotell og kontor), eller to side om side; tester av det gamle kjøpesenteret/kjelleren må be om `layout: 'classic'`; rommene møbleres etter funksjon (`level.plan`, `gen/furnish-rooms.js`, finnes bare under genereringen). `level.look` gir egen tapet og teppefarge (`core/looks.js`). Eksemplene bruker `layout: 'gallery'` (de gamle oppsettene). Se `docs/layouts.md`.
+- **Lommelykt** (`world/flashlight.js`, `view3d/flashlight.js`, F): sitter ved øyet, så den trenger ingen skygger. Nye shadere for flater må legge inn `flashlight(vWorld)` utenom `uBoost`, ellers er de svarte under strømbrudd; `withFlash` for enkle materialer. Se `docs/flashlight.md`.
+- **Krypeganger** (`TILE.CRAWL`, `core/crawl.js`, `gen/crawlways.js`): tak 0,9 m, aldri lys. C i gåmodus; `moveCircle` tar kroppshøyden. Generatoren bygger en massiv blokk rundt gangen og stenger aldri noe man når uten å krype; skikkelsen stopper ved åpningen og gir opp. Se `docs/crawlways.md`.
 - **Rekkverk** (`core/railings.js`): reglene for hvilke kanter som får vern/håndlist brukes
   både av geometrien (`world/railings.js`) og kollisjonen – endre dem bare der.
 - **Vannsklier** (`core/slides.js`): `level.slides` er en liste med objekter
@@ -192,9 +202,12 @@ src/
   tilbake når man går ut. `generateLevel` legger inn utganger (`gen/exits.js`), også i
   ytterkanten – kanten er da vegg eller en lukket dør til ingensteds – og gjenstander etter
   temaet (`gen/furnish.js`, `PLANS`). Begge har eget frø, så romoppsettet er uendret.
-  Størrelsen på nye nivåer følger `settings.levelSize` (`gen/sizes.js`: grunnstørrelse per tema × skala).
+  Størrelsen på nye nivåer følger `settings.levelSize` (`gen/sizes.js`: grunnstørrelse per tema × skala, varierer per nivå med `variedDims`).
+  Nye nivåer får 1–3 etasjer, oftest med hvert sitt tema, med trapp eller stige etter høyden (`gen/mixed-floors.js`, `docs/storeys.md`): alle etasjene skal kunne nås. New room og Generate/Random velger antall etasjer (`gen/new-building.js`).
   Takhøyde og bassengdybder varieres (`gen/variety.js`, eget frø; `vary: false` for eksemplene),
   og `gen/door-space.js` rydder dører og gjenstander som er i veien for hverandre.
+  Daily level (`gen/daily.js`, `view3d/daily.js`, `app/#daily`): samme nivå og kassetter for alle per dato, på tid.
+  Lights out (`gen/fuses.js`, `view3d/lights-out.js`): Game mode uten strøm, sikringsskap (E) i stedet for kassetter.
   Kassettjakt (`view3d/tape-hunt.js`): på genererte nivåer er dørene til ingensteds låst til alle
   kassettene er funnet (`exitsLocked`), kassettene summer (`audio/tape-hum.js`), og kassetter legges
   bare der man kan gå (`reachableCells`). Fremgang: `loadProgress`/`saveProgress`.
@@ -206,9 +219,9 @@ src/
 - **Korridorbygg** (`gen/building.js`): skolen og sykehuset. Korridorene på skolen får belegg
   (`finish`), og temaets `tiles` tegner belegget som skap – samme triks kan brukes for andre
   vegger med eget utseende i deler av et bygg.
-- **«Make it wrong»** (`gen/wrong.js`): katalogen `CHANGES` med små endringer (hver returnerer
+- **«Make it wrong»** (`gen/wrong.js`, flere i `gen/wrong-more.js`, felles rutehjelp i `gen/wrong-cells.js`): katalogen `CHANGES` med små endringer (hver returnerer
   `{ what, cells }` eller null), vektet (`WEIGHTS`) og begrenset (`MAX`). Nye endringer skal være
-  subtile hver for seg, aldri skumle, og ikke dele rommet i to (testen sjekker at det henger sammen).
+  subtile hver for seg, aldri skumle, og ikke dele rommet i to eller stenge noe inne (`wrong-more.test.js` sjekker hver endring mot det man når fra start).
 - **Drømmegange** (`view3d/drift.js` + `world/autopilot.js`): autopiloten bruker
   `world/paths.js` (som monsteret) og går gjennom dører til ingensteds via `walk.onExit`.
 - **Romlige avvik** (`world/anomalies.js`, ren logikk): `findLoops` finner rette ganger der
@@ -225,9 +238,9 @@ src/
   bak spilleren (`behind`) og aldri stenger en inne. `view3d/shifts.js` bygger verdenen på nytt fra
   en kopi av `walk.level` (Explorer setter `home`, så editorrommet kommer tilbake). Nye typer: legg
   dem i `KINDS` – subtile, aldri skumle hver for seg.
-- **Monsteret** (Uncanny/Nightmare): `view3d/scary.js` styrer monsteret (`world/monster-ai.js`,
-  ren logikk: avstandskart over rutenettet, lukkede dører stenger; `view3d/monster.js` tegner
-  det) og lydene (`audio/scary.js`). Det jakter når strømmen er borte (`Blackout`); stemningens
+- **Monsteret** (Uncanny/Nightmare) er den sorte skikkelsen (`docs/figure.md`): `view3d/scary.js` styrer det (`world/monster-ai.js`,
+  ren logikk: avstandskart over rutenettet, lukkede dører stenger; lister seg på avstand, raske utfall når det er nær; i Nightmare går det etter sporet, `world/monster-trail.js`; `view3d/monster.js` og `figure-material.js` tegner
+  det, uten modellfil) og lydene (`audio/scary.js`). Det jakter når strømmen er borte (`Blackout`); stemningens
   `chase` (Nightmare) gir fart/avstand, jakt i mørke deler og «tatt = tilbake til start med
   kassettene spredt» (`view3d/nightmare.js`) i stedet for noclip, og et brøl fra monsteret når
   jakten begynner (`chase.roar`). Stemningens egne skumle lyder: `sounds` (`audio/eerie-night.js`).
@@ -245,8 +258,9 @@ src/
   Bue = bit 4 (`DOOR_ARCH`) på åpninger uten dørblad: `ceilingAt` gir toppen av buen (`ARCH_TOP`), og
   `world/arches.js` (ren) bygger buen i surfaces; Level 0 får dem ved generering (`gen/arches.js`, bare
   med vary). `meta` lagres med maks 31 (`serialize.js`).
-  Trappens `floors` er toppen, bunnen kommer fra `stairSpan`. Manuelt Escalator-verktøy (E, opp/ned), motor, GPU-trinn og Mall-dekorbasseng: `docs/escalators.md`.
-- **Lys er bakt per vertex** (`world/lighting.js`) med siktlinje gjennom rutenettet; der
+  Trappens `floors` er toppen, bunnen kommer fra `stairSpan`. Ramper (`core/ramps.js`, verktøy G) er trapper med bit 3 uten bit 2 (`RAMP`): glatt flate og skrå sider
+  (`world/stairs.js`), ingen håndlist på veggen; Level 0 får pukler i ganger og lave hevede flater (`gen/ramps.js`, bare med vary). Manuelt Escalator-verktøy (E, opp/ned), motor, GPU-trinn og Mall-dekorbasseng: `docs/escalators.md`.
+- **Lys er bakt per vertex** (`world/lighting.js`) med siktlinje gjennom rutenettet. Temaets `ambient` følger lampene (`AMBIENT`: fullt der det direkte lyset er minst `REF`, bare `FLOOR` der ingen lampe når), så rom uten lamper er mørke; oversikten legger det tilbake (`world/fill.js`, `withFill` i flateshaderne, `uFill` via `setBoost`), og tåken i gåmodus følger lyset der man står og strømmen (`view3d/fog-light.js`); der
   siktlinjen krysser en rutegrense må den gå under taket og over gulvet i begge ruter, og
   ikke gjennom en lukket dør.
   Armaturen sitter alltid i taket (`top` = `ceil`). I rom høyere enn `HANG` over gulvet får lyskilden `low`:

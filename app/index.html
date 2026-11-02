@@ -27,9 +27,9 @@
           <button type="button" class="btn" id="btn-undo" title="Undo (Ctrl+Z)">↶ Undo</button>
           <button type="button" class="btn" id="btn-redo" title="Redo (Ctrl+Y)">↷ Redo</button>
           <div class="segmented" id="layout-toggle" role="group" aria-label="View">
-            <button type="button" data-layout="2d">2D</button>
-            <button type="button" data-layout="split">2D + 3D</button>
-            <button type="button" data-layout="3d">3D</button>
+            <button type="button" data-layout="2d" title="Only the 2D plan (fastest while drawing)">2D</button>
+            <button type="button" data-layout="split" title="The 2D plan and the 3D preview side by side">2D + 3D</button>
+            <button type="button" data-layout="3d" title="Only the 3D preview">3D</button>
           </div>
         </div>
         <div class="topbar-right">
@@ -87,7 +87,6 @@
 
       <footer class="statusbar">
         <span id="status-tool"></span>
-        <span id="status-build"></span>
       </footer>
     </div>
 

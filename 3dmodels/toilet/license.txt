@@ -1,0 +1,11 @@
+Model Information:
+* title:	toilet
+* source:	https://sketchfab.com/3d-models/toilet-c98c73d7b70e4635b8cc01705915aea6
+* author:	motaman (https://sketchfab.com/motaman)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "toilet" (https://sketchfab.com/3d-models/toilet-c98c73d7b70e4635b8cc01705915aea6) by motaman (https://sketchfab.com/motaman) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

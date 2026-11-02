@@ -136,7 +136,7 @@ describe('gjenstander på vegg og i tak', () => {
   it('veggklokken henger på veggen bak seg, takvifta under taket', async () => {
     const { generateLevel } = await import('../src/gen/index.js');
     const { ceilingAt } = await import('../src/core/heights.js');
-    const level = generateLevel({ theme: 'basement', w: 36, h: 28, seed: 3 });
+    const level = generateLevel({ theme: 'basement', w: 36, h: 28, seed: 3, layout: 'classic' });
     const fan = level.objects.find((o) => o.id === 'fan');
     const clock = level.objects.find((o) => o.id === 'clock');
     expect(fan).toBeTruthy();

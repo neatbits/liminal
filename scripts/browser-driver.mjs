@@ -88,7 +88,12 @@ export async function launchBrowser({ hardware = false } = {}) {
     }
     // Bare den midlertidige profilen laget over, innenfor arbeidsområdets cache.
     if (!resolve(profile).startsWith(cache + sep)) throw new Error('Unexpected browser profile path.');
-    rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    try {
+      rmSync(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 });
+    } catch (e) {
+      // Windows kan holde filer åpne en stund etter at nettleseren er borte. Resultatet av sjekken gjelder.
+      console.warn(`Could not remove the temporary browser profile: ${e.message}`);
+    }
   };
   try {
     const portFile = join(profile, 'DevToolsActivePort');

@@ -7,10 +7,12 @@ import { fillInterior, fillRect } from './util.js';
 import { recursiveDivision } from './division.js';
 import { hangDoors } from './doors.js';
 import { addPoolSlide } from './slides.js';
+import { buildLayout } from './layouts.js';
 
 const area = (r) => (r.x1 - r.x0 + 1) * (r.z1 - r.z0 + 1);
 
-export function playroom(level, rand) {
+export function playroom(level, rand, { layout } = {}) {
+  if (layout !== 'gallery' && buildLayout(level, rand, { wanted: layout, flicker: 0.04, broken: 0.05 })) return;
   fillInterior(level);
   // v bestemmer variant én gang og brukes to steder (divisjon og bingeplassering).
   const v = rand();

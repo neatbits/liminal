@@ -28,6 +28,10 @@ export const WINDOW_VIEWS = Object.freeze({
   hotel: view({ ground: '#a29d95', stone: '#cfbda5', firstRow: 50, rowGap: 45, spacing: 32,
     groundY: -2, width: [4, 3], height: [3, 4], depth: [5, 3],
     groundStyle: 4, windows: 1, lit: 0.25, fog: 0.009, roof: 1.8 }),
+  // Flyplassen: forplass, taksebane og rullebanen med kantlys (bakketype 6 i world/landscape-surfaces.js), og bare lave
+  // hangarer langt borte i horisonten.
+  airport: view({ ground: '#4d5157', stone: '#a3a9ae', firstRow: 420, rowGap: 160, spacing: 170,
+    groundY: -7, width: [30, 22], height: [5, 4], depth: [16, 8], groundStyle: 6, windows: 0, lit: 0, fog: 0.0028 }), // gatene ligger en etasje opp
   // A hand-built Basement window reveals an impossible, Babbdi-like city: dusty pink concrete.
   basement: view({ city: true, haze: '#c6b2a8', ground: '#86716a', stone: '#c3a89c',
     firstRow: 42, rowGap: 42, spacing: 34, groundY: -52,

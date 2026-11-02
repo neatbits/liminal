@@ -1,5 +1,5 @@
-// The ghost, motionless, outside a window (Uncanny and Nightmare, view3d/window-ghost.js): a still
-// image of the real ghost model (view3d/ghost-snapshot.js), set upright in the analytic window view
+// The dark figure, motionless, outside a window (Uncanny and Nightmare, view3d/window-ghost.js): a still
+// image of the figure (view3d/figure-snapshot.js), set upright in the analytic window view
 // (the Basement city and the other themes' landscapes) and hazed like the buildings. It stands
 // outside one wall direction only (uGhostFrame = that wall's normal into the room).
 export const WINDOW_GHOST = /* glsl */ `

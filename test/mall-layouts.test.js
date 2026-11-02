@@ -60,7 +60,7 @@ describe('mall layout families', () => {
     [64, 44, 2],
   ])('makes Terraces visible at %i × %i with %im recesses', (w, h, inset) => {
     // Seed 3 selects Terraces through the same automatic path as endless/generated rooms.
-    const l = generateLevel({ theme: 'mall', w, h, seed: 3 }),
+    const l = generateLevel({ theme: 'mall', w, h, seed: 3, layout: 'classic' }),
       { shop } = mallLayout(w, h);
     expect([...new Set(shopfronts(l).map(s => s.z))].sort((a, b) => a - b)).toEqual([
       shop + 1 - inset,

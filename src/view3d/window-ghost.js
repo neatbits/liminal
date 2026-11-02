@@ -1,5 +1,5 @@
-// I Uncanny og Nightmare (stemninger med monster) står spøkelset av og til helt stille utenfor ett
-// av vinduene (world/window-ghost.js): et stillbilde av spøkelsesmodellen (view3d/ghost-snapshot.js),
+// I Uncanny og Nightmare (stemninger med monster) står skikkelsen av og til helt stille utenfor ett
+// av vinduene (world/window-ghost.js): et stillbilde av den (view3d/figure-snapshot.js),
 // satt inn i vindusutsikten av world/window-ghost-view.js – kjellerbyen og temaenes landskap.
 // Det dukker opp mens man ser en annen vei, og er borte igjen etter et kort glimt: når man har sett
 // mot det et par sekunder (også mens man ser på det), eller etter en stund om man aldri ser det.
@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import { windows } from '../core/windows.js';
 import { ghostSpot, facingWall } from '../world/window-ghost.js';
-import { GhostSnapshot } from './ghost-snapshot.js';
+import { FigureSnapshot } from './figure-snapshot.js';
 import { getMood } from '../gen/moods.js';
 
 const WAIT = [20, 70]; // s før det dukker opp (igjen)
@@ -38,12 +38,12 @@ export class WindowGhost {
   }
 
   /**
-   * Første bilde koster (modellen lastes, shaderen kompileres): det tas med en gang – under
-   * overgangen til et nytt nivå – og ikke i det spøkelset skal dukke opp.
+   * Første bilde koster (shaderen kompileres): det tas med en gang – under overgangen til et nytt
+   * nivå – og ikke i det skikkelsen skal dukke opp.
    */
   _prepare() {
     if (this.snapshot || !this.v.walk || !getMood(this.v.settings.mood).monster || !this._materials().length) return;
-    this.snapshot = new GhostSnapshot(this.v.renderer);
+    this.snapshot = new FigureSnapshot(this.v.renderer);
     this.snapshot.take(this.rand);
   }
 
@@ -71,7 +71,7 @@ export class WindowGhost {
     const spot = ghostSpot(behind[Math.floor(this.rand() * behind.length)], this.rand);
     this.timer = Infinity; // til bildet er klart
     const token = (this._token = {});
-    this.snapshot ??= new GhostSnapshot(this.v.renderer);
+    this.snapshot ??= new FigureSnapshot(this.v.renderer);
     this.snapshot.take(this.rand).then((image) => {
       if (this._token !== token) return; // nullstilt mens modellen lastet
       this.image = image;

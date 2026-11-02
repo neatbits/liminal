@@ -12,6 +12,8 @@ import { scatterPlayBalls } from './play-balls.js';
 import { patient } from './furnish-medical.js';
 import { mallTraffic } from './mall-traffic.js';
 import { addHalfWalls } from './half-walls.js';
+import { furnishRooms } from './furnish-rooms.js';
+import { cubicleWalls } from './cubicles.js';
 import { chairPile } from './chair-piles.js';
 import { tryPlace, desk, gaming, foodspot, chairs, arcades, tvrow, table, poolside, tvstand } from './furnish-sets.js';
 
@@ -36,11 +38,13 @@ const DIRS = [
 const PLANS = {
   backrooms: [{ set: 'halfwalls' }, { set: 'foodspot', every: 2200 }, { id: 'arcade2', every: 3500 }, { id: 'dinerchair', open: true, every: 2500 }, { id: 'plasticchair', open: true, every: 2500 }, { id: 'woodenchair', open: true, every: 1300 }, { set: 'chairpile', open: true, every: 1800 }, { id: 'clock', every: 1400 }, { id: 'tv', every: 1100 }, { id: 'boombox', every: 1600 }, { id: 'soda', every: 3000 }],
   office: [{ set: 'desk', every: 110 }, { id: 'wallboard', every: 600 }, { id: 'whiteboard', every: 1000 }, { id: 'armchair', every: 1200 }, { id: 'sofa', every: 1600 }, { id: 'soda', every: 1500 }, { id: 'clock', every: 300 }, { id: 'tv', every: 1500 }, { set: 'table', open: true, every: 1500 }, { id: 'pottedplant', every: 650 }, { id: 'yucca', every: 900 }, { id: 'minifridge', every: 1600, rooms: true }],
-  basement: [{ set: 'livingroom', every: 1000, min: 1, rooms: true }, { id: 'sofa', every: 1400, rooms: true }, { id: 'fan', ceiling: true, every: 300, rooms: true }, { id: 'clock', every: 500 }, { set: 'tvstand', every: 1600, rooms: true }, { id: 'boombox', every: 900 }, { set: 'desk', every: 700, rooms: true }, { id: 'woodenchair', every: 1600, rooms: true }, { id: 'armchair', every: 1400, rooms: true }, { id: 'hifi', every: 1800, rooms: true }, { id: 'minifridge', every: 1400, rooms: true }],
+  basement: [{ set: 'livingroom', every: 1000, min: 1, rooms: true }, { id: 'sofa', every: 1400, rooms: true }, { id: 'fan', ceiling: true, every: 300, rooms: true }, { id: 'clock', every: 500 }, { set: 'tvstand', every: 1600, rooms: true }, { id: 'boombox', every: 900 }, { set: 'desk', every: 700, rooms: true }, { id: 'woodenchair', every: 1600, rooms: true }, { id: 'bunkbed', every: 2400, rooms: true }, { id: 'armchair', every: 1400, rooms: true }, { id: 'hifi', every: 1800, rooms: true }, { id: 'minifridge', every: 1400, rooms: true }],
   pool: [{ set: 'diving' }, { id: 'flamingo', water: true, every: 260 }, { set: 'poolside', shore: true, every: 150 }, { id: 'duck', water: true, every: 70 }, { id: 'soda', every: 1500 }, { id: 'boombox', every: 1000 }, { id: 'pottedpalm', open: true, every: 550 }, { id: 'palmplant', every: 900 }],
-  playroom: [{ set: 'softplay', open: true, every: 110 }, { id: 'playground', open: true, every: 650 }, { id: 'bouncehouse', open: true, every: 900 }, { id: 'bouncecombo', open: true, every: 1100 }, { id: 'bouncecourse', every: 1500 }, { id: 'plasticchair', every: 700 }, { set: 'gaming', every: 900 }, { id: 'clock', every: 600 }, { id: 'duck', water: true, every: 110 }, { id: 'tv', every: 700 }, { id: 'boombox', every: 900 }, { set: 'playballs' }],
+  playroom: [{ set: 'softplay', open: true, every: 110 }, { id: 'playground', open: true, every: 650 }, { id: 'plasticchair', every: 700 }, { set: 'gaming', every: 900 }, { id: 'clock', every: 600 }, { id: 'duck', water: true, every: 110 }, { id: 'tv', every: 700 }, { id: 'boombox', every: 900 }, { set: 'playballs' }],
   hotel: [{ id: 'armchair', every: 700 }, { id: 'sofa', every: 900 }, { set: 'chairs', every: 1200 }, { id: 'fan', ceiling: true, every: 600 }, { id: 'soda', every: 1500 }, { id: 'clock', every: 700 }, { id: 'cassette', every: 1500 }, { set: 'tvstand', every: 1000 }, { id: 'tv', every: 1400 }, { set: 'desk', every: 1500 }, { set: 'table', open: true, every: 1600 }, { id: 'pottedplant', every: 850 }, { id: 'palmplant', every: 1000 }, { id: 'yucca', every: 1300 }, { id: 'minifridge', every: 1800, rooms: true }],
   garage: [{ id: 'plasticchair', open: true, every: 1500 }, { id: 'soda', every: 2000 }, { id: 'boombox', every: 1500 }, { id: 'tv', every: 2200 }],
+  // Flyplassen møbleres mest etter rommene (gen/furnish-airport.js); dette er resten (og salen når planløsningene ikke får plass).
+  airport: [{ set: 'desk', every: 4000, rooms: true }, { id: 'waitingchairs', open: true, every: 300 }, { id: 'fids', every: 900 }, { id: 'luggagecart', open: true, every: 800 }, { id: 'soda', every: 900 }, { id: 'clock', every: 600 }, { id: 'pottedplant', every: 500 }],
   // Butikkene, inkludert importerte kosmetikk-/apotekreoler, innredes av mall-shops.js;
   // her bare gangene og atriet, så butikkmodellene aldri havner i ferdselsårene.
   mall: [{ id: 'mallbench', open: true, every: 350, min: 2, rooms: true }, { id: 'pottedpalm', open: true, every: 650, min: 1, rooms: true }, { id: 'pottedtree', open: true, every: 450, min: 1, rooms: true }, { id: 'palmplant', every: 700, rooms: true }, { id: 'pottedplant', every: 600, rooms: true }, { set: 'foodspot', every: 900, min: 1, rooms: true }, { set: 'table', open: true, every: 250, rooms: true }, { id: 'soda', every: 700, rooms: true }, { id: 'boombox', every: 1500, rooms: true }],
@@ -110,13 +114,20 @@ function place(level, rand, item, x, z) {
  */
 // Structural pieces precede spawn/exit placement and the ordinary furniture pass.
 export function furnishStructure(level, rand) {
-  return PLANS[level.theme]?.some(p => p.set === 'halfwalls') ? addHalfWalls(level, rand) : 0;
+  for (const r of level.plan ?? []) if (r.kind === 'cubicles') cubicleWalls(level, r);
+  const empty = level.plan?.some((r) => r.kind === 'hall'); // hallene i Level 0 skal være tomme
+  return !empty && PLANS[level.theme]?.some(p => p.set === 'halfwalls') ? addHalfWalls(level, rand) : 0;
 }
 
+// Med planløsning (gen/layouts.js) møbleres rommene etter funksjonen; av de vanlige listene bare småting.
+const LOOSE = ['clock', 'soda', 'pottedplant', 'yucca', 'palmplant', 'wallboard'];
+
 export function furnish(level, rand, spawn = level.spawn, { deepEnds = true } = {}) {
-  const plan = PLANS[level.theme];
+  const planned = !!level.plan;
+  const plan = planned ? PLANS[level.theme]?.filter((p) => LOOSE.includes(p.id)).map((p) => (['clock', 'soda', 'wallboard'].includes(p.id) ? { ...p, every: p.every * 3 } : p)) : PLANS[level.theme];
   if (!plan) return 0;
   const before = level.objects.length;
+  if (planned) furnishRooms(level, rand);
   // Rutene rett foran dørene holdes fri (gen/door-space.js rydder resten).
   const fronts = new Set(doorFrontCells(level).map(([x, z]) => z * level.w + x));
   const traffic = level.theme === 'mall' ? mallTraffic(level) : () => false;

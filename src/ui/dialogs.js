@@ -1,10 +1,11 @@
 // Konkrete dialoger: nytt rom, eksempler, mine rom, deling og hurtigtaster.
 import { THEMES, THEME_IDS } from '../core/themes.js';
+import { MAX_STOREYS } from '../core/storeys.js';
 import { TEMPLATES, PRESETS } from '../gen/index.js';
+import { floorLimit } from '../gen/new-building.js';
 import { TOOLS, SHAPES } from '../editor/tools.js';
 import { h, formatDate } from './dom.js';
 import { openModal } from './modal.js';
-import { MOODS } from '../gen/moods.js';
 
 const SIZES = [16, 24, 32, 48, 64, 96, 128];
 
@@ -32,6 +33,21 @@ export function newRoomDialog({ theme, onCreate, startup = false, draft = null, 
   // Frø for «Randomly generated» (tomt = tilfeldig); vises bare for den malen.
   const seedEl = h('input', { class: 'field', type: 'number', min: 0, step: 1, placeholder: 'Random' });
   const seedRow = h('div', { class: 'row', style: { display: 'none' } }, h('label', { text: 'Seed' }), seedEl);
+  const mixEl = h('input', { type: 'checkbox', class: 'switch', checked: true });
+  const mixRow = h('div', { class: 'row-toggle', style: { display: 'none' } }, h('label', { text: 'A different theme on each floor' }), mixEl);
+  const showOptions = () => {
+    const limit = floorLimit(template, +wEl.value, +hEl.value);
+    for (const option of floorsEl.options) option.disabled = +option.value > limit;
+    if (+floorsEl.value > limit) floorsEl.value = limit;
+    seedRow.style.display = template === 'random' ? '' : 'none';
+    mixRow.style.display = template === 'random' && +floorsEl.value > 1 ? '' : 'none';
+  };
+  const floorsEl = h(
+    'select',
+    { class: 'field', onchange: showOptions },
+    Array.from({ length: MAX_STOREYS }, (_, k) => h('option', { value: k + 1, text: k ? `${k + 1} floors` : '1 floor' })),
+  );
+  wEl.onchange = hEl.onchange = showOptions;
   const cards = TEMPLATES.map((t) =>
     h(
       'button',
@@ -41,7 +57,7 @@ export function newRoomDialog({ theme, onCreate, startup = false, draft = null, 
         onclick: (e) => {
           template = t.id;
           for (const c of list.children) c.classList.toggle('selected', c === e.currentTarget);
-          seedRow.style.display = template === 'random' ? '' : 'none';
+          showOptions();
         },
       },
       h('div', { class: 'card-main' }, h('div', { class: 'card-title', text: t.label }), h('div', { class: 'card-sub', text: t.hint })),
@@ -54,8 +70,10 @@ export function newRoomDialog({ theme, onCreate, startup = false, draft = null, 
     startup ? h('p', { text: draft ? 'Pick up where you left off, or create a new room.' : 'Create a new room, or continue the room behind this dialog.' }) : null,
     h('div', { class: 'row' }, h('label', { text: 'Theme' }), themeEl),
     h('div', { class: 'row-2' }, h('div', {}, h('label', { text: 'Width' }), wEl), h('div', {}, h('label', { text: 'Depth' }), hEl)),
+    h('div', { class: 'row' }, h('label', { text: 'Floors' }), floorsEl),
     h('div', { class: 'side-label', text: 'Start from' }),
     list,
+    mixRow,
     seedRow,
     startup && (onExamples || onMine)
       ? h('div', { class: 'start-links' }, h('span', { text: 'Or open' }),
@@ -63,7 +81,7 @@ export function newRoomDialog({ theme, onCreate, startup = false, draft = null, 
           h('button', { type: 'button', class: 'btn', text: 'My rooms …', onclick: () => onMine() }))
       : null,
   );
-  const create = { label: 'Create room', onClick: () => onCreate({ theme: themeEl.value, w: +wEl.value, h: +hEl.value, template, seed: seedEl.value }) };
+  const create = { label: 'Create room', onClick: () => onCreate({ theme: themeEl.value, w: +wEl.value, h: +hEl.value, floors: +floorsEl.value, mix: mixEl.checked, template, seed: seedEl.value }) };
   const short = draft && draft.length > 28 ? `${draft.slice(0, 27)}…` : draft;
   openModal({
     title: 'New room',
@@ -73,38 +91,6 @@ export function newRoomDialog({ theme, onCreate, startup = false, draft = null, 
       ? [create, { label: `Continue “${short}”`, primary: true }]
       : [{ label: startup ? 'Continue current room' : 'Cancel' }, { ...create, primary: true }],
   });
-}
-
-/** Game mode: velg stemning, så rett inn på Level 1 (view3d/game-mode.js). */
-export function gameModeDialog({ mood, onStart }) {
-  let chosen = MOODS[mood] ? mood : 'liminal';
-  const cards = Object.entries(MOODS).map(([id, m]) =>
-    h(
-      'button',
-      {
-        type: 'button',
-        class: id === chosen ? 'card selected' : 'card',
-        'aria-pressed': String(id === chosen),
-        onclick: (e) => {
-          chosen = id;
-          for (const c of list.children) {
-            c.classList.toggle('selected', c === e.currentTarget);
-            c.setAttribute('aria-pressed', String(c === e.currentTarget));
-          }
-        },
-      },
-      h('div', { class: 'card-main' }, h('div', { class: 'card-title', text: m.label }), h('div', { class: 'card-sub', text: m.hint })),
-    ),
-  );
-  const list = h('div', { class: 'card-list' }, cards);
-  const body = h(
-    'div',
-    {},
-    h('p', { text: 'Endless generated levels. The doors stay locked until you find every VHS tape – listen for the hum. How deep can you go?' }),
-    h('div', { class: 'side-label', text: 'Mood' }),
-    list,
-  );
-  openModal({ title: 'Game mode', body, actions: [{ label: 'Cancel' }, { label: 'Start game', primary: true, onClick: () => onStart(chosen) }] });
 }
 
 export function examplesDialog({ onPick }) {
@@ -195,12 +181,14 @@ export function helpDialog() {
     ['Ctrl+S', 'Save to My rooms'],
     ['W A S D / arrows', 'Walk'],
     ['Shift', 'Run'],
+    ['C', 'Crawl'],
+    ['F', 'Flashlight'],
     ['Space', 'Jump (higher from a diving board)'],
     ['E', 'Open and close doors'],
     ['P', 'Take a photo'],
     ['X', 'Next mood (Normal … Nightmare)'],
     ['G', 'Dream walk on and off'],
-    ['V / M / N', 'VHS filter / sound / music on and off'],
+    ['V / M / N', 'VHS filter / sound / music on and off (in Noclip, M shows the big map)'],
     ['Esc', 'Release the mouse · back to the editor'],
   ];
   openModal({

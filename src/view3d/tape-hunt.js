@@ -16,13 +16,15 @@ export class TapeHunt {
   }
 
   get locked() {
-    const { depth, tapes, v } = this.ex;
+    const { depth, tapes, v, lightsOut } = this.ex;
+    if (lightsOut.active) return depth > 0 && lightsOut.locked; // Lights out: sikringsskapene, ikke kassettene
     return exitsLocked({ depth, left: tapes.left, drifting: v.walk.drift.on });
   }
 
   /** Teksten i dørprompten for en låst dør til ingensteds, ellers null. */
   lockText() {
-    return this.locked ? `The door is locked · 📼 ${this.ex.found}/${this.ex.total}` : null;
+    if (!this.locked) return null;
+    return this.ex.lightsOut.active ? this.ex.lightsOut.lockText() : `The door is locked · 📼 ${this.ex.found}/${this.ex.total}`;
   }
 
   /**
@@ -32,6 +34,11 @@ export class TapeHunt {
   tryExit() {
     if (!this.locked) return true;
     const { v, tapes } = this.ex;
+    if (this.ex.lightsOut.active) {
+      if (v.walk.sound) lockedDoor(v.audio);
+      v.hud.flash(`The door won't open – the power is out. ${this.ex.lightsOut.extra()} fuse boxes on.`, 3500);
+      return false;
+    }
     const w = v.walk.walker, level = v.walk.level;
     const reach = reachableCells(level, w.x, w.z);
     // Kassetter i andre etasjer (view3d/storeys.js) regnes som mulige å nå via trappene.
@@ -50,7 +57,8 @@ export class TapeHunt {
     if (!this._explained && this.locked) {
       this._explained = true;
       clearTimeout(this._hint);
-      this._hint = setTimeout(() => this.ex.v.hud.flash('The doors here are locked. Find the tapes – they hum when you are close.', 5000), 2600);
+      const text = this.ex.lightsOut.active ? 'The power is out and the doors are locked. Find the fuse boxes – they hum when you are close.' : 'The doors here are locked. Find the tapes – they hum when you are close.';
+      this._hint = setTimeout(() => this.ex.v.hud.flash(text, 5000), 2600);
     }
   }
 

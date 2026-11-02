@@ -33,6 +33,13 @@ export async function checkMobilePlayer(browser,origin) {
   assert.equal(await evaluate(`document.documentElement.scrollWidth<=innerWidth`),true);
   // Floating joystick: the thumb lands anywhere on the left half; a small push is slower than a full one.
   const before=await evaluate('liminal.viewer.walk.walker.x');
+  await tap('[data-control="crawl"]');
+  assert.equal(await evaluate(`liminal.viewer.walk.walker.wantDown&&document.querySelector('[data-control="crawl"]').getAttribute('aria-pressed')`),'true','crawl stays on');
+  await tap('[data-control="crawl"]');
+  assert.equal(await evaluate(`liminal.viewer.walk.walker.wantDown`),false);
+  await tap('[data-control="light"]');
+  assert.equal(await evaluate(`liminal.viewer.walk.flashlight.on&&document.querySelector('[data-control="light"]').getAttribute('aria-pressed')`),'true','flashlight stays on');
+  await tap('[data-control="light"]');
   await tap('[data-control="run"]');
   assert.equal(await evaluate('liminal.viewer.walk.input.running'),true,'Run toggles on');
   await touch('touchStart',[{x:90,y:600,id:1}]);
@@ -66,6 +73,11 @@ export async function checkMobilePlayer(browser,origin) {
   await tap('.touch-menu');
   assert.equal(await evaluate('liminal.viewer.walk.paused'),true);
   assert.equal(await evaluate('liminal.viewer.walk.input.buttons.size'),0);
+  // Pausepanelet: Resume øverst og Exit nederst synes uten å rulle (view3d/hud-walkbar.js).
+  await evaluate('new Promise(r=>setTimeout(r,300))');
+  assert.equal(await evaluate(`(()=>{const p=document.querySelector('.hud-walkbar').getBoundingClientRect(),e=document.querySelector('[data-act="exit"]').getBoundingClientRect();return e.bottom<=p.bottom+1&&e.top>=p.top&&p.bottom<=innerHeight;})()`),true,'Exit visible in the pause panel');
+  shot=await call('Page.captureScreenshot',{format:'png'});
+  writeFileSync('node_modules/.cache/phone-pause.png',Buffer.from(shot.data,'base64'));
   await tap('[data-act="resume"]');
   assert.equal(await evaluate('liminal.viewer.walk.paused'),false);
   await call('Emulation.setDeviceMetricsOverride',{width:844,height:390,deviceScaleFactor:1,mobile:true});

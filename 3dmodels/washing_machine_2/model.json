@@ -1,0 +1,8 @@
+{
+  "drop": ["pCylinder1025", "pHelix", "pCylinder1037", "pCylinder1039"],
+  "simplify": 0.3,
+  "simplifyError": 0.004,
+  "join": true,
+  "textureSize": 512,
+  "matte": true
+}

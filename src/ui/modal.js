@@ -6,8 +6,10 @@ let current = null;
 /**
  * @param o { title, body (Node), actions: [{ label, primary, onClick }], className }
  *          onClick kan returnere false for å holde dialogen åpen. className: egen stil (startmenyen).
+ *          persistent: klikk utenfor lukker ikke dialogen (startmenyen fyller hele skjermen).
+ *          onEscape: returnerer true når Esc er tatt hånd om, og dialogen skal stå (undermenyene).
  */
-export function openModal({ title, body, actions = [], onClose, className = '' }) {
+export function openModal({ title, body, actions = [], onClose, onEscape, className = '', persistent = false }) {
   current?.close();
   const previousFocus = document.activeElement;
   let closed = false;
@@ -31,7 +33,7 @@ export function openModal({ title, body, actions = [], onClose, className = '' }
     if (e.key === 'Escape') {
       e.preventDefault();
       e.stopImmediatePropagation();
-      close();
+      if (!onEscape?.()) close();
     } else if (e.key === 'Tab') {
       const items = focusable();
       const at = items.indexOf(document.activeElement);
@@ -64,7 +66,12 @@ export function openModal({ title, body, actions = [], onClose, className = '' }
     h('div', { class: 'modal-body' }, body),
     foot,
   );
-  const backdrop = h('div', { class: 'modal-backdrop', onmousedown: (e) => e.target === backdrop && close() }, modal);
+  const onBackdrop = (e) => {
+    if (e.target !== backdrop) return;
+    if (persistent) e.preventDefault(); // fokus blir der det er
+    else close();
+  };
+  const backdrop = h('div', { class: 'modal-backdrop', onmousedown: onBackdrop }, modal);
   root.append(backdrop);
   document.addEventListener('keydown', onKey);
   document.addEventListener('focusin', onFocus);

@@ -1,11 +1,12 @@
 // Katalogen over gjenstander (core/objects.js har reglene for hvor de står). Ren data.
 import { BUILT_OBJECTS } from './object-catalog-built.js';
-
+import { AIRPORT_OBJECTS } from './object-catalog-airport.js';
 import { ccBy } from './object-credit.js';
 import { ELECTRONIC_OBJECTS } from './object-catalog-electronics.js';
 import { INTERIOR_OBJECTS } from './object-catalog-interiors.js';
 import { MALL_OBJECTS } from './object-catalog-mall.js';
 import { CHAIR_OBJECTS } from './object-catalog-chairs.js';
+import { ROOM_OBJECTS } from './object-catalog-rooms.js';
 
 /**
  * Katalogen. size = [bredde, høyde, dybde] i meter slik gjenstanden står i rommet (selve filen
@@ -170,30 +171,6 @@ export const OBJECTS = {
     size: [0.601, 0.838, 0.948],
     ...ccBy('deck chair', 'MaX3Dd', 'https://sketchfab.com/3d-models/deck-chair-38de6171cbeb41c5bdc49c07df76ede9', 'https://sketchfab.com/MaX3Dd'),
   },
-  bouncecourse: {
-    label: 'Inflatable obstacle course',
-    file: 'bounce_course',
-    turn: Math.PI, // inngangen er på baksiden i modellen
-    scale: 0.158, // 2,6 m høy, ca. 10 m lang
-    size: [9.693, 2.586, 2.276],
-    ...ccBy('Bounce House', 'Jeremy E. Grayson', 'https://sketchfab.com/3d-models/bounce-house-57263bf5a7e44e558ff00248d4c92101', 'https://sketchfab.com/JeremyGrayson'),
-  },
-  bouncecombo: {
-    label: 'Bounce house with slide',
-    file: 'bounce_combo',
-    turn: Math.PI, // inngangen er på baksiden i modellen
-    scale: 0.264, // 2,6 m høy
-    size: [4.215, 2.604, 3.149],
-    ...ccBy('Bounce House', 'Jeremy E. Grayson', 'https://sketchfab.com/3d-models/bounce-house-57263bf5a7e44e558ff00248d4c92101', 'https://sketchfab.com/JeremyGrayson'),
-  },
-  bouncehouse: {
-    label: 'Bounce house',
-    file: 'bounce_house',
-    turn: Math.PI, // inngangen er på baksiden i modellen
-    scale: 0.27, // 2,6 m høy
-    size: [2.912, 2.585, 3.249],
-    ...ccBy('Bounce House', 'Jeremy E. Grayson', 'https://sketchfab.com/3d-models/bounce-house-57263bf5a7e44e558ff00248d4c92101', 'https://sketchfab.com/JeremyGrayson'),
-  },
   playground: {
     label: 'Playground set',
     file: 'playground_model',
@@ -215,7 +192,9 @@ export const OBJECTS = {
   ...ELECTRONIC_OBJECTS,
   ...MALL_OBJECTS,
   ...CHAIR_OBJECTS,
+  ...ROOM_OBJECTS,
   ...BUILT_OBJECTS, // bygget av enkle former (object-catalog-built.js)
+  ...AIRPORT_OBJECTS, // flyplassterminalen (object-catalog-airport.js)
 };
 
 export const OBJECT_IDS = Object.keys(OBJECTS);

@@ -154,6 +154,7 @@ export class Editor extends ToolState {
       level: this.level,
       below,
       wells: this._wells,
+      lifts: { room: this.room, storey: this.storey }, // heisene hører til bygget (core/elevators.js)
       // Startpunktet: i etasjen man starter i, ellers svakt med etasjenummeret (render.js).
       spawn: this.storey === spawnStorey(this.room) || { level: storeyLevel(this.room, spawnStorey(this.room)), storey: spawnStorey(this.room) },
       theme: getTheme(this.level.theme),

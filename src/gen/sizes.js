@@ -18,6 +18,7 @@ const BASE = {
   hotel: [40, 40],
   garage: [48, 40],
   basement: [36, 28],
+  airport: [56, 40], // lange ganger og store haller
 };
 const FALLBACK = [40, 36];
 const MIN = 18; // mindre enn dette blir det knapt et rom igjen etter vegger og utganger
@@ -29,6 +30,18 @@ export function getLevelSize(id) {
 /** Lengde (eller bredde) ganget med skalaen, innenfor kartets grenser. */
 export function scaled(n, scale, min = MIN) {
   return clampSize(Math.max(min, Math.round(n * scale)));
+}
+
+/**
+ * [w, h] for et nytt nivå i de uendelige nivåene: samme grunnstørrelse, men hvert nivå er litt større
+ * eller mindre (0,75–1,3) og litt mer avlangt, innenfor det Small og Huge gir for temaet.
+ */
+export function variedDims(theme, scale, rand) {
+  const [w, h] = BASE[theme] ?? FALLBACK;
+  const size = scale * (0.75 + rand() * 0.55);
+  const shape = 0.8 + rand() * 0.45;
+  const fit = (s) => Math.max(LEVEL_SIZES.small.scale, Math.min(LEVEL_SIZES.huge.scale, s));
+  return [scaled(w, fit(size * shape)), scaled(h, fit(size / shape))];
 }
 
 /** [w, h] for et generert nivå i temaet med skalaen (1 = Medium). */

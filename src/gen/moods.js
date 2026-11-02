@@ -8,6 +8,8 @@ import { basins } from './variety.js';
 import { fillZone } from '../core/zones.js';
 import { getTheme } from '../core/themes.js';
 import { darkZones } from './darkness.js';
+import { walkLevels, storeyEntry, linkCells } from '../core/stairwells.js';
+import { addCrawlways } from './crawlways.js';
 
 /**
  * fog, exposure: ganges med temaets verdier. broken, flicker: andel av de tente lysene som er
@@ -19,10 +21,12 @@ import { darkZones } from './darkness.js';
  * (world/shifts.js), eller null. deep: sjanse for at et basseng i et generert nivå er mørkt og dypt.
  * dark: { chance, zones } – sjansen for at et generert nivå får mørke deler (gen/darkness.js) og hvor
  * mange. monster: null, 'lurk' (viser seg, tar deg aldri) eller 'hunt'. chase (bare med 'hunt'):
- * speed og near (veilengde unna der det dukker opp) for monsteret, inDarkness: det jakter også i
+ * speed (på avstand), rush (i et utfall), rest (pause etter et utfall) og near (veilengde unna der det dukker opp) for monsteret,
+ * sense og sight: det går etter sporet (world/monster-trail.js), inDarkness: det jakter også i
  * mørke deler uten strømbrudd, caught: 'restart' = tatt betyr tilbake til start (view3d/nightmare.js),
  * ellers noclip videre, roar: [min, maks] sekunder fra jakten begynner til det brøler (view3d/scary.js).
  * sounds: stemningens egne skumle lyder (audio/eerie-night.js), blandet med temaets.
+ * crawl: så mange krypeganger (gen/crawlways.js) et generert nivå får i tillegg til sine egne.
  */
 export const MOODS = {
   normal: {
@@ -40,7 +44,7 @@ export const MOODS = {
     wrong: { home: null, gen: null },
     anomalies: { loops: 0, corridor: 0.1 },
     blackout: { first: [150, 300], every: [240, 480], dark: [5, 8] }, eerie: 1.6, monster: null, shifts: null,
-    dark: { chance: 0.6, zones: 1 },
+    dark: { chance: 0.6, zones: 1 }, crawl: 1,
   },
   liminal: {
     label: 'Liminal',
@@ -49,16 +53,16 @@ export const MOODS = {
     wrong: { home: null, gen: 'subtle' },
     anomalies: { loops: 1, corridor: 0.2 },
     blackout: { first: [70, 140], every: [120, 260], dark: [6, 11] }, eerie: 1, monster: null, shifts: [90, 180],
-    dark: { chance: 0.5, zones: 1 },
+    dark: { chance: 0.5, zones: 1 }, crawl: 1,
   },
   uncanny: {
     label: 'Uncanny',
-    hint: 'The rooms are wrong, the lights fail – and something stands at the far end. It never comes closer.',
+    hint: 'The rooms are wrong, the lights fail – and something dark slips by in the background. It never quite reaches you.',
     fog: 1.4, exposure: 0.9, broken: 0.08, flicker: 0.08,
     wrong: { home: 'subtle', gen: 'wrong' },
     anomalies: { loops: 1, corridor: 0.25 },
     blackout: { first: [40, 80], every: [70, 140], dark: [9, 14] }, eerie: 0.6, monster: 'lurk', deep: 0.15, shifts: [45, 90],
-    dark: { chance: 0.75, zones: 1 },
+    dark: { chance: 0.75, zones: 1 }, crawl: 2,
   },
   nightmare: {
     label: 'Nightmare',
@@ -66,9 +70,9 @@ export const MOODS = {
     fog: 2.3, exposure: 0.72, broken: 0.25, flicker: 0.15,
     wrong: { home: 'wrong', gen: 'very' },
     anomalies: { loops: 1, corridor: 0.25 },
-    blackout: { first: [10, 20], every: [25, 50], dark: [20, 35] }, eerie: 0.35, monster: 'hunt', deep: 0.3, shifts: [25, 55],
-    dark: { chance: 1, zones: 3 },
-    chase: { speed: 2.9, near: [8, 16], inDarkness: true, caught: 'restart', roar: [0.6, 1.8] }, // bare løping redder deg
+    blackout: { first: [10, 20], every: [25, 50], dark: [16, 28] }, eerie: 0.35, monster: 'hunt', deep: 0.3, shifts: [25, 55],
+    dark: { chance: 1, zones: 3 }, crawl: 2,
+    chase: { speed: 1.7, rush: 3.6, rest: 4.5, near: [12, 22], sense: 6, sight: 7, inDarkness: true, caught: 'restart', roar: [0.6, 1.8] }, // bare løping redder deg
     sounds: ['scream', 'drag', 'stalk', 'scratch', 'growl'],
   },
 };
@@ -129,6 +133,8 @@ export function decayLights(level, broken, flicker, rand, patches = false) {
 /**
  * Rommet slik stemningen gjør det: en kopi med ødelagte lys og «Make it wrong», eller null når
  * stemningen ikke endrer noe. home = rommet fra editoren (endres mindre enn genererte nivåer).
+ * Gjelder alle etasjene, men der trapper og stiger går av og på, får «Make it wrong» ikke endre noe, og
+ * bassenger i øvre etasjer blir ikke dypere (de henger ned i rommet under og ville endret etasjehøyden).
  */
 export function moodLevel(level, moodId, rand, { home = false } = {}) {
   const mood = getMood(moodId);
@@ -137,16 +143,23 @@ export function moodLevel(level, moodId, rand, { home = false } = {}) {
   const lights = !home || mood.wrong.home || moodId === 'abandoned';
   const deep = home || getTheme(level.theme).pit ? 0 : mood.deep ?? 0; // ikke ballbinger
   const dark = home ? null : mood.dark; // aldri i rommet fra editoren
-  if (!wrong && !deep && !dark && !(lights && (mood.broken || mood.flicker))) return null;
+  const crawl = home ? 0 : mood.crawl ?? 0; // heller ikke nye ganger
+  if (!wrong && !deep && !dark && !crawl && !(lights && (mood.broken || mood.flicker))) return null;
   const out = cloneLevel(level);
-  out.objects = [...(level.objects ?? [])];
-  if (lights) decayLights(out, mood.broken, mood.flicker, rand, mood.patches);
-  // Noen bassenger blir dype (2,4–3 m) – man ser ikke bunnen.
-  if (deep) for (const cells of basins(out)) if (rand() < deep) fillZone(out, 'depth', cells, 2.4 + Math.round(rand() * 6) / 10);
-  if (wrong) makeWrong(out, wrong, rand);
-  // Sist, så de andre trekningene (og dermed rommene) er de samme som før.
-  // Temaet kan gjøre dem vanligere og større (Level 0).
-  const themed = getTheme(level.theme).dark;
-  if (dark && rand() < (themed?.chance ?? dark.chance)) darkZones(out, rand, dark.zones, out.spawn, themed?.share);
+  const walked = out.storeys?.length ? walkLevels(out) : null;
+  const keep = walked && linkCells(walked.levels, walked.wells);
+  [out, ...(out.storeys ?? [])].forEach((floor, k) => {
+    floor.objects = [...(floor.objects ?? [])];
+    if (lights) decayLights(floor, mood.broken, mood.flicker, rand, mood.patches);
+    // Noen bassenger blir dype (2,4–3 m) – man ser ikke bunnen.
+    if (deep && !k) for (const cells of basins(out)) if (rand() < deep) fillZone(out, 'depth', cells, 2.4 + Math.round(rand() * 6) / 10);
+    if (wrong) makeWrong(floor, wrong, rand, keep?.[k]);
+    // Sist, så de andre trekningene (og dermed rommene) er de samme som før.
+    // Temaet kan gjøre dem vanligere og større (Level 0).
+    const themed = getTheme(floor.theme ?? level.theme).dark;
+    const start = k ? storeyEntry(walked.levels, walked.wells, k) : out.spawn; // aldri mørkt der man kommer inn
+    if (dark && rand() < (themed?.chance ?? dark.chance)) darkZones(floor, rand, dark.zones, start, themed?.share);
+    if (crawl && !k) addCrawlways(floor, rand, crawl, keep?.[0]); // bare nederst: sjakter fra etasjen under går opp i de andre
+  });
   return out;
 }

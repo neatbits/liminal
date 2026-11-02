@@ -8,6 +8,7 @@
 .modal.start-screen {
   width: min(560px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
+  grid-template-rows: minmax(0, 1fr) auto; /* uten overskriftsraden: innholdet ruller, knappene blir stående */
   background: transparent;
   box-shadow: none;
   border: 0;
@@ -83,4 +84,49 @@
 .start-sub {
   font-size: 13px;
   opacity: 0.7;
+}
+
+/* Spillsidene (ui/game-dialog.js): samme bakgrunn som menyen, med stemningene eller dagens nivå. */
+.start-page .start-title {
+  font-size: clamp(44px, 7vw, 72px);
+}
+
+.start-body > p {
+  margin: 0;
+}
+
+.start-page .side-label {
+  margin: 0 0 -10px;
+}
+
+.start-page .card {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.start-page .card.selected {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.start-page .modal-foot {
+  border-top: 0;
+}
+
+.start-page .settings .start-title {
+  margin: 8px 0 16px;
+}
+
+.start-page .settings .side-label {
+  margin: 18px 0 8px;
+}
+
+.start-page label,
+.start-page .range-head span,
+.start-page .side-label,
+.start-page .side-hint {
+  color: #4a4230;
+}
+
+.start-page .modal-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(47, 42, 28, 0.4) transparent;
 }

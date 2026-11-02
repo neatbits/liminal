@@ -184,3 +184,40 @@
 .hud-toggle[data-icon]::before {
   content: attr(data-icon) ' ';
 }
+
+/* Kartet nede til høyre i Noclip (view3d/minimap.js): det man har sett, nord opp. */
+.hud-minimap {
+  position: absolute;
+  right: 18px;
+  bottom: 70px;
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  background: rgba(10, 9, 6, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(255, 245, 210, 0.25), 0 4px 18px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+/* Det store kartet (M): midt på skjermen. */
+.hud-minimap.big {
+  top: 50%;
+  left: 50%;
+  right: auto;
+  bottom: auto;
+  width: min(78vmin, 560px);
+  height: min(78vmin, 560px);
+  transform: translate(-50%, -50%);
+  background: rgba(10, 9, 6, 0.72);
+}
+
+/* Berøring: knappene står nede til høyre, så kartet ligger øverst, under menyknappen. */
+@media (pointer: coarse) {
+  .hud-minimap {
+    top: max(76px, calc(env(safe-area-inset-top) + 60px));
+    bottom: auto;
+    right: max(16px, env(safe-area-inset-right));
+    width: 128px;
+    height: 128px;
+    pointer-events: auto; /* et trykk gjør det stort */
+  }
+}

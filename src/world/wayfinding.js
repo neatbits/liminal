@@ -7,7 +7,7 @@ import { windowInfo } from '../core/windows.js';
 import { MeshData, faceQuad } from './mesher.js';
 import { SIDES } from './caps.js';
 
-export const SIGN_TEXTURES = { mall: 'mallSigns', playroom: 'playSigns', school: 'schoolSigns' };
+export const SIGN_TEXTURES = { mall: 'mallSigns', playroom: 'playSigns', school: 'schoolSigns', airport: 'airportSigns' };
 
 export function buildWayfinding(level, field) {
   const out = new MeshData(field);

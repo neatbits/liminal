@@ -134,7 +134,7 @@ describe('vannsklier', () => {
 
   it('i genererte rom med sklie er taket høyt i hele bassengrommet', () => {
     for (let seed = 1; seed <= 12; seed++) {
-      const level = generateLevel({ theme: 'pool', w: 48, h: 48, seed });
+      const level = generateLevel({ theme: 'pool', w: 48, h: 48, seed, layout: 'classic' });
       if (!level.slides.length) continue;
       const path = slidePath(level, level.slides[0]);
       const [sx, sz] = level.slides[0].points[0];

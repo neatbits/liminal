@@ -23,6 +23,7 @@ export class Drift {
   }
 
   toggle() {
+    if (this.walk.noDrift) return; // Spot the wrong og The Descent
     this.set(!this.on);
     this.walk.hud.flash(this.on ? 'Drifting… press a movement key to take over' : 'Drift off', 2500);
   }

@@ -104,7 +104,7 @@ spillets modeller eller teksturer.
 
 I Uncanny og Nightmare (stemninger med monster) står spøkelset av og til helt stille
 ute i byen, 8–15 m fra veggen med midten omtrent i øyehøyde. Det er den samme modellen som
-monsteret: `view3d/ghost-snapshot.js` tegner den én gang forfra (stillestående, tilfeldig
+monsteret: `view3d/figure-snapshot.js` tegner den én gang forfra (stillestående, tilfeldig
 kledestilling) til et lite bilde med gjennomsiktig bakgrunn og mipmaps, og
 `world/window-ghost-view.js` setter bildet i et loddrett plan i utsikten, med dis etter avstand.
 UV-ens deriverte tas før alle greiner, og bildet slås opp med `textureGrad`. Det samme gjelder

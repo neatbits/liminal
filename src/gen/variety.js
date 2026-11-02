@@ -18,6 +18,7 @@ export const HEIGHT_RANGES = {
   playroom: [3.0, 3.8],
   school: [2.8, 3.3],
   ward: [2.6, 3.0],
+  airport: [3.2, 3.8],
 };
 
 const round = (v) => Math.round(v * 10) / 10;

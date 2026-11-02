@@ -1,149 +1,84 @@
-// The roaming ghost: optimized cloth animation with a gentle hover above the AI path.
+// Den sorte skikkelsen i 3D: én flate som vender mot den som ser (core/figure.js), med kroppen i en
+// shader (view3d/figure-material.js). Posisjonen kommer fra AI-en (world/monster-ai.js).
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
-import modelURL from '../../models/animated_ghost_nightmare_mode.glb?url';
-import { GHOST, ghostPose, ghostClothTime } from '../core/ghost.js';
-import { ghostMaterial } from './ghost-material.js';
-
-const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-function disposeModel(model) {
-  const resources = new Set();
-  model.traverse(o => {
-    if (!o.isMesh) return;
-    resources.add(o.geometry);
-    for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
-      resources.add(m);
-      for (const value of Object.values(m)) if (value?.isTexture) resources.add(value);
-    }
-  });
-  for (const resource of resources) resource.dispose();
-}
+import { FIGURE, figurePose } from '../core/figure.js';
+import { figureMaterial } from './figure-material.js';
 
 export class Monster3D {
-  constructor({ load = () => loader.loadAsync(modelURL) } = {}) {
+  constructor() {
     this.group = new THREE.Group();
     this.group.name = 'monster';
     this.group.visible = false;
-    this.float = new THREE.Group();
-    this.group.add(this.float);
-    this.fetchModel = load;
-    this.ready = null;
+    const [w, h] = FIGURE.plane;
+    this.geometry = new THREE.PlaneGeometry(w, h).translate(0, h / 2, 0);
+    this.material = figureMaterial(FIGURE.height);
+    this.mesh = new THREE.Mesh(this.geometry, this.material);
+    this.mesh.frustumCulled = false;
+    this.group.add(this.mesh);
+    this.ready = Promise.resolve(true);
     this.time = 0;
-    this.model = null;
+    this.phase = 0;
+    this.rush = 0;
     this.disposed = false;
-    this.shown = false;
     this.warmed = false;
     this._warming = false;
   }
 
-  /** Load only in a mood that actually uses the ghost; repeated calls share one promise. */
+  /** Ingenting å laste (kroppen er kode); kalles som før, så shaderen kan forberedes under overgangen. */
   load() {
-    if (this.disposed) return Promise.resolve(false);
-    if (this.ready) return this.ready;
-    this.ready = this.fetchModel()
-      .then(gltf => {
-        if (this.disposed) {
-          disposeModel(gltf.scene);
-          return false;
-        }
-        const model = gltf.scene;
-        model.updateMatrixWorld(true);
-        this.mixer = new THREE.AnimationMixer(model);
-        for (const clip of gltf.animations) this.mixer.clipAction(clip).play();
-        // The unused base pose makes default morph bounds much larger than the actual ghost.
-        // Measure only the upright loop; the rest of the source clip collapses to the floor.
-        const bounds = new THREE.Box3();
-        for (let k = 0; k <= 16; k++) {
-          this.mixer.setTime(ghostClothTime((GHOST.clothPeriod * k) / 16));
-          model.updateMatrixWorld(true);
-          bounds.union(new THREE.Box3().setFromObject(model, true));
-        }
-        this.mixer.setTime(0);
-        const size = bounds.getSize(new THREE.Vector3());
-        if (!(size.y > 0)) throw new Error('Ghost model has no height');
-        const center = bounds.getCenter(new THREE.Vector3()),
-          scale = GHOST.height / size.y;
-        model.scale.multiplyScalar(scale);
-        model.position.set(-center.x * scale, -bounds.min.y * scale, -center.z * scale);
-        this.material = ghostMaterial();
-        const oldMaterials = new Set();
-        model.traverse(o => {
-          if (o.isMesh) {
-            for (const m of Array.isArray(o.material) ? o.material : [o.material]) oldMaterials.add(m);
-            o.material = this.material;
-          }
-        });
-        for (const m of oldMaterials) m.dispose();
-        this.model = model;
-        this.float.add(model);
-        return true;
-      })
-      .catch(error => {
-        this.error = error;
-        console.warn('Ghost model could not load:', error);
-        return false;
-      });
-    return this.ready;
+    return this.disposed ? Promise.resolve(false) : this.ready;
   }
 
   /**
-   * Draws the ghost once, invisibly, right in front of the camera: the shader compiles and the
-   * 16 morph targets (~3 MB) upload now instead of on the frame the ghost first appears.
-   * The next update() after that frame restores the material (or at once, if the ghost appears).
+   * Tegner skikkelsen én gang, usynlig, rett foran kameraet: shaderen kompileres nå, ikke i det
+   * bildet den først viser seg. Neste update() etter det bildet setter materialet tilbake.
    */
   warm(renderer, camera, scene) {
-    if (!this.model || this.warmed || this.disposed) return;
+    if (this.warmed || this.disposed) return;
     this.warmed = this._warming = true;
     const ahead = camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(2.5);
     this.group.position.copy(camera.position).add(ahead);
-    this.group.position.y -= GHOST.height / 2;
+    this.group.position.y -= FIGURE.height / 2;
     this.group.visible = true;
-    this.material.colorWrite = this.material.depthWrite = false;
+    this.material.colorWrite = false;
     this._drawn = false;
-    this.model.traverse(o => o.isMesh && (o.onAfterRender = () => (this._drawn = true)));
+    this.mesh.onAfterRender = () => (this._drawn = true);
     renderer.compileAsync?.(this.group, camera, scene).catch(() => {});
   }
 
   update(dt, ai, player, power) {
     if (this.disposed) return;
     if (this._warming) {
-      if (!this._drawn && !ai.visible) return; // the invisible frame has not been drawn yet
+      if (!this._drawn && !ai.visible) return; // det usynlige bildet er ikke tegnet ennå
       this._warming = false;
-      this.material.colorWrite = this.material.depthWrite = true;
-      this.model.traverse(o => o.isMesh && (o.onAfterRender = () => {}));
+      this.material.colorWrite = true;
+      this.mesh.onAfterRender = () => {};
     }
-    if (ai.visible) this.load();
-    this.group.visible = ai.visible && !!this.model;
-    if (!this.group.visible) {
-      this.shown = false;
+    this.group.visible = ai.visible;
+    if (!ai.visible) {
+      this.rush = 0;
       return;
-    }
-    if (!this.shown) {
-      this.time = 0;
-      this.mixer.setTime(0);
-      this.shown = true;
     }
     const step = Math.max(0, dt);
     this.time += step;
-    this.mixer.setTime(ghostClothTime(this.time));
-    const p = ghostPose(this.time, ai, player);
+    this.rush += ((ai.fast ? 1 : 0) - this.rush) * Math.min(1, step * 7);
+    this.phase += step * (2.2 + 7 * this.rush);
+    const p = figurePose(this.time, ai, player);
     this.group.position.set(p.x, p.y + (this.base ?? 0), p.z); // base: etasjen (view3d/storeys.js)
     this.group.rotation.y = p.yaw;
-    this.float.rotation.set(p.pitch, 0, p.roll);
-    this.material.uniforms.uDark.value = 1 - Math.max(0, Math.min(1, power ?? 1));
+    const u = this.material.uniforms;
+    u.uTime.value = this.time;
+    u.uRush.value = this.rush;
+    u.uSway.value = p.sway;
+    u.uStride.value = Math.sin(this.phase);
+    u.uDark.value = 1 - Math.max(0, Math.min(1, power ?? 1));
   }
 
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
     this.group.visible = false;
-    this.mixer?.stopAllAction();
-    if (this.model) this.mixer?.uncacheRoot(this.model);
-    if (this.model) {
-      disposeModel(this.model);
-      this.float.remove(this.model);
-      this.model = null;
-    }
+    this.geometry.dispose();
+    this.material.dispose();
   }
 }

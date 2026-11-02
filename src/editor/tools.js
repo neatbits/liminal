@@ -20,6 +20,7 @@ import { placeStairs, removeStairs, stairCells } from '../core/stairs.js';
 import { STAIR_THROUGH } from '../core/heights.js';
 import { clearObjects } from '../core/object-pose.js';
 import { placeEscalator } from '../core/escalators.js';
+import { placeRamp } from '../core/ramps.js';
 import { addSlide, removeSlidesAt } from '../core/slides.js';
 import { placeObject } from '../core/objects.js';
 import { paintWindows } from '../core/windows.js';
@@ -38,6 +39,7 @@ export const TOOLS = [
   { id: 'wall', label: 'Wall', key: '2', kind: 'tile', value: TILE.WALL, erase: TILE.FLOOR },
   { id: 'water', label: 'Water', key: '3', kind: 'tile', value: TILE.WATER, erase: TILE.FLOOR },
   { id: 'pillar', label: 'Pillar', key: '4', kind: 'tile', value: TILE.PILLAR, erase: TILE.FLOOR },
+  { id: 'crawl', label: 'Crawlway', key: 'V', kind: 'tile', value: TILE.CRAWL, erase: TILE.WALL }, // lave ganger (core/crawl.js)
   { id: 'door', label: 'Doorway', key: '5', kind: 'tile', value: TILE.DOOR, erase: TILE.WALL },
   { id: 'light', label: 'Light', key: '6', kind: 'light', value: LIGHT.ON },
   { id: 'flicker', label: 'Flickering', key: '7', kind: 'light', value: LIGHT.FLICKER },
@@ -50,13 +52,16 @@ export const TOOLS = [
   { id: 'stairs', label: 'Stairs', key: 'S', kind: 'stairs' },
   { id: 'stairwell', label: 'Stairs up', key: 'U', kind: 'stairs', through: true }, // til etasjen over (core/stairwells.js)
   { id: 'escalator', label: 'Escalator', key: 'E', kind: 'stairs', escalator: true },
+  { id: 'ramp', label: 'Ramp', key: 'G', kind: 'stairs', ramp: true }, // skrånende gulv (core/ramps.js)
+  { id: 'ladder', label: 'Ladder', key: 'A', kind: 'ladder' }, // opp gjennom et hull til etasjen over (core/ladders.js)
+  { id: 'elevator', label: 'Elevator', key: 'Y', kind: 'elevator' }, // sjakt gjennom bygget (core/elevators.js)
   { id: 'tiles', label: 'Floor finish', key: 'T', kind: 'zone', layer: 'finish' },
   { id: 'slide', label: 'Slide', key: 'L', kind: 'slide' },
   { id: 'deck', label: 'Deck', key: 'K', kind: 'zone', layer: 'deck' },
   { id: 'object', label: 'Object', key: 'J', kind: 'object' },
   { id: 'window', label: 'Window', key: 'W', kind: 'window' },
   { id: 'corner', label: 'Corner', key: 'Q', kind: 'corner' }, // skrå/avrundede hjørner (core/corners.js)
-  { id: 'led', label: 'LED Strip', key: 'N', kind: 'led' },
+  { id: 'led', label: 'LED strip', key: 'N', kind: 'led' },
   { id: 'panel', label: 'Ceiling panel', key: 'P', kind: 'panel' },
 ];
 
@@ -141,10 +146,10 @@ export function applyFill(level, tool, x, z, erase, spacing) {
 }
 
 /** Trappeverktøyet: et trappeløp fra a (bunn) til b (topp), `width` ruter bredt. */
-export function applyStairs(level, a, b, width, erase, { escalator = false, down = false, through = false } = {}) {
+export function applyStairs(level, a, b, width, erase, { escalator = false, down = false, through = false, ramp = false } = {}) {
   if (erase) return removeStairs(level, a, b, width);
   if (escalator) return placeEscalator(level, a, b, width, down);
-  const n = placeStairs(level, a, b, width);
+  const n = ramp ? placeRamp(level, a, b, width) : placeStairs(level, a, b, width);
   const cells = stairCells(a, b, width).rows.flat().filter(([x, z]) => getTile(level, x, z) === TILE.STAIRS);
   clearObjects(level, cells.map(([x, z]) => z * level.w + x)); // ingenting står i trappen
   // Trapp opp: løpet merkes og går til etasjen over (core/stairwells.js).

@@ -1,3 +1,4 @@
+import { PerspectiveCamera } from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WalkMode } from '../src/view3d/walkmode.js';
 import { waitWhileWalking } from '../src/view3d/walk-session.js';
@@ -29,7 +30,7 @@ function setup(touch = false) {
   return { walk, canvas, hud, audio };
 }
 
-const camera = () => ({ position: { set() {} }, rotation: { set() {} } });
+const camera = () => new PerspectiveCamera();
 
 describe('pause i gåmodus', () => {
   it('touch keeps pointer events available for on-screen buttons',()=>{

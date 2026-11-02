@@ -1,9 +1,11 @@
 // Plass rundt dørene i genererte rom: dørblad som slår inn i hverandre (eller foran en annen
 // åpning) snus – eller mister dørbladet – og gjenstander som står foran en døråpning fjernes (med
 // det som stod oppå dem). Rom man tegner selv røres ikke. Ren logikk.
+import { crawlFronts } from '../core/crawl.js';
 import { TILE } from '../core/level.js';
 import { doorInfo, doorFronts, swingCell, flipSwing, setDoor } from '../core/doors.js';
-import { OBJECTS, objectPose, objectBox } from '../core/objects.js';
+import { OBJECTS, objectBox } from '../core/objects.js';
+import { poser } from '../core/object-pose.js';
 
 function doors(level) {
   const out = [];
@@ -61,24 +63,25 @@ export function untangleDoors(level) {
  * dem (det ville ellers falt ned). Returnerer antall som ble fjernet.
  */
 export function clearDoorways(level) {
-  const free = doorFrontCells(level);
+  const free = [...doorFrontCells(level), ...crawlFronts(level)]; // også åpningene til krypeganger
   const before = level.objects.length;
+  const pose = poser(level);
   const blocks = (o) => {
     const def = OBJECTS[o.id];
     if (!def || def.mount || def.floats) return false;
-    const [x0, z0, x1, z1] = objectBox(objectPose(level, o));
+    const [x0, z0, x1, z1] = objectBox(pose(o));
     return free.some(([x, z]) => x0 < x + 1 - 0.05 && x1 > x + 0.05 && z0 < z + 1 - 0.05 && z1 > z + 0.05);
   };
-  const poses = level.objects.map((o) => objectPose(level, o).y);
+  const poses = level.objects.map((o) => pose(o).y);
   const keep = level.objects.map((o) => !blocks(o));
   // Det som stod oppå noe som ble fjernet, havner lavere: fjern det også (til ingenting endrer seg).
   for (let round = 0; round < 4 && keep.some((k) => !k); round++) {
     const rest = level.objects.filter((_, i) => keep[i]);
-    const lv = { ...level, objects: rest };
+    const lower = poser({ ...level, objects: rest });
     let more = false;
     rest.forEach((o) => {
       const i = level.objects.indexOf(o);
-      if (Math.abs(objectPose(lv, o).y - poses[i]) > 0.01) {
+      if (Math.abs(lower(o).y - poses[i]) > 0.01) {
         keep[i] = false;
         more = true;
       }

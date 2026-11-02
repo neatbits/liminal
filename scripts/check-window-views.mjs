@@ -73,10 +73,10 @@ try {
         return windowGhostProbe(liminal.viewer,win,{...ghostSpot(win,()=>.5),y:win.floor+1.2});})()`);
       assert.ok(ghost.seen>4&&ghost.otherWall===0&&ghost.hidden===0,`ghost outside the right wall only: ${JSON.stringify(ghost)}`);
       console.log(`PASS ${theme} ghost: outside the chosen wall only, hidden when off`,ghost);
-      const snap=await evaluate(`import('/src/view3d/ghost-snapshot.js').then(async({GhostSnapshot})=>{
-        const s=new GhostSnapshot(liminal.viewer.renderer),image=await s.take(()=>.3);
+      const snap=await evaluate(`import('/src/view3d/figure-snapshot.js').then(async({FigureSnapshot})=>{
+        const s=new FigureSnapshot(liminal.viewer.renderer),image=await s.take(()=>.3);
         const out=image&&{width:image.width,height:image.height,texture:image.texture.isTexture};s.dispose();return out;})`);
-      assert.ok(snap?.texture&&snap.height>1.6&&snap.height<2&&snap.width>0.5,`ghost model still image: ${JSON.stringify(snap)}`);
+      assert.ok(snap?.texture&&snap.height>2&&snap.height<2.5&&snap.width>0.5,`figure still image: ${JSON.stringify(snap)}`);
       if(view.city) {
         const city=await evaluate(`import('/scripts/window-probe.js').then(m=>m.basementCityProbe(liminal.viewer))`);
         assert.ok(city.ground>0,'city streets can be seen far below');
